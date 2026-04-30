@@ -3269,44 +3269,14 @@
   ],
   "environment": {
     "generated_model": {
-      "generated_time": "2026-04-30T14:00:44+0200",
-      "model_files": [
-        {
-          "name": "network_data_params.h",
-          "signature": "0x57b8c6dfcc2a27faee9053532967232a"
-        },
-        {
-          "name": "network_data_params.c",
-          "signature": "0x3fc163f906b0e3ec423d56b98712692d"
-        },
-        {
-          "name": "network_data.h",
-          "signature": "0x47b1c3c240890794e8229f1439976ee2"
-        },
-        {
-          "name": "network_data.c",
-          "signature": "0xf39cfa0336d0d375b2dfa30e4e9d6412"
-        },
-        {
-          "name": "network_config.h",
-          "signature": "0x93f0483b01216a598296dfcee2810820"
-        },
-        {
-          "name": "network.h",
-          "signature": "0xb8a2bb343fd69b43e7d36d2bb6ca0067"
-        },
-        {
-          "name": "network.c",
-          "signature": "0xa7f572f97e57f3236e1bd08bbb6ff083"
-        }
-      ],
+      "generated_time": "2026-04-30T18:20:20+0200",
       "name": "network"
     },
-    "network_signature": "0xd0f1b3ac8e48e137",
+    "network_signature": "0xcfe0684931f6ec5b",
     "test_name": "",
     "tools": [
       {
-        "arguments": "generate --target stm32u5 --name network -m /home/pascal/max78000/stm32u5_kws20/kws20_v3_qat_true2d_nchw_allconst_folded_for_cubeai.onnx --compression none --verbosity 1 --workspace /tmp/mxAI_workspace526264824489461109124838792144521 --output /home/pascal/.stm32cubemx/network_output",
+        "arguments": "validate --target stm32u5 --name network -m /home/pascal/max78000/stm32u5_kws20/kws20_v3_qat_true2d_nchw_allconst_folded_for_cubeai.onnx --compression none --verbosity 1 --workspace /tmp/mxAI_workspace66668253340133781551841969243437 --output /home/pascal/.stm32cubemx/network_output --mode target --desc serial:115200",
         "environment": [
           "STATS_TYPE=X-CUBE-AI"
         ],
@@ -5751,20 +5721,6 @@
     }
   ],
   "json_schema_version": "2.0",
-  "memory_footprint": {
-    "activations": 66832,
-    "io": [
-      0,
-      0
-    ],
-    "kernel_flash": 28364,
-    "kernel_ram": 14940,
-    "series": "stm32u5",
-    "toolchain": "arm-none-eabi-gcc (15:9-2019-q4-0ubuntu1) 9.2.1 20191025 (release) [ARM/arm-9-branch revision 277599]",
-    "toolchain_flash": 0,
-    "toolchain_ram": 0,
-    "weights": 684404
-  },
   "memory_pools": [
     {
       "address": "NULL",
@@ -5854,7 +5810,7 @@
       "virtual": false
     },
     {
-      "address": "s_network_weights_array_u64",
+      "address": "NULL",
       "alignment": 0,
       "attributes": {
         "latency": "UNDEF",

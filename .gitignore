@@ -230,3 +230,9 @@ logs/
 __pycache__/
 *.pyc
 .venv/
+
+*.png
+*.jpg
+*.PNG
+*.bmp
+*.mff

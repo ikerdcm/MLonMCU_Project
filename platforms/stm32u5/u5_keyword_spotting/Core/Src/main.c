@@ -22,6 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "mic_debug.h"
 #include "kws20_test.h"
 
 /* USER CODE END Includes */
@@ -95,6 +96,7 @@ int main(void)
   MX_X_CUBE_AI_Init();
   /* USER CODE BEGIN 2 */
   kws20_test_run_once();
+  mic_debug_run_once();
 
   /* USER CODE END 2 */
 
@@ -104,7 +106,7 @@ int main(void)
   {
     /* USER CODE END WHILE */
 
-  MX_X_CUBE_AI_Process();
+  /* MX_X_CUBE_AI_Process(); */
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */

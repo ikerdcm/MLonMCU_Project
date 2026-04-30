@@ -205,3 +205,28 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Embedded build outputs
+**/Debug/
+**/Release/
+**/build/
+**/*.o
+**/*.d
+**/*.su
+**/*.cyclo
+**/*.elf
+**/*.hex
+**/*.bin
+**/*.map
+**/*.list
+
+# Logs / temp
+logs/
+**/*.log
+~$*
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.venv/

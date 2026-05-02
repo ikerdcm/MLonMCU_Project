@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include "mic_debug.h"
 #include "kws20_test.h"
+#include "kws20_live.h"
 
 /* USER CODE END Includes */
 
@@ -55,6 +56,11 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_ICACHE_Init(void);
 /* USER CODE BEGIN PFP */
+void kws20_live_run_once(void);
+void mic2_poll_run_forever(void);
+void mic2_input_test_run_once(void);
+void audio_hw_probe_run_once(void);
+void audio_st_minimal_run_once(void);
 
 /* USER CODE END PFP */
 
@@ -95,9 +101,7 @@ int main(void)
   MX_ICACHE_Init();
   MX_X_CUBE_AI_Init();
   /* USER CODE BEGIN 2 */
-  kws20_test_run_once();
-  mic_debug_run_once();
-
+  kws20_live_run_once();
   /* USER CODE END 2 */
 
   /* Infinite loop */

@@ -27,13 +27,36 @@
 #define DEMO_CHUNK                  128u
 #define DEMO_PREAMBLE_SIZE          (30u * DEMO_CHUNK)
 #define DEMO_TRIGGER_CONSEC_HIGH    3u
-#define DEMO_THRESHOLD_HIGH         35u
+/* Log shows premature triggers at avg=37-56 (background noise sustains 3 chunks
+ * just above 35).  Real speech in the log reaches avg 200-450.  Setting 80
+ * eliminates noise triggers while still firing well before the vowel peak. */
+#define DEMO_THRESHOLD_HIGH         80u
 #define DEMO_QUIET_THRESHOLD        20u
 #define DEMO_ARM_QUIET_CHUNKS       0u
 #define DEMO_SILENCE_LOG_PERIOD     128u
-#define DEMO_SAMPLE_SCALE           32
+/* Scale PCM→int8.  The STM32U5 X-CUBE-AI float model expects the same int8-as-float
+ * values that the kws20_test.c static test vector uses at scale=1.0.
+ * kws_five_stm32.h (confirmed working) has speech peaks of ~±68–80 int8.
+ * With MDF hardware gain=-16 dB, MIC2 raw HPF peaks are ~±1000 ADC units.
+ * scale=20 maps those to int8 ≈ ±78, matching the training amplitude exactly.
+ * scale=32 (previous) was ±123 (1.6× over-scaled). Do NOT go above 32 — it clips
+ * fricatives (the "s" in "stop") and degrades recognition for consonant-heavy words. */
+#define DEMO_SAMPLE_SCALE           20
 #define DEMO_INITIAL_WARMUP_SAMPLES 32000u
 #define DEMO_POST_TRIGGER_SAMPLES   (KWS_INPUT_SIZE - DEMO_PREAMBLE_SIZE)
+/* Silence detection after keyword onset (mirrors MAX78000 demo behaviour).
+ * Collection stops early when DEMO_SILENCE_COUNTER_THRESHOLD consecutive quiet
+ * chunks are seen AND at least DEMO_MIN_KEYWORD_SAMPLES post-trigger samples
+ * have been collected.  The remainder of live_i8 is zero-padded.
+ *
+ * MAX78000 increments ai85Counter += PREAMBLE_SIZE at trigger time, so its
+ * silence gate (ai85Counter >= SAMPLE_SIZE/3 = 5461) fires after only
+ * 5461 - 3840 = 1621 post-trigger samples.  We must match that offset:
+ *   DEMO_MIN_KEYWORD_SAMPLES = KWS_INPUT_SIZE/3 - DEMO_PREAMBLE_SIZE = 1621
+ * Using KWS_INPUT_SIZE/3 alone (5461) was a bug that kept 3.4× more ambient
+ * noise in the window than MAX78000, since the silence cutoff was delayed. */
+#define DEMO_SILENCE_COUNTER_THRESHOLD 20u
+#define DEMO_MIN_KEYWORD_SAMPLES    (KWS_INPUT_SIZE / 3u - DEMO_PREAMBLE_SIZE)
 
 typedef struct {
     uint32_t ring_index;
@@ -48,6 +71,7 @@ typedef struct {
     uint32_t post_trigger_samples;
     uint32_t high_run;
     uint32_t quiet_run;
+    uint32_t silence_run;
     uint32_t warmup_samples;
 } live_capture_ctx_t;
 
@@ -122,31 +146,54 @@ static int16_t live_hpf(int16_t input)
     return (int16_t)y;
 }
 
-static void copy_demo_ring_to_live_i8(uint32_t trigger_ring_index)
+/* Copy preamble + num_post_samples from ring into live_i8 and zero-pad the rest.
+ * Passing DEMO_POST_TRIGGER_SAMPLES for num_post_samples copies the full window
+ * without padding (original behaviour).  Passing a smaller value zero-pads the
+ * tail, which mirrors the MAX78000 demo's silence-triggered early cutoff. */
+static void copy_demo_ring_to_live_i8(uint32_t trigger_ring_index, uint32_t num_post_samples)
 {
     uint32_t start = (trigger_ring_index + KWS_INPUT_SIZE - DEMO_PREAMBLE_SIZE) % KWS_INPUT_SIZE;
+    uint32_t valid = DEMO_PREAMBLE_SIZE + num_post_samples;
 
-    for (uint32_t i = 0; i < KWS_INPUT_SIZE; i++) {
+    if (valid > KWS_INPUT_SIZE) {
+        valid = KWS_INPUT_SIZE;
+    }
+
+    for (uint32_t i = 0; i < valid; i++) {
         live_i8[i] = mic_ring[(start + i) % KWS_INPUT_SIZE];
+    }
+    for (uint32_t i = valid; i < KWS_INPUT_SIZE; i++) {
+        live_i8[i] = 0;
     }
 }
 
-static void print_live_i8_stats_after_trigger(void)
+static void print_live_i8_stats_after_trigger(uint32_t post_trigger_samples)
 {
     int8_t min_v = 127;
     int8_t max_v = -128;
     int64_t sum_abs = 0;
+    int64_t speech_sum_abs = 0;
+    uint32_t speech_len = DEMO_PREAMBLE_SIZE + post_trigger_samples;
+
+    if (speech_len > KWS_INPUT_SIZE) {
+        speech_len = KWS_INPUT_SIZE;
+    }
 
     for (uint32_t i = 0; i < KWS_INPUT_SIZE; i++) {
         if (live_i8[i] < min_v) min_v = live_i8[i];
         if (live_i8[i] > max_v) max_v = live_i8[i];
         sum_abs += iabs32((int32_t)live_i8[i]);
+        if (i < speech_len) {
+            speech_sum_abs += iabs32((int32_t)live_i8[i]);
+        }
     }
 
-    printf("TRIGGERED input i8 min=%ld max=%ld avg_abs=%ld\r\n",
+    printf("TRIGGERED input i8 min=%ld max=%ld avg_abs=%ld speech_avg=%ld (speech_len=%lu)\r\n",
            (long)min_v,
            (long)max_v,
-           (long)(sum_abs / (int64_t)KWS_INPUT_SIZE));
+           (long)(sum_abs / (int64_t)KWS_INPUT_SIZE),
+           (long)(speech_sum_abs / (int64_t)speech_len),
+           (unsigned long)speech_len);
 
     printf("first 32 triggered i8:\r\n");
     for (uint32_t i = 0; i < 32u; i++) {
@@ -291,6 +338,7 @@ static int process_capture_sample(live_capture_ctx_t *ctx, int16_t raw)
                     ctx->state = 1u;
                     ctx->trigger_ring_index = ctx->ring_index;
                     ctx->post_trigger_samples = 0;
+                    ctx->silence_run = 0;
                     ctx->high_run = 0;
 
                     printf("SOUND DETECTED avg=%lu high_run=%lu trigger_ring=%lu\r\n",
@@ -298,14 +346,36 @@ static int process_capture_sample(live_capture_ctx_t *ctx, int16_t raw)
                            (unsigned long)DEMO_TRIGGER_CONSEC_HIGH,
                            (unsigned long)ctx->trigger_ring_index);
                 }
-            } else if (ctx->post_trigger_samples >= DEMO_POST_TRIGGER_SAMPLES) {
-                printf("KEYWORD WINDOW READY trigger_ring=%lu post_samples=%lu\r\n",
-                       (unsigned long)ctx->trigger_ring_index,
-                       (unsigned long)ctx->post_trigger_samples);
+            } else {
+                /* --- silence detection after keyword onset (like MAX78000 demo) --- */
+                if ((avg < DEMO_QUIET_THRESHOLD) &&
+                    (ctx->post_trigger_samples >= DEMO_MIN_KEYWORD_SAMPLES)) {
+                    ctx->silence_run++;
+                } else {
+                    ctx->silence_run = 0;
+                }
 
-                copy_demo_ring_to_live_i8(ctx->trigger_ring_index);
-                print_live_i8_stats_after_trigger();
-                return 1;
+                if (ctx->silence_run >= DEMO_SILENCE_COUNTER_THRESHOLD) {
+                    printf("SILENCE CUT-OFF post_samples=%lu silence_chunks=%lu\r\n",
+                           (unsigned long)ctx->post_trigger_samples,
+                           (unsigned long)ctx->silence_run);
+
+                    copy_demo_ring_to_live_i8(ctx->trigger_ring_index,
+                                              ctx->post_trigger_samples);
+                    print_live_i8_stats_after_trigger(ctx->post_trigger_samples);
+                    return 1;
+                }
+
+                if (ctx->post_trigger_samples >= DEMO_POST_TRIGGER_SAMPLES) {
+                    printf("KEYWORD WINDOW READY trigger_ring=%lu post_samples=%lu\r\n",
+                           (unsigned long)ctx->trigger_ring_index,
+                           (unsigned long)ctx->post_trigger_samples);
+
+                    copy_demo_ring_to_live_i8(ctx->trigger_ring_index,
+                                              DEMO_POST_TRIGGER_SAMPLES);
+                    print_live_i8_stats_after_trigger(DEMO_POST_TRIGGER_SAMPLES);
+                    return 1;
+                }
             }
         }
     }
@@ -596,7 +666,6 @@ void kws20_live_run_once(void)
             printf("==============================\r\n");
 
             run_inference(network, ai_input, ai_output, 0, 0);
-            run_inference(network, ai_input, ai_output, 1, 0);
 
             printf("\r\nKWS20 live inference done. Waiting for next input...\r\n");
         }

@@ -424,8 +424,8 @@ int32_t BSP_AUDIO_IN_Record(uint32_t Instance, uint8_t *pData, uint32_t NbrOfByt
     filterConfig.Gain            = -16;
     filterConfig.ReshapeFilter.Activation      = DISABLE;
     filterConfig.ReshapeFilter.DecimationRatio = MDF_RSF_DECIMATION_RATIO_4;
-    filterConfig.HighPassFilter.Activation      = DISABLE;
-    filterConfig.HighPassFilter.CutOffFrequency = MDF_HPF_CUTOFF_0_000625FPCM;
+    filterConfig.HighPassFilter.Activation      = ENABLE;
+    filterConfig.HighPassFilter.CutOffFrequency = MDF_HPF_CUTOFF_0_0025FPCM;
     filterConfig.Integrator.Activation     = DISABLE;
     filterConfig.Integrator.Value          = 4U;
     filterConfig.Integrator.OutputDivision = MDF_INTEGRATOR_OUTPUT_NO_DIV;
@@ -442,7 +442,7 @@ int32_t BSP_AUDIO_IN_Record(uint32_t Instance, uint8_t *pData, uint32_t NbrOfByt
     filterConfig.SoundActivity.SignalNoiseThreshold = MDF_SAD_SIGNAL_NOISE_18DB;
     filterConfig.AcquisitionMode = MDF_MODE_ASYNC_CONT;
     filterConfig.FifoThreshold   = MDF_FIFO_THRESHOLD_NOT_EMPTY;
-    filterConfig.DiscardSamples  = 1U;
+    filterConfig.DiscardSamples  = 64U;
     filterConfig.Trigger.Source  = MDF_FILTER_TRIG_TRGO;
     filterConfig.Trigger.Edge    = MDF_FILTER_TRIG_RISING_EDGE;
     filterConfig.SnapshotFormat  = MDF_SNAPSHOT_23BITS;
@@ -1609,8 +1609,10 @@ __weak HAL_StatusTypeDef MX_MDF1_Init(MDF_HandleTypeDef *hMdfBlock, MX_MDF_InitT
                                                        : MDF_SITF_CCK1_SOURCE;
   hMdfBlock->Init.SerialInterface.Threshold          = 31U;
 
+  /* B-U585I-IOT02A schematic uses two MP23DB01HP microphones on separate paths.
+   * U7/MIC2 is strapped differently and needs the opposite sampling edge. */
   hMdfBlock->Init.FilterBistream                     = (hMdfBlock->Instance == ADF1_Filter0) ? MDF_BITSTREAM5_RISING
-                                                       : MDF_BITSTREAM0_RISING;
+                                                       : MDF_BITSTREAM0_FALLING;
 
   /* Initialize  MDF */
   if (HAL_MDF_Init(hMdfBlock) != HAL_OK)

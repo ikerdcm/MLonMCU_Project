@@ -210,3 +210,10 @@ void GPDMA1_Channel6_IRQHandler(void)
 {
   BSP_AUDIO_IN_IRQHandler(0, AUDIO_IN_DEVICE_DIGITAL_MIC1);
 }
+
+
+/* MIC2 DMA IRQ */
+void GPDMA1_Channel0_IRQHandler(void)
+{
+  BSP_AUDIO_IN_IRQHandler(0, AUDIO_IN_DEVICE_DIGITAL_MIC2);
+}

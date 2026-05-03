@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 MANIFEST="$HOME/max78000/accuracy_test/manifest.csv"
 PORT="/dev/ttyACM0"
 VENV="$HOME/max78000/ai8x-synthesis/.venv"
-SCRIPT="$HOME/max78000/tools/run_kws20_accuracy_playback.py"
+SCRIPT="$SCRIPT_DIR/run_kws20_accuracy_playback.py"
 RESPONSE_WINDOW="${1:-2.5}"
 
 echo "Starting KWS20 board-level accuracy test"

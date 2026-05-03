@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Default settings
 PROJECT="$HOME/max78000/ai8x-synthesis/sdk/Examples/MAX78000/CNN/kws20_demo"
 BOARD="FTHR_RevA"
 PORT="/dev/ttyACM0"
 DURATION="${1:-120}"
 VENV="$HOME/max78000/ai8x-synthesis/.venv"
-BENCH_SCRIPT="$HOME/max78000/tools/bench_kws20.py"
+BENCH_SCRIPT="$SCRIPT_DIR/bench_kws20.py"
 
 echo "========================================"
 echo " MAX78000 KWS20 Benchmark"

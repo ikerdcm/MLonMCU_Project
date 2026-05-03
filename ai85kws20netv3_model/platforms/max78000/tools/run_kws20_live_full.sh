@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-source "$HOME/max78000/tools/kws20_measure_config.env"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/kws20_measure_config.env"
 
-echo "Starting KWS20 live UART-only benchmark"
+echo "Starting KWS20 live benchmark"
+echo "Project:  $KWS20_PROJECT"
+echo "Board:    $KWS20_BOARD"
 echo "Port:     $KWS20_PORT"
 echo "Duration: ${KWS20_DURATION}s"
 echo
@@ -39,15 +42,13 @@ ARGS=(
   --sample-rate "$KWS20_SAMPLE_RATE"
   --sample-count "$KWS20_SAMPLE_COUNT"
   --clock-mhz "$KWS20_CLOCK_MHZ"
-  --no-build
-  --no-flash
 )
 
-if [ -n "$KWS20_MAC_OPS" ]; then
+if [ -n "${KWS20_MAC_OPS}" ]; then
   ARGS+=(--mac-ops "$KWS20_MAC_OPS")
 fi
 
-if [ -n "$KWS20_VOLTAGE" ] && [ -n "$KWS20_CURRENT_MA" ]; then
+if [ -n "${KWS20_VOLTAGE}" ] && [ -n "${KWS20_CURRENT_MA}" ]; then
   ARGS+=(--voltage "$KWS20_VOLTAGE" --current-ma "$KWS20_CURRENT_MA")
 fi
 

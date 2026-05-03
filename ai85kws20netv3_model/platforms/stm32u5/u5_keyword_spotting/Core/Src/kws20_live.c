@@ -42,6 +42,21 @@
  * scale=32 (previous) was ±123 (1.6× over-scaled). Do NOT go above 32 — it clips
  * fricatives (the "s" in "stop") and degrades recognition for consonant-heavy words. */
 #define DEMO_SAMPLE_SCALE           20
+/* Subtractive noise gate on the int16 HPF signal (BEFORE scale to int8).
+ * Diagnosis from logs: live U5 capture has only 50% zeros and 13% in the
+ * |x|=21-40 range, vs MAX78000 reference at 80% zeros / 1% in |x|=21-40.
+ * Verified via TEST 2 (run MAX78000 capture through U5 model -> "five" PASS):
+ * the model is correct, the audio noise floor is the entire problem.
+ *
+ * Subtractive gating shifts the whole distribution toward zero by subtracting
+ * an estimated background level from |hpf|.  Samples below the threshold get
+ * snapped to 0; everything above gets reduced by that constant.  This mirrors
+ * how the MAX78000 hardware path naturally produces a near-zero noise floor.
+ *
+ * Threshold of 80 in int16 HPF domain corresponds to roughly the typical
+ * background |x| seen during silence in our captures (avg_abs=6 in int8 with
+ * scale=20 -> raw |hpf| ~ 6*256/20 = 77). */
+#define DEMO_HPF_NOISE_FLOOR        80
 #define DEMO_INITIAL_WARMUP_SAMPLES 32000u
 #define DEMO_POST_TRIGGER_SAMPLES   (KWS_INPUT_SIZE - DEMO_PREAMBLE_SIZE)
 /* Silence detection after keyword onset (mirrors MAX78000 demo behaviour).
@@ -173,6 +188,12 @@ static void print_live_i8_stats_after_trigger(uint32_t post_trigger_samples)
     int8_t max_v = -128;
     int64_t sum_abs = 0;
     int64_t speech_sum_abs = 0;
+    uint32_t zero_count = 0;
+    uint32_t hist_1_2 = 0;
+    uint32_t hist_3_10 = 0;
+    uint32_t hist_11_20 = 0;
+    uint32_t hist_21_40 = 0;
+    uint32_t hist_41p = 0;
     uint32_t speech_len = DEMO_PREAMBLE_SIZE + post_trigger_samples;
 
     if (speech_len > KWS_INPUT_SIZE) {
@@ -180,12 +201,21 @@ static void print_live_i8_stats_after_trigger(uint32_t post_trigger_samples)
     }
 
     for (uint32_t i = 0; i < KWS_INPUT_SIZE; i++) {
-        if (live_i8[i] < min_v) min_v = live_i8[i];
-        if (live_i8[i] > max_v) max_v = live_i8[i];
-        sum_abs += iabs32((int32_t)live_i8[i]);
+        int8_t s = live_i8[i];
+        int32_t a = iabs32((int32_t)s);
+
+        if (s < min_v) min_v = s;
+        if (s > max_v) max_v = s;
+        sum_abs += a;
         if (i < speech_len) {
-            speech_sum_abs += iabs32((int32_t)live_i8[i]);
+            speech_sum_abs += a;
         }
+        if (a == 0) zero_count++;
+        else if (a <= 2) hist_1_2++;
+        else if (a <= 10) hist_3_10++;
+        else if (a <= 20) hist_11_20++;
+        else if (a <= 40) hist_21_40++;
+        else hist_41p++;
     }
 
     printf("TRIGGERED input i8 min=%ld max=%ld avg_abs=%ld speech_avg=%ld (speech_len=%lu)\r\n",
@@ -195,6 +225,17 @@ static void print_live_i8_stats_after_trigger(uint32_t post_trigger_samples)
            (long)(speech_sum_abs / (int64_t)speech_len),
            (unsigned long)speech_len);
 
+    /* Histogram for direct comparison with MAX78000 reference distribution.
+     * MAX78000 'five' reference: 0=80%, 1-2=7%, 3-10=10%, 11-20=2.7%, 21-40=1%, 41+=0.2% */
+    printf("HIST  zero=%lu(%lu%%)  1-2=%lu  3-10=%lu  11-20=%lu  21-40=%lu  41+=%lu\r\n",
+           (unsigned long)zero_count,
+           (unsigned long)(zero_count * 100u / KWS_INPUT_SIZE),
+           (unsigned long)hist_1_2,
+           (unsigned long)hist_3_10,
+           (unsigned long)hist_11_20,
+           (unsigned long)hist_21_40,
+           (unsigned long)hist_41p);
+
     printf("first 32 triggered i8:\r\n");
     for (uint32_t i = 0; i < 32u; i++) {
         printf("%ld", (long)live_i8[i]);
@@ -203,6 +244,31 @@ static void print_live_i8_stats_after_trigger(uint32_t post_trigger_samples)
         }
     }
     printf("\r\n");
+}
+
+/* Dump the full live_i8[] (16384 int8 samples) over UART in the same format
+ * as the MAX78000 reference log (test_vectors/max78000_ai_input_dump.log):
+ *   AI_INPUT_DUMP_BEGIN
+ *   <32 comma-separated int8 values, trailing comma, per line>
+ *   ... (512 lines total) ...
+ *   AI_INPUT_DUMP_END
+ *
+ * On a 115200 baud UART this takes roughly 7 seconds.  Capture it with any
+ * serial logger, then diff against the MAX78000 reference vectors to see
+ * whether the live capture distribution actually matches what the model was
+ * trained on. */
+static void dump_live_i8_to_uart(void)
+{
+    printf("\r\nAI_INPUT_DUMP_BEGIN\r\n");
+
+    for (uint32_t i = 0; i < KWS_INPUT_SIZE; i++) {
+        printf("%ld,", (long)live_i8[i]);
+        if (((i + 1u) % 32u) == 0u) {
+            printf("\r\n");
+        }
+    }
+
+    printf("AI_INPUT_DUMP_END\r\n");
 }
 
 static int audio_stream_start(void)
@@ -264,7 +330,23 @@ static int process_capture_sample(live_capture_ctx_t *ctx, int16_t raw)
         return 0;
     }
 
-    v = ((int32_t)hpf * DEMO_SAMPLE_SCALE) / 256;
+    {
+        /* Subtractive noise gate on HPF signal: |x| <= floor -> 0,
+         * |x| > floor -> sign(x) * (|x| - floor).  Pushes the whole
+         * distribution toward zero so the noise floor matches MAX78000. */
+        int32_t hpf32 = (int32_t)hpf;
+        int32_t a = (hpf32 >= 0) ? hpf32 : -hpf32;
+        int32_t gated;
+
+        if (a <= DEMO_HPF_NOISE_FLOOR) {
+            gated = 0;
+        } else {
+            gated = (hpf32 >= 0) ? (a - DEMO_HPF_NOISE_FLOOR)
+                                 : -(a - DEMO_HPF_NOISE_FLOOR);
+        }
+
+        v = (gated * DEMO_SAMPLE_SCALE) / 256;
+    }
     if (v > 127) v = 127;
     if (v < -128) v = -128;
 
@@ -664,6 +746,8 @@ void kws20_live_run_once(void)
             printf("TEST WINDOW start=%lu samples, time=%lu ms\r\n",
                    0ul, 0ul);
             printf("==============================\r\n");
+
+            dump_live_i8_to_uart();
 
             run_inference(network, ai_input, ai_output, 0, 0);
 

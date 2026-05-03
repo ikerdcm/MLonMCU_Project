@@ -1,5 +1,6 @@
 #include "kws20_test.h"
 #include "kws_five_stm32.h"
+#include "kws_max78000_generated_vectors.h"
 
 #include "main.h"
 #include "network.h"
@@ -30,6 +31,23 @@ static const char *labels[KWS_OUTPUT_SIZE] = {
     "unknown"
 };
 
+typedef struct {
+    const char *name;
+    const char *source_note;
+    const float *src;
+    float scale;
+    int transpose;
+    int expected_idx;
+    int reference_idx;
+} offline_case_t;
+
+typedef struct {
+    int best_idx;
+    uint32_t cycles;
+    uint32_t time_us;
+    float best_val;
+} offline_result_t;
+
 static void dwt_init(void)
 {
     CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
@@ -44,7 +62,16 @@ static long safe_x1000(float x)
     return (long)(x * 1000.0f);
 }
 
-static void fill_input(float scale, int transpose)
+static const char *label_or_qmark(int idx)
+{
+    if (idx >= 0 && idx < KWS_OUTPUT_SIZE) {
+        return labels[idx];
+    }
+
+    return "?";
+}
+
+static void fill_input_from(const float *src, float scale, int transpose)
 {
     for (int i = 0; i < KWS_INPUT_SIZE; i++) {
         int src_i = i;
@@ -55,7 +82,7 @@ static void fill_input(float scale, int transpose)
             src_i = c * 128 + r;
         }
 
-        ai_input_data[i] = kws_five_stm32[src_i] * scale;
+        ai_input_data[i] = src[src_i] * scale;
     }
 }
 
@@ -85,10 +112,59 @@ static void print_top5(void)
     }
 }
 
-static int run_one(ai_handle network, ai_buffer *ai_input, ai_buffer *ai_output,
-                   float scale, int transpose)
+static int find_rank(int target_idx)
 {
-    fill_input(scale, transpose);
+    if (target_idx < 0 || target_idx >= KWS_OUTPUT_SIZE) {
+        return -1;
+    }
+
+    int rank = 1;
+
+    for (int i = 0; i < KWS_OUTPUT_SIZE; i++) {
+        if (i != target_idx && ai_output_data[i] > ai_output_data[target_idx]) {
+            rank++;
+        }
+    }
+
+    return rank;
+}
+
+static void print_input_stats(const float *src, float scale, int transpose)
+{
+    float min_v = 0.0f;
+    float max_v = 0.0f;
+    double sum_abs = 0.0;
+    uint32_t nonzero = 0;
+
+    for (int i = 0; i < KWS_INPUT_SIZE; i++) {
+        int src_i = i;
+        if (transpose) {
+            int r = i / 128;
+            int c = i % 128;
+            src_i = c * 128 + r;
+        }
+
+        float v = src[src_i] * scale;
+
+        if (i == 0 || v < min_v) min_v = v;
+        if (i == 0 || v > max_v) max_v = v;
+        if (v != 0.0f) nonzero++;
+        sum_abs += fabsf(v);
+    }
+
+    printf("input stats: min=%ld max=%ld avg_abs=%ld nonzero=%lu/%d\r\n",
+           safe_x1000(min_v),
+           safe_x1000(max_v),
+           safe_x1000((float)(sum_abs / (double)KWS_INPUT_SIZE)),
+           (unsigned long)nonzero,
+           KWS_INPUT_SIZE);
+}
+
+static int run_one_with(const float *src, ai_handle network, ai_buffer *ai_input,
+                        ai_buffer *ai_output, float scale, int transpose,
+                        offline_result_t *result)
+{
+    fill_input_from(src, scale, transpose);
     memset(ai_output_data, 0, sizeof(ai_output_data));
 
     DWT->CYCCNT = 0;
@@ -115,10 +191,13 @@ static int run_one(ai_handle network, ai_buffer *ai_input, ai_buffer *ai_output,
 
     uint32_t cycles = end_cycles - start_cycles;
     uint32_t hclk = HAL_RCC_GetHCLKFreq();
-    uint32_t time_us = 0;
+    uint32_t time_us = (hclk > 0) ? (uint32_t)(((uint64_t)cycles * 1000000ULL) / hclk) : 0;
 
-    if (hclk > 0) {
-        time_us = (uint32_t)(((uint64_t)cycles * 1000000ULL) / hclk);
+    if (result != NULL) {
+        result->best_idx = best;
+        result->cycles = cycles;
+        result->time_us = time_us;
+        result->best_val = best_val;
     }
 
     printf("\r\nscale x1e9: %ld  transpose: %d\r\n",
@@ -135,29 +214,36 @@ static int run_one(ai_handle network, ai_buffer *ai_input, ai_buffer *ai_output,
 
 void kws20_test_run_once(void)
 {
+    static const offline_case_t cases[] = {
+        {
+            .name = "STM32 reference tensor",
+            .source_note = "kws_five_stm32.h: known-good CubeAI input tensor",
+            .src = kws_five_stm32,
+            .scale = 1.0f,
+            .transpose = 0,
+            .expected_idx = 14,
+            .reference_idx = 14,
+        },
+        KWS_MAX78000_GENERATED_CASES
+    };
+
     printf("\r\n==============================\r\n");
-    printf("KWS20 STM32U5 scale sweep\r\n");
+    printf("KWS20 OFFLINE EVAL\r\n");
     printf("==============================\r\n");
-
-    printf("Input vector raw min/max check:\r\n");
-    float mn = kws_five_stm32[0];
-    float mx = kws_five_stm32[0];
-
-    for (int i = 1; i < KWS_INPUT_SIZE; i++) {
-        if (kws_five_stm32[i] < mn) mn = kws_five_stm32[i];
-        if (kws_five_stm32[i] > mx) mx = kws_five_stm32[i];
-    }
-
-    printf("raw min x1000: %ld\r\n", safe_x1000(mn));
-    printf("raw max x1000: %ld\r\n", safe_x1000(mx));
+    printf("Direct-run tensors in this harness:\r\n");
+    printf("  1) STM32 reference tensor\r\n");
+    printf("  2..N) MAX78000 AI input dumps from generated registry (%d cases)\r\n",
+           KWS_MAX78000_GENERATED_CASE_COUNT);
+    printf("Not auto-run yet: MAX78000 demo kws_five.h\r\n");
+    printf("  Reason: that file is a raw offline sample vector for the MAX frontend,\r\n");
+    printf("          not the post-frontend AI input tensor used by this U5 model.\r\n");
 
     ai_handle network = AI_HANDLE_NULL;
     ai_error err;
+    int pass = 0;
+    int total = 0;
 
-    const ai_handle act_addr[] = {
-        activations
-    };
-
+    const ai_handle act_addr[] = { activations };
     err = ai_network_create_and_init(&network, act_addr, NULL);
     if (err.type != AI_ERROR_NONE) {
         printf("AI create/init failed: type=%d code=%d\r\n", err.type, err.code);
@@ -178,33 +264,55 @@ void kws20_test_run_once(void)
 
     dwt_init();
 
-    printf("\r\nRunning final QAT-like CubeAI test: scale=1.0 transpose=0\r\n");
-    run_one(network, ai_input, ai_output, 1.0f, 0);
-    printf("\r\nFinal single-run test done.\r\n");
-    return;
+    for (uint32_t i = 0; i < (sizeof(cases) / sizeof(cases[0])); i++) {
+        offline_result_t result = {0};
+        int predicted;
+        int expected_rank;
 
-    const float scales[] = {
-        1.0f / 128.0f,
-        1.0f / 256.0f,
-        1.0f / 512.0f,
-        1.0f / 1024.0f,
-        1.0f / 2048.0f,
-        1.0f / 4096.0f,
-        1.0f / 8192.0f,
-        1.0f / 16384.0f,
-        1.0f / 32768.0f,
-        1.0f / 65536.0f
-    };
+        printf("\r\n--- CASE %lu: %s ---\r\n",
+               (unsigned long)(i + 1),
+               cases[i].name);
+        printf("source: %s\r\n", cases[i].source_note);
+        print_input_stats(cases[i].src, cases[i].scale, cases[i].transpose);
 
-    int n = sizeof(scales) / sizeof(scales[0]);
+        predicted = run_one_with(cases[i].src, network, ai_input, ai_output,
+                                 cases[i].scale, cases[i].transpose, &result);
+        expected_rank = find_rank(cases[i].expected_idx);
+        total++;
 
-    for (int t = 0; t <= 1; t++) {
-        for (int i = 0; i < n; i++) {
-            run_one(network, ai_input, ai_output, scales[i], t);
+        printf("expected: %s  reference: %s  expected_rank=%d\r\n",
+               label_or_qmark(cases[i].expected_idx),
+               label_or_qmark(cases[i].reference_idx),
+               expected_rank);
+        printf("case summary: cycles=%lu time_us=%lu best_logit_x1000=%ld\r\n",
+               (unsigned long)result.cycles,
+               (unsigned long)result.time_us,
+               safe_x1000(result.best_val));
+
+        if (predicted == cases[i].expected_idx) {
+            pass++;
+            printf("CASE %lu PASS: %s -> %s\r\n",
+                   (unsigned long)(i + 1),
+                   label_or_qmark(cases[i].expected_idx),
+                   label_or_qmark(predicted));
+        } else {
+            printf("CASE %lu FAIL: %s -> %s\r\n",
+                   (unsigned long)(i + 1),
+                   label_or_qmark(cases[i].expected_idx),
+                   label_or_qmark(predicted));
+        }
+
+        if (i >= 1) {
+            if (predicted == cases[i].reference_idx) {
+                printf("       => U5 agrees with the MAX78000 dump reference on this tensor.\r\n");
+            } else {
+                printf("       => U5 disagrees with the MAX78000 dump reference on this tensor.\r\n");
+            }
         }
     }
 
     ai_network_destroy(network);
 
-    printf("\r\nSweep done.\r\n");
+    printf("\r\nOFFLINE EVAL RESULT: %d/%d PASSED\r\n", pass, total);
+    printf("==============================\r\n");
 }

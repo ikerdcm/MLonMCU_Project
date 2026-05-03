@@ -244,3 +244,7 @@ ai85kws20netv3_model/platforms/stm32u5/u5_keyword_spotting/Core/Src/kws20_live.c
 ai85kws20netv3_model/platforms/stm32u5/u5_keyword_spotting/Core/Src/kws20_live.c.bak_no_silence_abort
 ai85kws20netv3_model/platforms/stm32u5/u5_keyword_spotting/Core/Src/kws20_live.c.bak_move_trigger_2026-05-01_220703
 ai85kws20netv3_model/platforms/stm32u5/u5_keyword_spotting/Core/Src/kws20_live.c.bak_move_trigger_2026-05-01_220658
+ai85kws20netv3_model/platforms/stm32u5/u5_keyword_spotting/Core/Inc/kws_max78000_dump_001_five.h
+ai85kws20netv3_model/platforms/stm32u5/u5_keyword_spotting/Core/Inc/kws_max78000_dump_002_five.h
+ai85kws20netv3_model/platforms/stm32u5/u5_keyword_spotting/Core/Inc/kws_max78000_dump_003_five.h
+ai85kws20netv3_model/platforms/stm32u5/u5_keyword_spotting/Core/Inc/kws_max78000_dump_004_five.h

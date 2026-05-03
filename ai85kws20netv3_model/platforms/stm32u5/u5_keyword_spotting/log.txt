@@ -1,0 +1,190 @@
+
+#
+# AI Validation 7.1
+#
+Compiled with GCC 13.3.1
+STM32 device configuration...
+ Device       : DevID:0x0482 (STM32U575/585) RevID:0x2001
+ Core Arch.   : M33 - FPU  used
+ HAL version  : 0x01060200
+ SYSCLK clock : 160 MHz
+ HCLK clock   : 160 MHz
+ ICACHE       : True
+ Timestamp    : SysTick + DWT (delay(1)=1.003 ms)
+
+==============================
+ST AUDIO RECORD EXAMPLE RUN
+==============================
+Board: B-U585I-IOT02A
+Config: MIC1 / ADF1_Filter0 / 11025 Hz / 16-bit / mono / 16 KiB buffer / 3000 ms
+Speak plan: 1 s silence, 1 s speech, 1 s silence
+BSP_AUDIO_IN_Init returned: 0
+Calling BSP_AUDIO_IN_Record with 16384 bytes...
+BSP_AUDIO_IN_Record returned: 0
+BSP_AUDIO_IN_Stop returned: 0
+BSP_AUDIO_IN_DeInit returned: 0
+Callbacks: half=4 full=5 err=0
+ST example buffer min=-841 max=903 mean=0 avg_abs=80 chunk_min=18 chunk_max=446 chunk_avg=74
+Timeline per DMA half-buffer (~371 ms each):
+  F[00]    0.. 371 ms avg_abs=0 min=0 max=0
+  H[01]  371.. 742 ms avg_abs=118 min=-936 max=737
+  F[02]  742..1113 ms avg_abs=70 min=-944 max=883
+  H[03] 1113..1484 ms avg_abs=55 min=-951 max=875
+  F[04] 1484..1855 ms avg_abs=73 min=-943 max=660
+  H[05] 1855..2226 ms avg_abs=78 min=-916 max=896
+  F[06] 2226..2597 ms avg_abs=29 min=-157 max=127
+  H[07] 2597..2968 ms avg_abs=180 min=-929 max=903
+  F[08] 2968..3339 ms avg_abs=28 min=-157 max=117
+ST audio record example run done.
+
+#
+# AI Validation 7.1
+#
+Compiled with GCC 13.3.1
+STM32 device configuration...
+ Device       : DevID:0x0482 (STM32U575/585) RevID:0x2001
+ Core Arch.   : M33 - FPU  used
+ HAL version  : 0x01060200
+ SYSCLK clock : 160 MHz
+ HCLK clock   : 160 MHz
+ ICACHE       : True
+ Timestamp    : SysTick + DWT (delay(1)=1.003 ms)
+
+==============================
+ST AUDIO RECORD EXAMPLE RUN
+==============================
+Board: B-U585I-IOT02A
+Config: MIC1 / ADF1_Filter0 / 11025 Hz / 16-bit / mono / 16 KiB buffer / 3000 ms
+Speak plan: 1 s silence, 1 s speech, 1 s silence
+BSP_AUDIO_IN_Init returned: 0
+Calling BSP_AUDIO_IN_Record with 16384 bytes...
+BSP_AUDIO_IN_Record returned: 0
+BSP_AUDIO_IN_Stop returned: 0
+BSP_AUDIO_IN_DeInit returned: 0
+Callbacks: half=4 full=5 err=0
+ST example buffer min=-944 max=894 mean=0 avg_abs=59 chunk_min=15 chunk_max=498 chunk_avg=55
+Timeline per DMA half-buffer (~371 ms each):
+  F[00]    0.. 371 ms avg_abs=0 min=0 max=0
+  H[01]  371.. 742 ms avg_abs=118 min=-942 max=654
+  F[02]  742..1113 ms avg_abs=75 min=-964 max=910
+  H[03] 1113..1484 ms avg_abs=55 min=-966 max=773
+  F[04] 1484..1855 ms avg_abs=87 min=-939 max=895
+  H[05] 1855..2226 ms avg_abs=80 min=-952 max=926
+  F[06] 2226..2597 ms avg_abs=33 min=-202 max=132
+  H[07] 2597..2968 ms avg_abs=87 min=-944 max=894
+  F[08] 2968..3339 ms avg_abs=30 min=-167 max=140
+ST audio record example run done.
+
+#
+# AI Validation 7.1
+#
+Compiled with GCC 13.3.1
+STM32 device configuration...
+ Device       : DevID:0x0482 (STM32U575/585) RevID:0x2001
+ Core Arch.   : M33 - FPU  used
+ HAL version  : 0x01060200
+ SYSCLK clock : 160 MHz
+ HCLK clock   : 160 MHz
+ ICACHE       : True
+ Timestamp    : SysTick + DWT (delay(1)=1.003 ms)
+
+==============================
+ST AUDIO RECORD EXAMPLE RUN
+==============================
+Board: B-U585I-IOT02A
+Config: MIC1 / ADF1_Filter0 / 11025 Hz / 16-bit / mono / 16 KiB buffer / 3000 ms
+Speak plan: 1 s silence, 1 s speech, 1 s silence
+BSP_AUDIO_IN_Init returned: 0
+Calling BSP_AUDIO_IN_Record with 16384 bytes...
+BSP_AUDIO_IN_Record returned: 0
+BSP_AUDIO_IN_Stop returned: 0
+BSP_AUDIO_IN_DeInit returned: 0
+Callbacks: half=4 full=5 err=0
+ST example buffer min=-911 max=926 mean=-1 avg_abs=69 chunk_min=17 chunk_max=451 chunk_avg=64
+Timeline per DMA half-buffer (~371 ms each):
+  F[00]    0.. 371 ms avg_abs=0 min=0 max=0
+  H[01]  371.. 742 ms avg_abs=115 min=-923 max=727
+  F[02]  742..1113 ms avg_abs=73 min=-927 max=916
+  H[03] 1113..1484 ms avg_abs=57 min=-963 max=754
+  F[04] 1484..1855 ms avg_abs=70 min=-937 max=897
+  H[05] 1855..2226 ms avg_abs=88 min=-928 max=912
+  F[06] 2226..2597 ms avg_abs=30 min=-178 max=121
+  H[07] 2597..2968 ms avg_abs=109 min=-911 max=926
+  F[08] 2968..3339 ms avg_abs=30 min=-172 max=122
+ST audio record example run done.
+
+#
+# AI Validation 7.1
+#
+Compiled with GCC 13.3.1
+STM32 device configuration...
+ Device       : DevID:0x0482 (STM32U575/585) RevID:0x2001
+ Core Arch.   : M33 - FPU  used
+ HAL version  : 0x01060200
+ SYSCLK clock : 160 MHz
+ HCLK clock   : 160 MHz
+ ICACHE       : True
+ Timestamp    : SysTick + DWT (delay(1)=1.003 ms)
+
+==============================
+ST AUDIO RECORD EXAMPLE RUN
+==============================
+Board: B-U585I-IOT02A
+Config: MIC1 / ADF1_Filter0 / 11025 Hz / 16-bit / mono / 16 KiB buffer / 3000 ms
+Speak plan: 1 s silence, 1 s speech, 1 s silence
+BSP_AUDIO_IN_Init returned: 0
+Calling BSP_AUDIO_IN_Record with 16384 bytes...
+BSP_AUDIO_IN_Record returned: 0
+BSP_AUDIO_IN_Stop returned: 0
+BSP_AUDIO_IN_DeInit returned: 0
+Callbacks: half=4 full=5 err=0
+ST example buffer min=-937 max=914 mean=-1 avg_abs=70 chunk_min=21 chunk_max=487 chunk_avg=67
+Timeline per DMA half-buffer (~371 ms each):
+  F[00]    0.. 371 ms avg_abs=0 min=0 max=0
+  H[01]  371.. 742 ms avg_abs=114 min=-917 max=611
+  F[02]  742..1113 ms avg_abs=67 min=-937 max=835
+  H[03] 1113..1484 ms avg_abs=61 min=-936 max=878
+  F[04] 1484..1855 ms avg_abs=72 min=-946 max=903
+  H[05] 1855..2226 ms avg_abs=92 min=-953 max=903
+  F[06] 2226..2597 ms avg_abs=30 min=-140 max=118
+  H[07] 2597..2968 ms avg_abs=108 min=-937 max=914
+  F[08] 2968..3339 ms avg_abs=31 min=-175 max=131
+ST audio record example run done.
+
+#
+# AI Validation 7.1
+#
+Compiled with GCC 13.3.1
+STM32 device configuration...
+ Device       : DevID:0x0482 (STM32U575/585) RevID:0x2001
+ Core Arch.   : M33 - FPU  used
+ HAL version  : 0x01060200
+ SYSCLK clock : 160 MHz
+ HCLK clock   : 160 MHz
+ ICACHE       : True
+ Timestamp    : SysTick + DWT (delay(1)=1.003 ms)
+
+==============================
+ST AUDIO RECORD EXAMPLE RUN
+==============================
+Board: B-U585I-IOT02A
+Config: MIC1 / ADF1_Filter0 / 11025 Hz / 16-bit / mono / 16 KiB buffer / 3000 ms
+Speak plan: 1 s silence, 1 s speech, 1 s silence
+BSP_AUDIO_IN_Init returned: 0
+Calling BSP_AUDIO_IN_Record with 16384 bytes...
+BSP_AUDIO_IN_Record returned: 0
+BSP_AUDIO_IN_Stop returned: 0
+BSP_AUDIO_IN_DeInit returned: 0
+Callbacks: half=4 full=5 err=0
+ST example buffer min=-951 max=916 mean=-1 avg_abs=53 chunk_min=18 chunk_max=426 chunk_avg=49
+Timeline per DMA half-buffer (~371 ms each):
+  F[00]    0.. 371 ms avg_abs=0 min=0 max=0
+  H[01]  371.. 742 ms avg_abs=116 min=-920 max=747
+  F[02]  742..1113 ms avg_abs=67 min=-956 max=839
+  H[03] 1113..1484 ms avg_abs=55 min=-929 max=793
+  F[04] 1484..1855 ms avg_abs=78 min=-930 max=865
+  H[05] 1855..2226 ms avg_abs=82 min=-963 max=908
+  F[06] 2226..2597 ms avg_abs=31 min=-171 max=113
+  H[07] 2597..2968 ms avg_abs=74 min=-951 max=916
+  F[08] 2968..3339 ms avg_abs=30 min=-140 max=110
+ST audio record example run done.

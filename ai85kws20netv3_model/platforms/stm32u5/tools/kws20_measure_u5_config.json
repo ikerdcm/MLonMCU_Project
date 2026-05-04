@@ -10,7 +10,7 @@
   "sample_rate": 16000.0,
   "sample_count": 16384.0,
   "voltage": 3.28,
-  "current_ma": 20.0,
-  "timeout": 60.0,
+  "current_ma": 24.11,
+  "timeout": 30.0,
   "no_build": true
 }

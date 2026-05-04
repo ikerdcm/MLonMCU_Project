@@ -151,7 +151,7 @@ def write_registry(out_dir: Path, source_rel: str, records: Iterable[DumpRecord]
 
     if records:
         for idx, rec in enumerate(records):
-            suffix = " \\" if idx != len(records) - 1 else ""
+            suffix = ", \\" if idx != len(records) - 1 else ""
             lines.append(
                 f'    {{ "{rec.label} / dump #{rec.dump_index}", '
                 f'"{source_rel}: AI_INPUT_DUMP #{rec.dump_index}", '

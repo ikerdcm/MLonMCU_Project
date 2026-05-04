@@ -155,8 +155,53 @@ def collect_uart(ser, baud, timeout_s, out_dir):
     return uart_rows, inf_rows, model_info, acquisition, done
 
 
+def collect_uart_live(ser, baud, timeout_s, out_dir):
+    raw_path = out_dir / "serial_raw.log"
+    uart_rows = []
+    inf_rows = []
+    model_info = None
+    acquisition = None
+    start = time.time()
+
+    with open(raw_path, "w") as raw:
+        while time.time() - start < timeout_s:
+            data = ser.readline()
+            if not data:
+                continue
+            now = time.time()
+            elapsed = now - start
+            iso = datetime.fromtimestamp(now).isoformat(timespec="milliseconds")
+            line = data.decode("utf-8", errors="replace").strip()
+            print(line)
+            raw.write(f"{iso},elapsed_s={elapsed:.6f},{line}\n")
+            raw.flush()
+
+            uart_rows.append({
+                "time_iso": iso,
+                "elapsed_s": elapsed,
+                "bytes": len(line.encode("utf-8", errors="replace")),
+                "uart_tx_time_s_est": estimate_uart_tx_time_s(line, baud),
+                "raw": line,
+            })
+
+            fields = parse_bench_line(line)
+            if not fields:
+                continue
+
+            event = fields.get("event", "")
+            if event == "model_info":
+                model_info = fields
+            elif event == "acquisition":
+                acquisition = fields
+            elif event == "inference":
+                inf_rows.append(fields)
+
+    return uart_rows, inf_rows, model_info, acquisition
+
+
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--mode", choices=["offline", "live"], default="offline")
     ap.add_argument("--project", default="/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/stm32u5/u5_keyword_spotting")
     ap.add_argument("--elf", default=None)
     ap.add_argument("--build-log", default=None)
@@ -173,12 +218,15 @@ def main():
     args = ap.parse_args()
 
     project = Path(args.project).expanduser().resolve()
-    out_dir = Path.home() / "stm32u5_measurements" / datetime.now().strftime("kws20_metrics_%Y%m%d_%H%M%S")
+    repo_measure_root = Path(__file__).resolve().parent.parent / "measurements"
+    mode_dir = "live_measurements" if args.mode == "live" else "offline_measurements"
+    out_dir = repo_measure_root / mode_dir / datetime.now().strftime("kws20_metrics_%Y%m%d_%H%M%S")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     env = os.environ.copy()
     summary = {
         "timestamp": datetime.now().isoformat(),
+        "mode": args.mode,
         "project": str(project),
         "port": args.port,
         "baud": args.baud,
@@ -207,11 +255,29 @@ def main():
         if "memory" not in summary:
             summary["memory"] = run_size_on_elf(elf, out_dir)
 
+    memory = summary.get("memory")
+    if memory and ("data_bytes" in memory) and ("bss_bytes" in memory):
+        static_sram_bytes = int(memory["data_bytes"]) + int(memory["bss_bytes"])
+        summary["static_sram_usage"] = {
+            "static_sram_bytes": static_sram_bytes,
+            "static_sram_kib": static_sram_bytes / 1024.0,
+            "data_bytes": int(memory["data_bytes"]),
+            "bss_bytes": int(memory["bss_bytes"]),
+        }
+
     print(f"\n[UART] Opening {args.port} @ {args.baud}")
     with serial.Serial(args.port, args.baud, timeout=0.2) as ser:
         time.sleep(1.0)
         ser.reset_input_buffer()
-        uart_rows, inf_rows, model_info, acquisition, done = collect_uart(ser, args.baud, args.timeout, out_dir)
+        if args.mode == "live":
+            uart_rows, inf_rows, model_info, acquisition = collect_uart_live(
+                ser, args.baud, args.timeout, out_dir
+            )
+            done = False
+        else:
+            uart_rows, inf_rows, model_info, acquisition, done = collect_uart(
+                ser, args.baud, args.timeout, out_dir
+            )
 
     write_csv(out_dir / "uart_events.csv", uart_rows)
     write_csv(out_dir / "inference_events.csv", inf_rows)
@@ -268,6 +334,7 @@ def main():
             }
             if args.mac_ops:
                 summary["energy_estimate"]["mac_ops_per_joule"] = args.mac_ops / energy_j
+                summary["energy_estimate"]["mac_ops_per_second_per_watt"] = (args.mac_ops / avg_s) / power_w
 
     with open(out_dir / "summary.json", "w") as f:
         json.dump(summary, f, indent=2)
@@ -276,6 +343,7 @@ def main():
     print(f"Output: {out_dir}")
     print(json.dumps({
         "memory": summary.get("memory"),
+        "static_sram_usage": summary.get("static_sram_usage"),
         "elf_size_bytes": summary.get("elf_size_bytes"),
         "cnn_latency_us": summary.get("cnn_latency_us"),
         "cycles": summary.get("cycles"),

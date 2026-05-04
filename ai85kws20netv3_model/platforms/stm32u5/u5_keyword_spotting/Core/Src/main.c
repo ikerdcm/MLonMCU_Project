@@ -23,6 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "mic_debug.h"
+#include "kws20_mode_config.h"
 #include "kws20_measure.h"
 #include "kws20_test.h"
 #include "kws20_live.h"
@@ -101,7 +102,15 @@ int main(void)
   MX_ICACHE_Init();
   MX_X_CUBE_AI_Init();
   /* USER CODE BEGIN 2 */
+#if KWS20_CFG_ENABLE_MEASURE
+#if KWS20_CFG_MEASURE_LIVE
+  kws20_live_run_once();
+#else
   kws20_measure_run_once();
+#endif
+#else
+  kws20_live_run_once();
+#endif
   /* USER CODE END 2 */
 
   /* Infinite loop */

@@ -1,4 +1,5 @@
 #include "kws20_live.h"
+#include "kws20_mode_config.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -33,7 +34,6 @@
 #define DEMO_THRESHOLD_HIGH         80u
 #define DEMO_QUIET_THRESHOLD        20u
 #define DEMO_ARM_QUIET_CHUNKS       0u
-#define DEMO_SILENCE_LOG_PERIOD     128u
 /* Scale PCM→int8.  The STM32U5 X-CUBE-AI float model expects the same int8-as-float
  * values that the kws20_test.c static test vector uses at scale=1.0.
  * kws_five_stm32.h (confirmed working) has speech peaks of ~±68–80 int8.
@@ -42,21 +42,6 @@
  * scale=32 (previous) was ±123 (1.6× over-scaled). Do NOT go above 32 — it clips
  * fricatives (the "s" in "stop") and degrades recognition for consonant-heavy words. */
 #define DEMO_SAMPLE_SCALE           20
-/* Subtractive noise gate on the int16 HPF signal (BEFORE scale to int8).
- * Diagnosis from logs: live U5 capture has only 50% zeros and 13% in the
- * |x|=21-40 range, vs MAX78000 reference at 80% zeros / 1% in |x|=21-40.
- * Verified via TEST 2 (run MAX78000 capture through U5 model -> "five" PASS):
- * the model is correct, the audio noise floor is the entire problem.
- *
- * Subtractive gating shifts the whole distribution toward zero by subtracting
- * an estimated background level from |hpf|.  Samples below the threshold get
- * snapped to 0; everything above gets reduced by that constant.  This mirrors
- * how the MAX78000 hardware path naturally produces a near-zero noise floor.
- *
- * Threshold of 80 in int16 HPF domain corresponds to roughly the typical
- * background |x| seen during silence in our captures (avg_abs=6 in int8 with
- * scale=20 -> raw |hpf| ~ 6*256/20 = 77). */
-#define DEMO_HPF_NOISE_FLOOR        80
 #define DEMO_INITIAL_WARMUP_SAMPLES 32000u
 #define DEMO_POST_TRIGGER_SAMPLES   (KWS_INPUT_SIZE - DEMO_PREAMBLE_SIZE)
 /* Silence detection after keyword onset (mirrors MAX78000 demo behaviour).
@@ -80,7 +65,6 @@ typedef struct {
     uint32_t chunk_count;
     int32_t chunk_sum;
     int16_t chunk_samples[DEMO_CHUNK];
-    uint32_t logical_chunk_counter;
     uint32_t state;
     uint32_t trigger_ring_index;
     uint32_t post_trigger_samples;
@@ -109,6 +93,7 @@ static volatile uint32_t live_block_overrun_count = 0;
 static volatile uint32_t live_capture_enabled = 0;
 static volatile uint32_t live_dma_active = 0;
 static uint32_t live_stream_primed = 0;
+static uint32_t live_last_post_trigger_samples = 0;
 
 static int live_capture_ok = 0;
 
@@ -119,6 +104,25 @@ static const char *labels[KWS_OUTPUT_SIZE] = {
     "six", "seven", "eight", "nine", "zero",
     "unknown"
 };
+
+#if KWS20_CFG_ENABLE_MEASURE && KWS20_CFG_MEASURE_LIVE
+#define KWS20_LIVE_BENCH_ENABLED 1
+#else
+#define KWS20_LIVE_BENCH_ENABLED 0
+#endif
+
+#if KWS20_LIVE_BENCH_ENABLED && KWS20_CFG_LIVE_MEASURE_MINIMAL_OUTPUT
+#define KWS20_LIVE_MINIMAL_OUTPUT_ENABLED 1
+#else
+#define KWS20_LIVE_MINIMAL_OUTPUT_ENABLED 0
+#endif
+
+static void live_dwt_init(void)
+{
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+    DWT->CYCCNT = 0;
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+}
 
 static int32_t iabs32(int32_t x)
 {
@@ -182,95 +186,6 @@ static void copy_demo_ring_to_live_i8(uint32_t trigger_ring_index, uint32_t num_
     }
 }
 
-static void print_live_i8_stats_after_trigger(uint32_t post_trigger_samples)
-{
-    int8_t min_v = 127;
-    int8_t max_v = -128;
-    int64_t sum_abs = 0;
-    int64_t speech_sum_abs = 0;
-    uint32_t zero_count = 0;
-    uint32_t hist_1_2 = 0;
-    uint32_t hist_3_10 = 0;
-    uint32_t hist_11_20 = 0;
-    uint32_t hist_21_40 = 0;
-    uint32_t hist_41p = 0;
-    uint32_t speech_len = DEMO_PREAMBLE_SIZE + post_trigger_samples;
-
-    if (speech_len > KWS_INPUT_SIZE) {
-        speech_len = KWS_INPUT_SIZE;
-    }
-
-    for (uint32_t i = 0; i < KWS_INPUT_SIZE; i++) {
-        int8_t s = live_i8[i];
-        int32_t a = iabs32((int32_t)s);
-
-        if (s < min_v) min_v = s;
-        if (s > max_v) max_v = s;
-        sum_abs += a;
-        if (i < speech_len) {
-            speech_sum_abs += a;
-        }
-        if (a == 0) zero_count++;
-        else if (a <= 2) hist_1_2++;
-        else if (a <= 10) hist_3_10++;
-        else if (a <= 20) hist_11_20++;
-        else if (a <= 40) hist_21_40++;
-        else hist_41p++;
-    }
-
-    printf("TRIGGERED input i8 min=%ld max=%ld avg_abs=%ld speech_avg=%ld (speech_len=%lu)\r\n",
-           (long)min_v,
-           (long)max_v,
-           (long)(sum_abs / (int64_t)KWS_INPUT_SIZE),
-           (long)(speech_sum_abs / (int64_t)speech_len),
-           (unsigned long)speech_len);
-
-    /* Histogram for direct comparison with MAX78000 reference distribution.
-     * MAX78000 'five' reference: 0=80%, 1-2=7%, 3-10=10%, 11-20=2.7%, 21-40=1%, 41+=0.2% */
-    printf("HIST  zero=%lu(%lu%%)  1-2=%lu  3-10=%lu  11-20=%lu  21-40=%lu  41+=%lu\r\n",
-           (unsigned long)zero_count,
-           (unsigned long)(zero_count * 100u / KWS_INPUT_SIZE),
-           (unsigned long)hist_1_2,
-           (unsigned long)hist_3_10,
-           (unsigned long)hist_11_20,
-           (unsigned long)hist_21_40,
-           (unsigned long)hist_41p);
-
-    printf("first 32 triggered i8:\r\n");
-    for (uint32_t i = 0; i < 32u; i++) {
-        printf("%ld", (long)live_i8[i]);
-        if (i != 31u) {
-            printf(", ");
-        }
-    }
-    printf("\r\n");
-}
-
-/* Dump the full live_i8[] (16384 int8 samples) over UART in the same format
- * as the MAX78000 reference log (test_vectors/max78000_ai_input_dump.log):
- *   AI_INPUT_DUMP_BEGIN
- *   <32 comma-separated int8 values, trailing comma, per line>
- *   ... (512 lines total) ...
- *   AI_INPUT_DUMP_END
- *
- * On a 115200 baud UART this takes roughly 7 seconds.  Capture it with any
- * serial logger, then diff against the MAX78000 reference vectors to see
- * whether the live capture distribution actually matches what the model was
- * trained on. */
-static void dump_live_i8_to_uart(void)
-{
-    printf("\r\nAI_INPUT_DUMP_BEGIN\r\n");
-
-    for (uint32_t i = 0; i < KWS_INPUT_SIZE; i++) {
-        printf("%ld,", (long)live_i8[i]);
-        if (((i + 1u) % 32u) == 0u) {
-            printf("\r\n");
-        }
-    }
-
-    printf("AI_INPUT_DUMP_END\r\n");
-}
-
 static int audio_stream_start(void)
 {
     BSP_AUDIO_Init_t AudioInit;
@@ -296,17 +211,21 @@ static int audio_stream_start(void)
     AudioInit.ChannelsNbr = 1;
     AudioInit.Volume = 100;
 
+#if !KWS20_LIVE_MINIMAL_OUTPUT_ENABLED
     printf("Audio path: %s\r\n", live_audio_device_desc());
+#endif
     ret = BSP_AUDIO_IN_Init(0, &AudioInit);
-    printf("BSP_AUDIO_IN_Init returned: %ld\r\n", (long)ret);
     if (ret != BSP_ERROR_NONE) {
+        printf("BSP_AUDIO_IN_Init returned: %ld\r\n", (long)ret);
         return 0;
     }
 
+#if !KWS20_LIVE_MINIMAL_OUTPUT_ENABLED
     printf("Starting DMA capture on %s...\r\n", live_audio_device_desc());
+#endif
     ret = BSP_AUDIO_IN_Record(0, (uint8_t *)mic_dma, LIVE_DMA_BYTES);
-    printf("BSP_AUDIO_IN_Record returned: %ld\r\n", (long)ret);
     if (ret != BSP_ERROR_NONE) {
+        printf("BSP_AUDIO_IN_Record returned: %ld\r\n", (long)ret);
         BSP_AUDIO_IN_DeInit(0);
         return 0;
     }
@@ -324,29 +243,15 @@ static int process_capture_sample(live_capture_ctx_t *ctx, int16_t raw)
     if (ctx->global_samples <= ctx->warmup_samples) {
         if (ctx->global_samples == ctx->warmup_samples) {
             live_stream_primed = 1;
+#if !KWS20_LIVE_MINIMAL_OUTPUT_ENABLED
             printf("audio warmup finished after %lu samples\r\n",
                    (unsigned long)ctx->warmup_samples);
+#endif
         }
         return 0;
     }
 
-    {
-        /* Subtractive noise gate on HPF signal: |x| <= floor -> 0,
-         * |x| > floor -> sign(x) * (|x| - floor).  Pushes the whole
-         * distribution toward zero so the noise floor matches MAX78000. */
-        int32_t hpf32 = (int32_t)hpf;
-        int32_t a = (hpf32 >= 0) ? hpf32 : -hpf32;
-        int32_t gated;
-
-        if (a <= DEMO_HPF_NOISE_FLOOR) {
-            gated = 0;
-        } else {
-            gated = (hpf32 >= 0) ? (a - DEMO_HPF_NOISE_FLOOR)
-                                 : -(a - DEMO_HPF_NOISE_FLOOR);
-        }
-
-        v = (gated * DEMO_SAMPLE_SCALE) / 256;
-    }
+    v = ((int32_t)hpf * DEMO_SAMPLE_SCALE) / 256;
     if (v > 127) v = 127;
     if (v < -128) v = -128;
 
@@ -378,19 +283,8 @@ static int process_capture_sample(live_capture_ctx_t *ctx, int16_t raw)
 
         ctx->chunk_count = 0;
         ctx->chunk_sum = 0;
-        ctx->logical_chunk_counter++;
-
         {
             uint32_t avg = chunk_sum_abs / DEMO_CHUNK;
-
-            if ((avg >= DEMO_THRESHOLD_HIGH) ||
-                ((ctx->state == 0u) &&
-                 ((ctx->logical_chunk_counter % DEMO_SILENCE_LOG_PERIOD) == 0u))) {
-                printf("MIC avg=%lu state=%s ring=%lu\r\n",
-                       (unsigned long)avg,
-                       (ctx->state != 0u) ? "keyword" : "silence",
-                       (unsigned long)ctx->ring_filled);
-            }
 
             if (ctx->ring_filled < DEMO_PREAMBLE_SIZE) {
                 return 0;
@@ -423,10 +317,6 @@ static int process_capture_sample(live_capture_ctx_t *ctx, int16_t raw)
                     ctx->silence_run = 0;
                     ctx->high_run = 0;
 
-                    printf("SOUND DETECTED avg=%lu high_run=%lu trigger_ring=%lu\r\n",
-                           (unsigned long)avg,
-                           (unsigned long)DEMO_TRIGGER_CONSEC_HIGH,
-                           (unsigned long)ctx->trigger_ring_index);
                 }
             } else {
                 /* --- silence detection after keyword onset (like MAX78000 demo) --- */
@@ -438,24 +328,16 @@ static int process_capture_sample(live_capture_ctx_t *ctx, int16_t raw)
                 }
 
                 if (ctx->silence_run >= DEMO_SILENCE_COUNTER_THRESHOLD) {
-                    printf("SILENCE CUT-OFF post_samples=%lu silence_chunks=%lu\r\n",
-                           (unsigned long)ctx->post_trigger_samples,
-                           (unsigned long)ctx->silence_run);
-
                     copy_demo_ring_to_live_i8(ctx->trigger_ring_index,
                                               ctx->post_trigger_samples);
-                    print_live_i8_stats_after_trigger(ctx->post_trigger_samples);
+                    live_last_post_trigger_samples = ctx->post_trigger_samples;
                     return 1;
                 }
 
                 if (ctx->post_trigger_samples >= DEMO_POST_TRIGGER_SAMPLES) {
-                    printf("KEYWORD WINDOW READY trigger_ring=%lu post_samples=%lu\r\n",
-                           (unsigned long)ctx->trigger_ring_index,
-                           (unsigned long)ctx->post_trigger_samples);
-
                     copy_demo_ring_to_live_i8(ctx->trigger_ring_index,
                                               DEMO_POST_TRIGGER_SAMPLES);
-                    print_live_i8_stats_after_trigger(DEMO_POST_TRIGGER_SAMPLES);
+                    live_last_post_trigger_samples = DEMO_POST_TRIGGER_SAMPLES;
                     return 1;
                 }
             }
@@ -484,22 +366,13 @@ static int capture_keyword_like_demo_to_i8(void)
     memset(&ctx, 0, sizeof(ctx));
     memset(mic_ring, 0, sizeof(mic_ring));
     memset(live_i8, 0, sizeof(live_i8));
+    live_last_post_trigger_samples = 0;
 
     live_hpf_init();
     ctx.warmup_samples = live_stream_primed ? 0u : DEMO_INITIAL_WARMUP_SAMPLES;
     live_block_read_seq = live_block_write_seq;
     live_block_overrun_count = 0;
     live_capture_enabled = 1;
-
-    printf("DEMO trigger params: chunk=%lu high=%lu quiet=%lu arm_chunks=%lu preamble=%lu warmup=%lu post=%lu scale=%d\r\n",
-           (unsigned long)DEMO_CHUNK,
-           (unsigned long)DEMO_THRESHOLD_HIGH,
-           (unsigned long)DEMO_QUIET_THRESHOLD,
-           (unsigned long)DEMO_ARM_QUIET_CHUNKS,
-           (unsigned long)DEMO_PREAMBLE_SIZE,
-           (unsigned long)ctx.warmup_samples,
-           (unsigned long)DEMO_POST_TRIGGER_SAMPLES,
-           DEMO_SAMPLE_SCALE);
 
     for (;;) {
         while (live_block_read_seq != live_block_write_seq) {
@@ -537,11 +410,6 @@ capture_done:
 static void record_audio_once(void)
 {
     live_capture_ok = 0;
-
-    printf("\r\n==============================\r\n");
-    printf("KWS20 DEMO-LIKE LIVE MIC TRIGGER\r\n");
-    printf("==============================\r\n");
-    printf("Waiting continuously. Say a keyword when ready.\r\n");
 
     if (!audio_stream_start()) {
         return;
@@ -605,16 +473,36 @@ static void run_inference(ai_handle network,
                           ai_buffer *ai_input,
                           ai_buffer *ai_output,
                           int transpose,
-                          int invert)
+                          int invert,
+                          uint32_t run_index,
+                          uint32_t hclk_hz,
+                          uint32_t post_trigger_samples)
 {
     ai_i32 batch;
     uint32_t best = 0;
     ai_float best_val;
+#if KWS20_LIVE_BENCH_ENABLED
+    uint32_t start_cycles;
+    uint32_t end_cycles;
+    uint32_t cycles;
+    uint32_t time_us;
+#else
+    (void)run_index;
+    (void)hclk_hz;
+    (void)post_trigger_samples;
+#endif
 
     memset(ai_output_data, 0, sizeof(ai_output_data));
     load_ai_input_from_i8(transpose, invert);
 
+#if KWS20_LIVE_BENCH_ENABLED
+    DWT->CYCCNT = 0;
+    start_cycles = DWT->CYCCNT;
+#endif
     batch = ai_network_run(network, ai_input, ai_output);
+#if KWS20_LIVE_BENCH_ENABLED
+    end_cycles = DWT->CYCCNT;
+#endif
     if (batch != 1) {
         ai_error err = ai_network_get_error(network);
         printf("ai_network_run failed: batch=%ld type=%d code=%d\r\n",
@@ -630,6 +518,22 @@ static void run_inference(ai_handle network,
         }
     }
 
+#if KWS20_LIVE_BENCH_ENABLED
+    cycles = end_cycles - start_cycles;
+    time_us = (hclk_hz > 0u) ? (uint32_t)(((uint64_t)cycles * 1000000ULL) / hclk_hz) : 0u;
+
+    printf("BENCH,event=inference,run=%lu,mode=live,layout=%s,invert=%d,cnn_us=%lu,cycles=%lu,pred_idx=%lu,post_trigger_samples=%lu,audio_window_ms=%lu\r\n",
+           (unsigned long)run_index,
+           (transpose != 0) ? "simple_transpose" : "raw",
+           invert,
+           (unsigned long)time_us,
+           (unsigned long)cycles,
+           (unsigned long)best,
+           (unsigned long)post_trigger_samples,
+           (unsigned long)(((uint64_t)(DEMO_PREAMBLE_SIZE + post_trigger_samples) * 1000ULL) / LIVE_SAMPLE_RATE));
+#endif
+
+#if !KWS20_LIVE_MINIMAL_OUTPUT_ENABLED
     printf("\r\nLIVE inference layout=%s invert=%d\r\n",
            (transpose != 0) ? "simple_transpose" : "raw",
            invert);
@@ -638,6 +542,7 @@ static void run_inference(ai_handle network,
            labels[best],
            (long)(best_val * 1000.0f));
     print_top5();
+#endif
 }
 
 int kws20_live_audio_half_callback(uint32_t instance)
@@ -715,6 +620,8 @@ void kws20_live_run_once(void)
     ai_handle network = AI_HANDLE_NULL;
     ai_handle act_addr[] = { activations };
     ai_error err = ai_network_create_and_init(&network, act_addr, NULL);
+    uint32_t run_index = 0;
+    uint32_t hclk_hz = HAL_RCC_GetHCLKFreq();
 
     if (err.type != AI_ERROR_NONE) {
         printf("ai_network_create_and_init failed: type=%d code=%d\r\n", err.type, err.code);
@@ -733,25 +640,47 @@ void kws20_live_run_once(void)
 
         ai_input[0].data = AI_HANDLE_PTR(ai_input_data);
         ai_output[0].data = AI_HANDLE_PTR(ai_output_data);
+        live_dwt_init();
+
+#if KWS20_LIVE_BENCH_ENABLED
+        printf("BENCH,event=model_info,mode=live,hclk_hz=%lu,input_elems=%u,input_bytes=%u,output_elems=%u,output_bytes=%u,activations_bytes=%u,weights_bytes=%u,sample_rate_hz=%u,full_window_samples=%u\r\n",
+               (unsigned long)hclk_hz,
+               (unsigned int)AI_NETWORK_IN_1_SIZE,
+               (unsigned int)AI_NETWORK_IN_1_SIZE_BYTES,
+               (unsigned int)AI_NETWORK_OUT_1_SIZE,
+               (unsigned int)AI_NETWORK_OUT_1_SIZE_BYTES,
+               (unsigned int)AI_NETWORK_DATA_ACTIVATIONS_SIZE,
+               (unsigned int)AI_NETWORK_DATA_WEIGHTS_SIZE,
+               (unsigned int)LIVE_SAMPLE_RATE,
+               (unsigned int)KWS_INPUT_SIZE);
+        printf("BENCH,event=acquisition,mode=live,sample_rate_hz=%u,sample_count=%u,audio_window_ms=%u,chunk=%u,preamble=%u,post_trigger_max=%u\r\n",
+               (unsigned int)LIVE_SAMPLE_RATE,
+               (unsigned int)KWS_INPUT_SIZE,
+               (unsigned int)(((uint64_t)KWS_INPUT_SIZE * 1000ULL) / LIVE_SAMPLE_RATE),
+               (unsigned int)DEMO_CHUNK,
+               (unsigned int)DEMO_PREAMBLE_SIZE,
+               (unsigned int)DEMO_POST_TRIGGER_SAMPLES);
+#endif
 
         for (;;) {
+            uint32_t post_trigger_samples;
             record_audio_once();
 
             if (!live_capture_ok) {
-                printf("\r\nNo valid keyword capture. Waiting again...\r\n");
                 continue;
             }
 
-            printf("\r\n==============================\r\n");
-            printf("TEST WINDOW start=%lu samples, time=%lu ms\r\n",
-                   0ul, 0ul);
-            printf("==============================\r\n");
+            post_trigger_samples = live_last_post_trigger_samples;
+            if (post_trigger_samples == 0u) {
+                post_trigger_samples = DEMO_POST_TRIGGER_SAMPLES;
+            }
 
-            dump_live_i8_to_uart();
+            run_inference(network, ai_input, ai_output, 0, 0, run_index, hclk_hz, post_trigger_samples);
+            run_index++;
 
-            run_inference(network, ai_input, ai_output, 0, 0);
-
+#if !KWS20_LIVE_MINIMAL_OUTPUT_ENABLED
             printf("\r\nKWS20 live inference done. Waiting for next input...\r\n");
+#endif
         }
     }
 }

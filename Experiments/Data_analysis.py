@@ -22,6 +22,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable
 
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -424,32 +425,258 @@ def _label_for(sel: Selection, axis: str | None) -> str:
     return sel.label()
 
 
+# --------------------------------------------------------------------------- #
+# Pulse detection (shared by plot-aligned and power-stats)
+# --------------------------------------------------------------------------- #
+
+# Per the README: 30 s acquisition split into 6 evenly spaced 5 s windows,
+# one inference per window.
+WINDOW_LENGTH_MS = 5_000.0
+NUM_WINDOWS = 6
+
+
+def detect_pulses(t_ms: np.ndarray, c_uA: np.ndarray,
+                  smooth_ms: float = 1.0,
+                  threshold_frac: float = 0.3,
+                  merge_gap_ms: float = 10.0,
+                  min_width_ms: float = 50.0) -> dict:
+    """Find inference pulses in a Current(uA) trace.
+
+    Strategy: rolling-mean smooth, threshold at baseline+frac*(peak-baseline),
+    merge sub-`merge_gap_ms` gaps, drop runs shorter than `min_width_ms`.
+    For per-window detection (5 s slice) `min_width_ms` should still match the
+    real inference width, since each window contains exactly one pulse.
+    """
+    t = np.asarray(t_ms, dtype=float)
+    c = np.asarray(c_uA, dtype=float)
+    n = len(c)
+    empty = {
+        "baseline_uA": float("nan"),
+        "peak_uA": float("nan"),
+        "threshold_uA": float("nan"),
+        "pulses": [],
+        "active_mask": np.zeros(n, dtype=bool),
+        "smoothed": c.copy(),
+        "dt_ms": 0.0,
+    }
+    if n < 2:
+        return empty
+
+    diffs = np.diff(t)
+    dt_ms = float(np.median(diffs)) if len(diffs) else 0.0
+    if dt_ms <= 0:
+        return empty
+
+    win = max(1, int(round(smooth_ms / dt_ms)))
+    smoothed = pd.Series(c).rolling(win, center=True, min_periods=1).mean().to_numpy()
+
+    baseline = float(np.median(smoothed))
+    peak = float(np.max(smoothed))
+    threshold = baseline + threshold_frac * (peak - baseline)
+    above = smoothed > threshold
+
+    # merge short gaps inside `above`
+    gap_samples = max(1, int(round(merge_gap_ms / dt_ms)))
+    i = 0
+    while i < n:
+        if above[i]:
+            i += 1
+            continue
+        j = i
+        while j < n and not above[j]:
+            j += 1
+        if i > 0 and j < n and (j - i) < gap_samples:
+            above[i:j] = True
+        i = j
+
+    pulses_raw = []
+    in_p, s = False, 0
+    for k in range(n):
+        if above[k] and not in_p:
+            s, in_p = k, True
+        elif not above[k] and in_p:
+            pulses_raw.append((s, k))
+            in_p = False
+    if in_p:
+        pulses_raw.append((s, n))
+
+    pulses = []
+    mask = np.zeros(n, dtype=bool)
+    for s, e in pulses_raw:
+        width = float(t[e - 1] - t[s])
+        if width < min_width_ms:
+            continue
+        sl = c[s:e]
+        ts = t[s:e]
+        # ∫ I dt in uA*ms = nC. Energy(nJ) = V * nC. /1000 -> uJ. (V applied later.)
+        charge_nC = float(np.trapezoid(sl, ts)) if len(sl) > 1 else 0.0
+        pulses.append({
+            "start_idx": int(s),
+            "end_idx": int(e),
+            "start_ms": float(t[s]),
+            "end_ms": float(t[e - 1]),
+            "width_ms": width,
+            "peak_uA": float(np.max(sl)),
+            "mean_uA": float(np.mean(sl)),
+            "min_uA": float(np.min(sl)),
+            "charge_nC": charge_nC,
+        })
+        mask[s:e] = True
+
+    return {
+        "baseline_uA": baseline,
+        "peak_uA": peak,
+        "threshold_uA": threshold,
+        "pulses": pulses,
+        "active_mask": mask,
+        "smoothed": smoothed,
+        "dt_ms": dt_ms,
+    }
+
+
+def _voltage_for(sel: Selection, default_v: float = 3.3) -> float:
+    """Pull energy_estimate.voltage_v from JSON if available, else default."""
+    if sel.entry.has_json:
+        v = _get(_load_json_safe(sel), "energy_estimate", "voltage_v")
+        if isinstance(v, (int, float)):
+            return float(v)
+    return default_v
+
+
+# --------------------------------------------------------------------------- #
+# Plot power signal — submenu (full / single 5 s window / aligned)
+# --------------------------------------------------------------------------- #
+
+def _ask_window_index() -> int | None:
+    choices = [
+        Choice(title=f"Window {i + 1}  ({i * 5}–{(i + 1) * 5} s)", value=i)
+        for i in range(NUM_WINDOWS)
+    ]
+    choices.append(Choice(title="<- back", value=None))
+    return questionary.select("Which 5 s window?", choices=choices).ask()
+
+
+def _slice_window(df: pd.DataFrame, w: int) -> pd.DataFrame:
+    t0 = w * WINDOW_LENGTH_MS
+    t1 = (w + 1) * WINDOW_LENGTH_MS
+    m = (df["Timestamp(ms)"] >= t0) & (df["Timestamp(ms)"] < t1)
+    return df.loc[m]
+
+
+def _plot_full(items: list[Selection], axis: str | None) -> None:
+    _, ax = plt.subplots(figsize=(11, 5))
+    for sel in items:
+        console.print(f"  [dim]reading[/] {sel.entry.csv_path}")
+        df = load_csv(sel.entry.csv_path)
+        ax.plot(df["Timestamp(ms)"], df["Current(uA)"],
+                label=_label_for(sel, axis), linewidth=0.7)
+    title = items[0].label() if len(items) == 1 else f"Power signal — comparing by {axis}"
+    ax.set_title(title)
+    ax.set_xlabel("Timestamp (ms)")
+    ax.set_ylabel("Current (uA)")
+    ax.grid(True, alpha=0.3)
+    if len(items) > 1:
+        ax.legend()
+    plt.tight_layout()
+    plt.show()
+
+
+def _plot_window(items: list[Selection], axis: str | None, w: int) -> None:
+    _, ax = plt.subplots(figsize=(11, 5))
+    for sel in items:
+        console.print(f"  [dim]reading[/] {sel.entry.csv_path}")
+        df = _slice_window(load_csv(sel.entry.csv_path), w)
+        if df.empty:
+            console.print(f"  [yellow]no samples in window {w + 1} for {sel.label()}[/]")
+            continue
+        ax.plot(df["Timestamp(ms)"], df["Current(uA)"],
+                label=_label_for(sel, axis), linewidth=0.7)
+    t0 = int(w * WINDOW_LENGTH_MS / 1000)
+    t1 = int((w + 1) * WINDOW_LENGTH_MS / 1000)
+    title = f"Power signal — window {w + 1} ({t0}–{t1} s)"
+    if len(items) > 1:
+        title += f" — comparing by {axis}"
+    ax.set_title(title)
+    ax.set_xlabel("Timestamp (ms)")
+    ax.set_ylabel("Current (uA)")
+    ax.grid(True, alpha=0.3)
+    if len(items) > 1:
+        ax.legend()
+    plt.tight_layout()
+    plt.show()
+
+
+def _plot_window_aligned(items: list[Selection], axis: str | None, w: int) -> None:
+    """Overlay 5 s windows aligned to each signal's first detected pulse start."""
+    _, ax = plt.subplots(figsize=(11, 5))
+    plotted = 0
+    for sel in items:
+        console.print(f"  [dim]reading[/] {sel.entry.csv_path}")
+        df = _slice_window(load_csv(sel.entry.csv_path), w)
+        if df.empty:
+            console.print(f"  [yellow]no samples in window {w + 1} for {sel.label()}[/]")
+            continue
+        twin = df["Timestamp(ms)"].to_numpy(dtype=float)
+        cwin = df["Current(uA)"].to_numpy(dtype=float)
+        det = detect_pulses(twin, cwin)
+        if det["pulses"]:
+            shift = det["pulses"][0]["start_ms"]
+        else:
+            console.print(f"  [yellow]no pulse found in window {w + 1} for {sel.label()}; "
+                          f"falling back to window start[/]")
+            shift = float(twin[0])
+        ax.plot(twin - shift, cwin, label=_label_for(sel, axis), linewidth=0.7)
+        plotted += 1
+
+    if plotted == 0:
+        plt.close()
+        return
+
+    title = f"Power signal aligned — window {w + 1} (t = 0 at pulse start)"
+    if len(items) > 1:
+        title += f" — comparing by {axis}"
+    ax.set_title(title)
+    ax.set_xlabel("Time relative to pulse start (ms)")
+    ax.set_ylabel("Current (uA)")
+    ax.grid(True, alpha=0.3)
+    ax.axvline(0, color="grey", linestyle="--", alpha=0.5, label="pulse start")
+    if len(items) > 1:
+        ax.legend()
+    plt.tight_layout()
+    plt.show()
+
+
 def analysis_plot_power(items: list[Selection], axis: str | None) -> None:
-    """Plot the power-consumption signal (Current(uA) vs Timestamp(ms))."""
+    """Submenu: full window / single 5 s window / aligned 5 s window."""
     plottable = [s for s in items if s.entry.has_csv]
     if not plottable:
         console.print("[red]No CSV power traces available for the selected items.[/]")
         return
 
-    _, ax = plt.subplots(figsize=(11, 5))
-    for sel in plottable:
-        console.print(f"  [dim]reading[/] {sel.entry.csv_path}")
-        df = load_csv(sel.entry.csv_path)
-        ax.plot(df["Timestamp(ms)"], df["Current(uA)"],
-                label=_label_for(sel, axis), linewidth=0.7)
-
-    if len(plottable) == 1:
-        title = plottable[0].label()
-    else:
-        title = f"Power signal — comparing by {axis}"
-    ax.set_title(title)
-    ax.set_xlabel("Timestamp (ms)")
-    ax.set_ylabel("Current (uA)")
-    ax.grid(True, alpha=0.3)
-    if len(plottable) > 1:
-        ax.legend()
-    plt.tight_layout()
-    plt.show()
+    while True:
+        choice = questionary.select(
+            "Plot range:",
+            choices=[
+                Choice(title="Full window — all 30 s, 6 inferences", value="full"),
+                Choice(title="Single 5 s window", value="window"),
+                Choice(title="Single 5 s window — aligned to pulse start", value="aligned"),
+                Choice(title="<- back", value="__back__"),
+            ],
+        ).ask()
+        if choice in (None, "__back__"):
+            return
+        if choice == "full":
+            _plot_full(plottable, axis)
+        elif choice == "window":
+            w = _ask_window_index()
+            if w is None:
+                continue
+            _plot_window(plottable, axis, w)
+        elif choice == "aligned":
+            w = _ask_window_index()
+            if w is None:
+                continue
+            _plot_window_aligned(plottable, axis, w)
 
 
 # --------------------------------------------------------------------------- #
@@ -543,47 +770,113 @@ def _maybe_barplot(items: list[Selection], axis: str | None, title: str,
 # Concrete analyses
 # --------------------------------------------------------------------------- #
 
-def analysis_power_stats(items: list[Selection], axis: str | None) -> None:
-    """Aggregate stats on the Current(uA) trace from the CSV."""
-    stats: list[dict | None] = []
-    for sel in items:
-        if not sel.entry.has_csv:
-            stats.append(None)
-            continue
-        df = load_csv(sel.entry.csv_path)
-        c = df["Current(uA)"].astype(float)
-        t = df["Timestamp(ms)"].astype(float)
-        median = float(c.median())
-        std = float(c.std())
-        thr = median + std
-        stats.append({
-            "samples": int(len(c)),
-            "duration (ms)": float(t.iloc[-1] - t.iloc[0]),
-            "mean (uA)": float(c.mean()),
-            "median (uA)": median,
-            "std (uA)": std,
-            "min (uA)": float(c.min()),
-            "p95 (uA)": float(c.quantile(0.95)),
-            "max / peak (uA)": float(c.max()),
-            "RMS (uA)": float(((c ** 2).mean()) ** 0.5),
-            "active duty (% > med+std)": float((c > thr).mean() * 100.0),
-        })
+def _compute_power_stats(sel: Selection) -> dict | None:
+    if not sel.entry.has_csv:
+        return None
+    df = load_csv(sel.entry.csv_path)
+    c = df["Current(uA)"].astype(float).to_numpy()
+    t = df["Timestamp(ms)"].astype(float).to_numpy()
+    voltage = _voltage_for(sel)
 
+    det = detect_pulses(t, c)
+    active = det["active_mask"]
+    idle = ~active
+
+    pulses = det["pulses"]
+    widths = np.array([p["width_ms"] for p in pulses]) if pulses else np.array([])
+    peaks = np.array([p["peak_uA"] for p in pulses]) if pulses else np.array([])
+    means = np.array([p["mean_uA"] for p in pulses]) if pulses else np.array([])
+    starts = np.array([p["start_ms"] for p in pulses]) if pulses else np.array([])
+    periods = np.diff(starts) if len(starts) >= 2 else np.array([])
+    # per-pulse energy: V * ∫ I dt; charge_nC is in nC, so * V gives nJ; /1000 -> uJ
+    pulse_energies_uJ = np.array([p["charge_nC"] * voltage / 1000.0 for p in pulses])
+
+    def _safe(fn, arr, default=None):
+        return float(fn(arr)) if len(arr) else default
+
+    s = {
+        # general
+        "samples": int(len(c)),
+        "duration (ms)": float(t[-1] - t[0]),
+        "voltage (V)": float(voltage),
+        # whole-trace
+        "mean (uA)": float(np.mean(c)),
+        "median (uA)": float(np.median(c)),
+        "std (uA)": float(np.std(c)),
+        "min (uA)": float(np.min(c)),
+        "p95 (uA)": float(np.quantile(c, 0.95)),
+        "max / peak (uA)": float(np.max(c)),
+        "RMS (uA)": float(np.sqrt(np.mean(c ** 2))),
+        # pulse detection setup
+        "pulses detected": int(len(pulses)),
+        "baseline (uA)": float(det["baseline_uA"]),
+        "threshold (uA)": float(det["threshold_uA"]),
+        "duty cycle (%)": float(active.mean() * 100.0) if len(active) else None,
+        # active (pulse-high) vs idle (pulse-low)
+        "active mean (uA)": float(c[active].mean()) if active.any() else None,
+        "active std (uA)":  float(c[active].std()) if active.any() else None,
+        "active peak (uA)": float(c[active].max()) if active.any() else None,
+        "idle mean (uA)":   float(c[idle].mean()) if idle.any() else None,
+        "idle std (uA)":    float(c[idle].std()) if idle.any() else None,
+        "active − idle (uA)": (
+            float(c[active].mean() - c[idle].mean())
+            if active.any() and idle.any() else None
+        ),
+        # pulse shape
+        "pulse width avg (ms)": _safe(np.mean, widths),
+        "pulse width std (ms)": _safe(np.std,  widths),
+        "pulse width min (ms)": _safe(np.min,  widths),
+        "pulse width max (ms)": _safe(np.max,  widths),
+        "pulse mean current avg (uA)": _safe(np.mean, means),
+        "pulse peak current avg (uA)": _safe(np.mean, peaks),
+        "pulse peak current max (uA)": _safe(np.max,  peaks),
+        # period / cadence
+        "inter-pulse period avg (ms)": _safe(np.mean, periods),
+        "inter-pulse period std (ms)": _safe(np.std,  periods),
+        # energy (integrated)
+        "energy / pulse avg (uJ)": _safe(np.mean, pulse_energies_uJ),
+        "energy / pulse std (uJ)": _safe(np.std,  pulse_energies_uJ),
+        "energy / pulse min (uJ)": _safe(np.min,  pulse_energies_uJ),
+        "energy / pulse max (uJ)": _safe(np.max,  pulse_energies_uJ),
+    }
+    return s
+
+
+def analysis_power_stats(items: list[Selection], axis: str | None) -> None:
+    """Pulse-aware stats on the Current(uA) trace: whole-trace, active vs idle,
+    pulse shape (width, peak, mean), cadence (inter-pulse period), and energy.
+    """
+    stats: list[dict | None] = [_compute_power_stats(s) for s in items]
     if all(s is None for s in stats):
         console.print("[red]No CSV power traces available for the selected items.[/]")
         return
 
     metrics = [
-        "samples", "duration (ms)", "mean (uA)", "median (uA)", "std (uA)",
+        "samples", "duration (ms)", "voltage (V)",
+        "mean (uA)", "median (uA)", "std (uA)",
         "min (uA)", "p95 (uA)", "max / peak (uA)", "RMS (uA)",
-        "active duty (% > med+std)",
+        "pulses detected", "baseline (uA)", "threshold (uA)", "duty cycle (%)",
+        "active mean (uA)", "active std (uA)", "active peak (uA)",
+        "idle mean (uA)", "idle std (uA)", "active − idle (uA)",
+        "pulse width avg (ms)", "pulse width std (ms)",
+        "pulse width min (ms)", "pulse width max (ms)",
+        "pulse mean current avg (uA)",
+        "pulse peak current avg (uA)", "pulse peak current max (uA)",
+        "inter-pulse period avg (ms)", "inter-pulse period std (ms)",
+        "energy / pulse avg (uJ)", "energy / pulse std (uJ)",
+        "energy / pulse min (uJ)", "energy / pulse max (uJ)",
     ]
-    rows = [(m, [s[m] if s else None for s in stats]) for m in metrics]
-    console.print(_build_table("Power statistics (from CSV)", items, axis, rows))
-    _maybe_barplot(items, axis, "Mean current",
-                   [s["mean (uA)"] if s else None for s in stats], "uA")
-    _maybe_barplot(items, axis, "Peak current",
-                   [s["max / peak (uA)"] if s else None for s in stats], "uA")
+    rows = [(m, [s.get(m) if s else None for s in stats]) for m in metrics]
+    console.print(_build_table("Power statistics (CSV + pulse detection)", items, axis, rows))
+
+    _maybe_barplot(items, axis, "Active mean current",
+                   [s.get("active mean (uA)") if s else None for s in stats], "uA")
+    _maybe_barplot(items, axis, "Idle mean current",
+                   [s.get("idle mean (uA)") if s else None for s in stats], "uA")
+    _maybe_barplot(items, axis, "Pulse width (avg)",
+                   [s.get("pulse width avg (ms)") if s else None for s in stats], "ms")
+    _maybe_barplot(items, axis, "Energy per pulse (avg)",
+                   [s.get("energy / pulse avg (uJ)") if s else None for s in stats], "uJ")
 
 
 def analysis_energy(items: list[Selection], axis: str | None) -> None:

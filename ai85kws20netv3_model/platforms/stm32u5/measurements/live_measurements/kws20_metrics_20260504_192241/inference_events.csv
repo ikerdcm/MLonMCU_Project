@@ -1,0 +1,7 @@
+event,run,mode,layout,invert,cnn_us,cycles,pred_idx,post_trigger_samples,audio_window_ms
+inference,0,live,raw,0,397242,63558820,3,9088,808
+inference,1,live,raw,0,397241,63558708,8,9984,864
+inference,2,live,raw,0,397242,63558814,11,10112,872
+inference,3,live,raw,0,397242,63558836,0,11264,944
+inference,4,live,raw,0,397242,63558834,8,12544,1024
+inference,5,live,raw,0,397242,63558799,8,9344,824

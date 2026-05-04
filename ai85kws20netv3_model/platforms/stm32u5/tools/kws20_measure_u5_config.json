@@ -1,0 +1,16 @@
+{
+  "mode": "offline",
+  "project": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/stm32u5/u5_keyword_spotting",
+  "elf": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/stm32u5/u5_keyword_spotting/Debug/u5_keyword_spotting.elf",
+  "build_log": null,
+  "port": "/dev/ttyACM0",
+  "baud": 115200,
+  "clock_mhz": 160.0,
+  "mac_ops": 8797410.0,
+  "sample_rate": 16000.0,
+  "sample_count": 16384.0,
+  "voltage": 3.28,
+  "current_ma": 20.0,
+  "timeout": 60.0,
+  "no_build": true
+}

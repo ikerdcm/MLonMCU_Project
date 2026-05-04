@@ -18,6 +18,9 @@ except ImportError:
     sys.exit(1)
 
 
+DEFAULT_CONFIG_PATH = Path(__file__).with_name("kws20_measure_u5_config.json")
+
+
 def run_cmd(cmd, cwd, env, log_path):
     print(f"\n[RUN] {' '.join(map(str, cmd))}")
     lines = []
@@ -105,6 +108,16 @@ def parse_bench_line(line):
         k, v = part.split("=", 1)
         fields[k.strip()] = v.strip()
     return fields
+
+
+def load_config(path):
+    cfg_path = Path(path).expanduser().resolve()
+    if not cfg_path.exists():
+        raise RuntimeError(f"Config file not found: {cfg_path}")
+    data = json.loads(cfg_path.read_text())
+    if not isinstance(data, dict):
+        raise RuntimeError(f"Config file must contain a JSON object: {cfg_path}")
+    return cfg_path, data
 
 
 def collect_uart(ser, baud, timeout_s, out_dir):
@@ -200,21 +213,27 @@ def collect_uart_live(ser, baud, timeout_s, out_dir):
 
 
 def main():
+    bootstrap = argparse.ArgumentParser(add_help=False)
+    bootstrap.add_argument("--config", default=str(DEFAULT_CONFIG_PATH))
+    bootstrap_args, _ = bootstrap.parse_known_args()
+    config_path, config = load_config(bootstrap_args.config)
+
     ap = argparse.ArgumentParser()
-    ap.add_argument("--mode", choices=["offline", "live"], default="offline")
-    ap.add_argument("--project", default="/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/stm32u5/u5_keyword_spotting")
-    ap.add_argument("--elf", default=None)
-    ap.add_argument("--build-log", default=None)
-    ap.add_argument("--port", default="/dev/ttyACM0")
-    ap.add_argument("--baud", type=int, default=115200)
-    ap.add_argument("--clock-mhz", type=float, default=160.0)
-    ap.add_argument("--mac-ops", type=float, default=8797410.0)
-    ap.add_argument("--sample-rate", type=float, default=16000.0)
-    ap.add_argument("--sample-count", type=float, default=16384.0)
-    ap.add_argument("--voltage", type=float, default=None)
-    ap.add_argument("--current-ma", type=float, default=None)
-    ap.add_argument("--timeout", type=float, default=20.0)
-    ap.add_argument("--no-build", action="store_true")
+    ap.add_argument("--config", default=str(config_path))
+    ap.add_argument("--mode", choices=["offline", "live"], default=config.get("mode", "offline"))
+    ap.add_argument("--project", default=config.get("project", "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/stm32u5/u5_keyword_spotting"))
+    ap.add_argument("--elf", default=config.get("elf"))
+    ap.add_argument("--build-log", default=config.get("build_log"))
+    ap.add_argument("--port", default=config.get("port", "/dev/ttyACM0"))
+    ap.add_argument("--baud", type=int, default=config.get("baud", 115200))
+    ap.add_argument("--clock-mhz", type=float, default=config.get("clock_mhz", 160.0))
+    ap.add_argument("--mac-ops", type=float, default=config.get("mac_ops", 8797410.0))
+    ap.add_argument("--sample-rate", type=float, default=config.get("sample_rate", 16000.0))
+    ap.add_argument("--sample-count", type=float, default=config.get("sample_count", 16384.0))
+    ap.add_argument("--voltage", type=float, default=config.get("voltage"))
+    ap.add_argument("--current-ma", type=float, default=config.get("current_ma"))
+    ap.add_argument("--timeout", type=float, default=config.get("timeout", 20.0))
+    ap.add_argument("--no-build", action="store_true", default=bool(config.get("no_build", False)))
     args = ap.parse_args()
 
     project = Path(args.project).expanduser().resolve()
@@ -227,6 +246,7 @@ def main():
     summary = {
         "timestamp": datetime.now().isoformat(),
         "mode": args.mode,
+        "config": str(Path(args.config).expanduser().resolve()),
         "project": str(project),
         "port": args.port,
         "baud": args.baud,

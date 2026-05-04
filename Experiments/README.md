@@ -23,8 +23,8 @@ Examples of valid values:
 - `<model>`: `ai85kws20netv3_model_v0`, `ai85kws20netv3_model_v1`
 
 Notes:
-- `online/` holds data captured from live runs (e.g., CSV/JSON exports).
-- `offline/` is reserved for post-processed or derived results.
+- `online/` holds data captured from live runs (with microphone activated)
+- `offline/` holds data captured from prerecorded data
 
 ## PWR measurement guidelines (nRF Connect)
 

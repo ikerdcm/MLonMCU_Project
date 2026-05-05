@@ -198,77 +198,83 @@ def collect_uart_live(ser, baud, timeout_s, out_dir):
     acquisition = None
     saw_bench_inference = False
     start = time.time()
+    print(f"[UART] capturing for up to {timeout_s:.0f} s -- press Ctrl+C to stop early "
+          f"(summary will still be written)")
 
     with open(raw_path, "w") as raw:
-        while time.time() - start < timeout_s:
-            data = ser.readline()
-            if not data:
-                continue
-            now = time.time()
-            elapsed = now - start
-            iso = datetime.fromtimestamp(now).isoformat(timespec="milliseconds")
-            line = data.decode("utf-8", errors="replace").strip()
-            print(line)
-            raw.write(f"{iso},elapsed_s={elapsed:.6f},{line}\n")
-            raw.flush()
-
-            uart_rows.append({
-                "time_iso": iso,
-                "elapsed_s": elapsed,
-                "bytes": len(line.encode("utf-8", errors="replace")),
-                "uart_tx_time_s_est": estimate_uart_tx_time_s(line, baud),
-                "raw": line,
-            })
-
-            bench = parse_bench_fields(line)
-            if bench:
-                event = bench.get("event")
-                if event == "model_info":
-                    model_info = bench
-                elif event == "acquisition":
-                    acquisition = bench
-                elif event == "inference":
-                    saw_bench_inference = True
-                    row = {
-                        "time_iso": iso,
-                        "elapsed_s": elapsed,
-                        "raw": line,
-                    }
-                    for key in ("run", "cnn_us", "timer_ticks", "cycles", "pred_idx",
-                                "confidence_x10", "sample_counter", "word_counter"):
-                        if key in bench:
-                            row[key] = bench[key]
-                    inf_rows.append(row)
-                    pred_idx = bench.get("pred_idx", "")
-                    pred_label = pred_idx
-                    if pred_idx.lstrip("-").isdigit():
-                        idx = int(pred_idx)
-                        if 0 <= idx < len(KEYWORDS):
-                            pred_label = KEYWORDS[idx]
-                    pred = {
-                        "prediction": pred_label,
-                        "confidence": (float(bench["confidence_x10"]) / 10.0)
-                        if "confidence_x10" in bench else None,
-                        "raw": line.strip(),
-                        "time_iso": iso,
-                        "elapsed_s": elapsed,
-                    }
-                    pred_rows.append(pred)
+        try:
+            while time.time() - start < timeout_s:
+                data = ser.readline()
+                if not data:
                     continue
+                now = time.time()
+                elapsed = now - start
+                iso = datetime.fromtimestamp(now).isoformat(timespec="milliseconds")
+                line = data.decode("utf-8", errors="replace").strip()
+                print(line)
+                raw.write(f"{iso},elapsed_s={elapsed:.6f},{line}\n")
+                raw.flush()
 
-            cnn = parse_cnn_time(line)
-            if cnn is not None and not saw_bench_inference:
-                inf_rows.append({
+                uart_rows.append({
                     "time_iso": iso,
                     "elapsed_s": elapsed,
-                    "cnn_us": cnn,
+                    "bytes": len(line.encode("utf-8", errors="replace")),
+                    "uart_tx_time_s_est": estimate_uart_tx_time_s(line, baud),
                     "raw": line,
                 })
 
-            pred = parse_prediction(line)
-            if pred and not saw_bench_inference:
-                pred.update({"time_iso": iso, "elapsed_s": elapsed})
-                pred_rows.append(pred)
+                bench = parse_bench_fields(line)
+                if bench:
+                    event = bench.get("event")
+                    if event == "model_info":
+                        model_info = bench
+                    elif event == "acquisition":
+                        acquisition = bench
+                    elif event == "inference":
+                        saw_bench_inference = True
+                        row = {
+                            "time_iso": iso,
+                            "elapsed_s": elapsed,
+                            "raw": line,
+                        }
+                        for key in ("run", "cnn_us", "timer_ticks", "cycles", "pred_idx",
+                                    "confidence_x10", "sample_counter", "word_counter"):
+                            if key in bench:
+                                row[key] = bench[key]
+                        inf_rows.append(row)
+                        pred_idx = bench.get("pred_idx", "")
+                        pred_label = pred_idx
+                        if pred_idx.lstrip("-").isdigit():
+                            idx = int(pred_idx)
+                            if 0 <= idx < len(KEYWORDS):
+                                pred_label = KEYWORDS[idx]
+                        pred = {
+                            "prediction": pred_label,
+                            "confidence": (float(bench["confidence_x10"]) / 10.0)
+                            if "confidence_x10" in bench else None,
+                            "raw": line.strip(),
+                            "time_iso": iso,
+                            "elapsed_s": elapsed,
+                        }
+                        pred_rows.append(pred)
+                        continue
+
+                cnn = parse_cnn_time(line)
+                if cnn is not None and not saw_bench_inference:
+                    inf_rows.append({
+                        "time_iso": iso,
+                        "elapsed_s": elapsed,
+                        "cnn_us": cnn,
+                        "raw": line,
+                    })
+
+                pred = parse_prediction(line)
+                if pred and not saw_bench_inference:
+                    pred.update({"time_iso": iso, "elapsed_s": elapsed})
+                    pred_rows.append(pred)
+        except KeyboardInterrupt:
+            print(f"\n[UART] Ctrl+C received after {time.time() - start:.1f} s -- "
+                  f"finishing up and writing summary...")
 
     return uart_rows, inf_rows, pred_rows, model_info, acquisition
 
@@ -328,6 +334,7 @@ def main():
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", default=str(config_path))
+    ap.add_argument("--mode", choices=("live", "offline"), default=config.get("mode", "live"))
     ap.add_argument("--project", default=config.get("project", str(Path(__file__).resolve().parent.parent / "kws20_demo")))
     ap.add_argument("--elf", default=config.get("elf"))
     ap.add_argument("--port", default=config.get("port", "/dev/ttyACM0"))
@@ -345,6 +352,8 @@ def main():
     ap.add_argument("--no-build", action="store_true", default=bool(config.get("no_build", True)))
     ap.add_argument("--no-flash", action="store_true", default=bool(config.get("no_flash", True)))
     args = ap.parse_args()
+    if args.mode != "live":
+        raise RuntimeError("MAX78000 measurement currently supports only --mode live.")
 
     project = Path(args.project).expanduser().resolve()
     repo_measure_root = Path(__file__).resolve().parent.parent / "measurements" / "live_measurements"
@@ -353,7 +362,7 @@ def main():
 
     summary = {
         "timestamp": datetime.now().isoformat(),
-        "mode": "live",
+        "mode": args.mode,
         "config": str(Path(args.config).expanduser().resolve()),
         "project": str(project),
         "port": args.port,

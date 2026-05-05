@@ -1,0 +1,23 @@
+time_iso,elapsed_s,bytes,uart_tx_time_s_est,raw
+2026-05-05T16:48:19.070,2.2470827102661133,20,0.001736111111111111,d word: OFF (100.0%)
+2026-05-05T16:48:19.082,2.2596921920776367,147,0.012760416666666666,"BENCH,event=inference,run=8,mode=live,cnn_us=1849,timer_ticks=1129,cycles=72256,pred_idx=9,confidence_x10=1000,sample_counter=463232,word_counter=8"
+2026-05-05T16:48:22.280,5.457931041717529,25,0.002170138888888889,Detected word: ON (99.4%)
+2026-05-05T16:48:22.292,5.469711780548096,146,0.012673611111111111,"BENCH,event=inference,run=9,mode=live,cnn_us=1849,timer_ticks=1129,cycles=72256,pred_idx=8,confidence_x10=994,sample_counter=513920,word_counter=9"
+2026-05-05T16:48:24.234,7.41184401512146,22,0.0019097222222222222,Detected word: Unknown
+2026-05-05T16:48:24.247,7.4245805740356445,148,0.012847222222222222,"BENCH,event=inference,run=10,mode=live,cnn_us=1849,timer_ticks=1129,cycles=72256,pred_idx=0,confidence_x10=509,sample_counter=544640,word_counter=10"
+2026-05-05T16:48:25.061,8.238614797592163,27,0.00234375,Detected word: OFF (100.0%)
+2026-05-05T16:48:25.074,8.251258850097656,149,0.012934027777777777,"BENCH,event=inference,run=11,mode=live,cnn_us=1849,timer_ticks=1129,cycles=72256,pred_idx=9,confidence_x10=1000,sample_counter=557440,word_counter=11"
+2026-05-05T16:48:27.604,10.781534194946289,27,0.00234375,Detected word: YES (100.0%)
+2026-05-05T16:48:27.616,10.793614149093628,149,0.012934027777777777,"BENCH,event=inference,run=12,mode=live,cnn_us=1849,timer_ticks=1129,cycles=72256,pred_idx=6,confidence_x10=1000,sample_counter=597504,word_counter=12"
+2026-05-05T16:48:29.970,13.147142887115479,27,0.00234375,Detected word: YES (100.0%)
+2026-05-05T16:48:29.983,13.160021305084229,149,0.012934027777777777,"BENCH,event=inference,run=13,mode=live,cnn_us=1849,timer_ticks=1129,cycles=72256,pred_idx=6,confidence_x10=1000,sample_counter=634752,word_counter=13"
+2026-05-05T16:48:32.537,15.714232206344604,27,0.00234375,Detected word: YES (100.0%)
+2026-05-05T16:48:32.550,15.727073431015015,149,0.012934027777777777,"BENCH,event=inference,run=14,mode=live,cnn_us=1853,timer_ticks=1131,cycles=72384,pred_idx=6,confidence_x10=1000,sample_counter=675200,word_counter=14"
+2026-05-05T16:48:36.022,19.199198246002197,27,0.00234375,Detected word: YES (100.0%)
+2026-05-05T16:48:36.035,19.212254524230957,149,0.012934027777777777,"BENCH,event=inference,run=15,mode=live,cnn_us=1849,timer_ticks=1129,cycles=72256,pred_idx=6,confidence_x10=1000,sample_counter=730240,word_counter=15"
+2026-05-05T16:48:39.152,22.329517364501953,26,0.0022569444444444442,Detected word: ON (100.0%)
+2026-05-05T16:48:39.165,22.342279195785522,149,0.012934027777777777,"BENCH,event=inference,run=16,mode=live,cnn_us=1849,timer_ticks=1129,cycles=72256,pred_idx=8,confidence_x10=1000,sample_counter=779648,word_counter=16"
+2026-05-05T16:48:41.977,25.15412187576294,28,0.0024305555555555556,Detected word: FIVE (100.0%)
+2026-05-05T16:48:41.989,25.166807651519775,150,0.013020833333333334,"BENCH,event=inference,run=17,mode=live,cnn_us=1849,timer_ticks=1129,cycles=72256,pred_idx=14,confidence_x10=1000,sample_counter=824192,word_counter=17"
+2026-05-05T16:48:44.801,27.97880482673645,27,0.00234375,Detected word: FIVE (99.9%)
+2026-05-05T16:48:44.814,27.99159550666809,149,0.012934027777777777,"BENCH,event=inference,run=18,mode=live,cnn_us=1849,timer_ticks=1129,cycles=72256,pred_idx=14,confidence_x10=999,sample_counter=868736,word_counter=18"

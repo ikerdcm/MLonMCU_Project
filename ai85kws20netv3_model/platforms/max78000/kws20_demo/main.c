@@ -44,6 +44,7 @@
 #include "tmr.h"
 #include "dma.h"
 #include "led.h"
+#include "kws20_mode_config.h"
 #ifndef BOARD_AUD01_REVA
 #include "pb.h"
 #endif
@@ -90,13 +91,23 @@
 #define DISPLAY_AUDIO // displays audio waveform on TFT
 #endif
 
+#if KWS20_CFG_ENABLE_MEASURE && KWS20_CFG_MEASURE_LIVE
+#define KWS20_MEASURE_LIVE_ACTIVE 1
+#else
+#define KWS20_MEASURE_LIVE_ACTIVE 0
+#endif
+
 /* Enable/Disable Features */
+#if !(KWS20_MEASURE_LIVE_ACTIVE && KWS20_CFG_MINIMAL_OUTPUT)
 #define ENABLE_PRINT_ENVELOPE // enables printing average waveform envelope for samples
+#endif
 //#define ENABLE_CLASSIFICATION_DISPLAY  // enables printing classification result
 #define ENABLE_SILENCE_DETECTION // Starts collecting only after avg > THRESHOLD_HIGH, otherwise starts from first sample
 #undef EIGHT_BIT_SAMPLES // samples from Mic or Test vectors are eight bit, otherwise 16-bit
-// // #define ENABLE_MIC_PROCESSING // enables capturing Mic, otherwise a header file Test vector is used as sample data
+#define ENABLE_MIC_PROCESSING // enables capturing Mic, otherwise a header file Test vector is used as sample data
+#if !(KWS20_MEASURE_LIVE_ACTIVE && KWS20_CFG_MINIMAL_OUTPUT)
 #define ENABLE_MIC_DEBUG_STATUS // periodic mic/I2S status to avoid silent live-mode failures
+#endif
 
 #ifndef ENABLE_MIC_PROCESSING
 #include "kws_five.h"
@@ -152,7 +163,7 @@
     printf(fmt, ##args)
 #else
 #define PR_DEBUG(fmt, args...) \
-    if (1)                     \
+    if (!(KWS20_MEASURE_LIVE_ACTIVE && KWS20_CFG_MINIMAL_OUTPUT)) \
     printf(fmt, ##args)
 #define PR_INFO(fmt, args...) \
     if (1)                    \
@@ -305,6 +316,43 @@ static uint32_t setColor(int r, int g, int b)
 #endif
 
     return color;
+}
+#endif
+
+#if KWS20_CFG_ENABLE_AI_INPUT_DUMP
+static void dump_ai_input_buffers(const uint8_t *buffer)
+{
+    printf("\nAI_INPUT_DUMP_ARMED_WAIT\n");
+    for (volatile uint32_t wait_i = 0; wait_i < 80000000; wait_i++) {
+        ;
+    }
+
+    printf("\nAI_INPUT_DUMP_BEGIN\n");
+    for (int dump_i = 0; dump_i < 16384; dump_i++) {
+        printf("%d", (int)buffer[dump_i]);
+        if (dump_i != 16383) {
+            printf(",");
+        }
+        if ((dump_i + 1) % 32 == 0) {
+            printf("\n");
+        }
+    }
+    printf("\nAI_INPUT_DUMP_END\n");
+
+    printf("\nAI_INPUT_DUMP_BEGIN\n");
+    {
+        const int8_t *dump_ptr = (const int8_t *)buffer;
+        for (int dump_i = 0; dump_i < 16384; dump_i++) {
+            printf("%d", (int)dump_ptr[dump_i]);
+            if (dump_i != 16383) {
+                printf(",");
+            }
+            if ((dump_i + 1) % 32 == 0) {
+                printf("\n");
+            }
+        }
+    }
+    printf("\nAI_INPUT_DUMP_END\n");
 }
 #endif
 
@@ -712,39 +760,12 @@ int main(void)
                     fail();
                 }
 
+#if KWS20_CFG_ENABLE_AI_INPUT_DUMP
+                dump_ai_input_buffers(pAI85Buffer);
+#endif
+
                 /* Start CNN */
-                
-printf("\nAI_INPUT_DUMP_ARMED_WAIT\n");
-for (volatile uint32_t wait_i = 0; wait_i < 80000000; wait_i++) {
-    ;
-}
-printf("\nAI_INPUT_DUMP_BEGIN\n");
-for (int dump_i = 0; dump_i < 16384; dump_i++) {
-    printf("%d", (int)pAI85Buffer[dump_i]);
-    if (dump_i != 16383) {
-        printf(",");
-    }
-    if ((dump_i + 1) % 32 == 0) {
-        printf("\n");
-    }
-}
-printf("\nAI_INPUT_DUMP_END\n");
-
-
-printf("\nAI_INPUT_DUMP_BEGIN\n");
-int8_t *dump_ptr = (int8_t *)pAI85Buffer;
-for (int dump_i = 0; dump_i < 16384; dump_i++) {
-    printf("%d", (int)dump_ptr[dump_i]);
-    if (dump_i != 16383) {
-        printf(",");
-    }
-    if ((dump_i + 1) % 32 == 0) {
-        printf("\n");
-    }
-}
-printf("\nAI_INPUT_DUMP_END\n");
-
-if (!cnn_start()) {
+                if (!cnn_start()) {
                     PR_DEBUG("ERROR: Starting CNN! \n");
                     fail();
                 }
@@ -822,14 +843,13 @@ if (!cnn_start()) {
                 /* find detected class with max probability */
                 ret = check_inference(ml_softmax, ml_data, &out_class, &probability);
 
-                PR_DEBUG("----------------------------------------- \n");
                 /* Treat low confidence detections as unknown*/
                 if (!ret || out_class == NUM_OUTPUTS - 1) {
-                    PR_DEBUG("Detected word: %s", "Unknown");
+                    PR_INFO("Detected word: %s", "Unknown");
                 } else {
-                    PR_DEBUG("Detected word: %s (%0.1f%%)", keywords[out_class], probability);
+                    PR_INFO("Detected word: %s (%0.1f%%)", keywords[out_class], probability);
                 }
-                PR_DEBUG("\n----------------------------------------- \n");
+                PR_INFO("\n");
                 PR_INFO("BENCH,event=inference,run=%u,mode=live,cnn_us=%u,timer_ticks=%u,cycles=%u,pred_idx=%d,confidence_x10=%u,sample_counter=%u,word_counter=%u\n",
                         (unsigned int)wordCounter, (unsigned int)cnn_time,
                         (unsigned int)cnn_timer_ticks, (unsigned int)cnn_timer_cycles,

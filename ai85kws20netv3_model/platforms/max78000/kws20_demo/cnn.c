@@ -56,8 +56,8 @@ void CNN_ISR(void)
 #ifdef CNN_INFERENCE_TIMER
     cnn_timer_ticks = MXC_TMR_GetCount(CNN_INFERENCE_TIMER);
     cnn_timer_cycles = cnn_timer_ticks *
-                       (1u << ((CNN_INFERENCE_TIMER->ctrl0 & MXC_F_TMR_REVB_CTRL0_CLKDIV_A) >>
-                               MXC_F_TMR_REVB_CTRL0_CLKDIV_A_POS));
+                       (1u << ((CNN_INFERENCE_TIMER->ctrl0 & MXC_F_TMR_CTRL0_CLKDIV_A) >>
+                               MXC_F_TMR_CTRL0_CLKDIV_A_POS));
     cnn_time = MXC_TMR_SW_Stop(CNN_INFERENCE_TIMER);
 #else
     cnn_timer_ticks = 0;

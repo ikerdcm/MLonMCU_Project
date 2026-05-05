@@ -12,7 +12,7 @@
   "voltage": null,
   "current_ma": null,
   "maxim_path": null,
-  "openocd_root": null,
+  "openocd_root": "/home/pascal/max78000/ai8x-synthesis/openocd",
   "no_build": true,
   "no_flash": true
 }

@@ -83,7 +83,30 @@ def find_period_peaks(times_ms, currents_ua, expected_peaks, period_ms):
     return peaks
 
 
-def compute_peak_metrics(times_ms, currents_ua, peak_specs, threshold_fraction, voltage_v):
+def moving_average(values, radius):
+    if radius <= 0:
+        return list(values)
+    prefix = [0.0]
+    for v in values:
+        prefix.append(prefix[-1] + v)
+    out = []
+    n = len(values)
+    for i in range(n):
+        lo = max(0, i - radius)
+        hi = min(n, i + radius + 1)
+        out.append((prefix[hi] - prefix[lo]) / (hi - lo))
+    return out
+
+
+def compute_positive_peak_metrics(
+    times_ms,
+    currents_ua,
+    peak_specs,
+    threshold_fraction,
+    voltage_v,
+    local_baseline_window_ms,
+    local_baseline_guard_ms,
+):
     dt_ms = times_ms[1] - times_ms[0]
     metrics = []
 
@@ -99,7 +122,14 @@ def compute_peak_metrics(times_ms, currents_ua, peak_specs, threshold_fraction, 
         baseline_samples = currents_ua[i0:ex0] + currents_ua[ex1:i1]
         if not baseline_samples:
             baseline_samples = currents_ua[i0:i1]
-        baseline_ua = percentile(baseline_samples, 0.2)
+        global_baseline_ua = percentile(baseline_samples, 0.2)
+
+        pre0 = max(i0, nearest_index(times_ms, peak_time_ms - local_baseline_window_ms))
+        pre1 = max(pre0 + 1, min(peak_idx, nearest_index(times_ms, peak_time_ms - local_baseline_guard_ms)))
+        local_pre_samples = currents_ua[pre0:pre1]
+        local_pre_baseline_ua = percentile(local_pre_samples, 0.5) if local_pre_samples else global_baseline_ua
+
+        baseline_ua = max(global_baseline_ua, local_pre_baseline_ua)
         threshold_ua = baseline_ua + threshold_fraction * (peak_current_ua - baseline_ua)
 
         start_idx = peak_idx
@@ -145,6 +175,171 @@ def compute_peak_metrics(times_ms, currents_ua, peak_specs, threshold_fraction, 
         )
 
     return metrics
+
+
+def compute_transition_window_metrics(
+    times_ms,
+    currents_ua,
+    peak_specs,
+    voltage_v,
+    start_fraction,
+    end_fraction,
+    local_baseline_window_ms,
+    local_baseline_guard_ms,
+    settle_ms,
+    smooth_ms,
+    expected_duration_ms,
+):
+    dt_ms = times_ms[1] - times_ms[0]
+    smooth_radius = max(1, int(round((smooth_ms / dt_ms) / 2.0)))
+    settle_samples = max(1, int(round(settle_ms / dt_ms)))
+    metrics = []
+
+    for peak_number, w0, w1, peak_idx in peak_specs:
+        i0 = nearest_index(times_ms, w0)
+        i1 = min(len(times_ms) - 1, nearest_index(times_ms, w1))
+        segment_times = times_ms[i0:i1]
+        segment_currents = currents_ua[i0:i1]
+        local_peak_idx = max(0, peak_idx - i0)
+        peak_time_ms = times_ms[peak_idx]
+        peak_current_ua = currents_ua[peak_idx]
+
+        pre0 = max(i0, nearest_index(times_ms, peak_time_ms - local_baseline_window_ms))
+        pre1 = max(pre0 + 1, min(peak_idx, nearest_index(times_ms, peak_time_ms - local_baseline_guard_ms)))
+        post0 = min(i1 - 1, max(peak_idx + 1, nearest_index(times_ms, peak_time_ms + local_baseline_guard_ms)))
+        post1 = min(i1, nearest_index(times_ms, peak_time_ms + local_baseline_window_ms))
+        if post1 <= post0:
+            post1 = i1
+
+        pre_samples = currents_ua[pre0:pre1]
+        post_samples = currents_ua[post0:post1]
+        pre_level = percentile(pre_samples, 0.5) if pre_samples else percentile(segment_currents, 0.8)
+        post_level = percentile(post_samples, 0.5) if post_samples else percentile(segment_currents, 0.2)
+
+        if pre_level <= post_level:
+            fallback = compute_positive_peak_metrics(
+                times_ms,
+                currents_ua,
+                [(peak_number, w0, w1, peak_idx)],
+                0.25,
+                voltage_v,
+                local_baseline_window_ms,
+                local_baseline_guard_ms,
+            )[0]
+            metrics.append(fallback)
+            continue
+
+        delta = pre_level - post_level
+        start_threshold = pre_level - start_fraction * delta
+        end_threshold = post_level + end_fraction * delta
+        smoothed = moving_average(segment_currents, smooth_radius)
+
+        search_back_samples = max(1, int(round(local_baseline_window_ms / dt_ms)))
+        start_search_lo = max(0, local_peak_idx - search_back_samples)
+        candidate_starts = []
+        prev_above = True
+        for j in range(start_search_lo, local_peak_idx + 1):
+            cur_below = smoothed[j] <= start_threshold
+            if cur_below and prev_above:
+                candidate_starts.append(j)
+            prev_above = not cur_below
+        if not candidate_starts:
+            candidate_starts = [max(start_search_lo, local_peak_idx - search_back_samples // 2)]
+
+        end_local = local_peak_idx
+        found_end = False
+        while end_local < len(smoothed) - settle_samples:
+            if all(v <= end_threshold for v in smoothed[end_local:end_local + settle_samples]):
+                found_end = True
+                break
+            end_local += 1
+        if not found_end:
+            end_local = len(smoothed) - 1
+
+        if expected_duration_ms is not None:
+            start_local = min(
+                candidate_starts,
+                key=lambda j: abs(((segment_times[end_local] - segment_times[j]) + dt_ms) - expected_duration_ms),
+            )
+        else:
+            start_local = candidate_starts[0]
+
+        start_idx = i0 + start_local
+        end_idx = i0 + end_local
+        if end_idx <= start_idx:
+            end_idx = min(i1 - 1, start_idx + 1)
+
+        event_currents = currents_ua[start_idx:end_idx + 1]
+        mean_current_ua = sum(event_currents) / len(event_currents)
+        mean_excess_ua = sum((v - post_level) for v in event_currents) / len(event_currents)
+        duration_ms = times_ms[end_idx] - times_ms[start_idx] + dt_ms
+        charge_total_uc = sum(v * dt_ms / 1000.0 for v in event_currents)
+        charge_uc = sum((v - post_level) * dt_ms / 1000.0 for v in event_currents)
+        energy_total_uj = None if voltage_v is None else charge_total_uc * voltage_v
+        energy_uj = None if voltage_v is None else charge_uc * voltage_v
+
+        metrics.append(
+            PeakMetrics(
+                peak_number=peak_number,
+                window_start_ms=w0,
+                window_end_ms=w1,
+                peak_time_ms=peak_time_ms,
+                peak_current_ua=peak_current_ua,
+                baseline_current_ua=post_level,
+                threshold_current_ua=end_threshold,
+                start_ms=times_ms[start_idx],
+                end_ms=times_ms[end_idx],
+                duration_ms=duration_ms,
+                mean_current_ua=mean_current_ua,
+                mean_excess_current_ua=mean_excess_ua,
+                charge_total_uc=charge_total_uc,
+                charge_uc=charge_uc,
+                energy_total_uj=energy_total_uj,
+                energy_uj=energy_uj,
+            )
+        )
+
+    return metrics
+
+
+def compute_peak_metrics(
+    times_ms,
+    currents_ua,
+    peak_specs,
+    window_mode,
+    threshold_fraction,
+    voltage_v,
+    local_baseline_window_ms,
+    local_baseline_guard_ms,
+    transition_start_fraction,
+    transition_end_fraction,
+    transition_settle_ms,
+    transition_smooth_ms,
+    expected_duration_ms,
+):
+    if window_mode == "transition_window":
+        return compute_transition_window_metrics(
+            times_ms,
+            currents_ua,
+            peak_specs,
+            voltage_v,
+            transition_start_fraction,
+            transition_end_fraction,
+            local_baseline_window_ms,
+            local_baseline_guard_ms,
+            transition_settle_ms,
+            transition_smooth_ms,
+            expected_duration_ms,
+        )
+    return compute_positive_peak_metrics(
+        times_ms,
+        currents_ua,
+        peak_specs,
+        threshold_fraction,
+        voltage_v,
+        local_baseline_window_ms,
+        local_baseline_guard_ms,
+    )
 
 
 def write_peak_csv(path: Path, metrics):
@@ -421,20 +616,66 @@ def load_summary_json(path: Path | None):
     return json.loads(path.read_text())
 
 
+def load_config(path: Path | None):
+    if path is None or not path.exists():
+        return {}
+    return json.loads(path.read_text())
+
+
+def pick_value(cli_value, config, key, default=None):
+    if cli_value is not None:
+        return cli_value
+    if key in config and config[key] is not None:
+        return config[key]
+    return default
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--csv", required=True)
+    default_config_path = Path(__file__).with_name("analyze_power_peaks_config.json")
+    ap.add_argument("--config", default=str(default_config_path))
+    ap.add_argument("--csv")
     ap.add_argument("--summary-json")
     ap.add_argument("--out-dir")
-    ap.add_argument("--expected-peaks", type=int, default=6)
-    ap.add_argument("--period-ms", type=float, default=5000.0)
-    ap.add_argument("--threshold-fraction", type=float, default=0.25)
-    ap.add_argument("--zoom-half-window-ms", type=float, default=15.0)
-    ap.add_argument("--overlay-half-window-ms", type=float, default=5.0)
-    ap.add_argument("--voltage", type=float, default=None)
+    ap.add_argument("--expected-peaks", type=int)
+    ap.add_argument("--period-ms", type=float)
+    ap.add_argument("--threshold-fraction", type=float)
+    ap.add_argument("--zoom-half-window-ms", type=float)
+    ap.add_argument("--overlay-half-window-ms", type=float)
+    ap.add_argument("--voltage", type=float)
+    ap.add_argument("--local-baseline-window-ms", type=float)
+    ap.add_argument("--local-baseline-guard-ms", type=float)
+    ap.add_argument("--window-mode")
+    ap.add_argument("--transition-start-fraction", type=float)
+    ap.add_argument("--transition-end-fraction", type=float)
+    ap.add_argument("--transition-settle-ms", type=float)
+    ap.add_argument("--transition-smooth-ms", type=float)
     args = ap.parse_args()
 
-    csv_path = Path(args.csv).expanduser().resolve()
+    config_path = Path(args.config).expanduser().resolve() if args.config else None
+    config = load_config(config_path)
+
+    csv_value = pick_value(args.csv, config, "csv")
+    if not csv_value:
+        raise RuntimeError("Missing CSV path. Set it in --csv or in the config file.")
+
+    args.summary_json = pick_value(args.summary_json, config, "summary_json")
+    args.out_dir = pick_value(args.out_dir, config, "out_dir")
+    args.expected_peaks = int(pick_value(args.expected_peaks, config, "expected_peaks", 6))
+    args.period_ms = float(pick_value(args.period_ms, config, "period_ms", 5000.0))
+    args.threshold_fraction = float(pick_value(args.threshold_fraction, config, "threshold_fraction", 0.25))
+    args.zoom_half_window_ms = float(pick_value(args.zoom_half_window_ms, config, "zoom_half_window_ms", 15.0))
+    args.overlay_half_window_ms = float(pick_value(args.overlay_half_window_ms, config, "overlay_half_window_ms", 5.0))
+    args.voltage = pick_value(args.voltage, config, "voltage")
+    args.local_baseline_window_ms = float(pick_value(args.local_baseline_window_ms, config, "local_baseline_window_ms", 5.0))
+    args.local_baseline_guard_ms = float(pick_value(args.local_baseline_guard_ms, config, "local_baseline_guard_ms", 0.2))
+    args.window_mode = str(pick_value(args.window_mode, config, "window_mode", "positive_peak"))
+    args.transition_start_fraction = float(pick_value(args.transition_start_fraction, config, "transition_start_fraction", 0.3))
+    args.transition_end_fraction = float(pick_value(args.transition_end_fraction, config, "transition_end_fraction", 0.2))
+    args.transition_settle_ms = float(pick_value(args.transition_settle_ms, config, "transition_settle_ms", 20.0))
+    args.transition_smooth_ms = float(pick_value(args.transition_smooth_ms, config, "transition_smooth_ms", 5.0))
+
+    csv_path = Path(csv_value).expanduser().resolve()
     summary_path = Path(args.summary_json).expanduser().resolve() if args.summary_json else None
     out_dir = (
         Path(args.out_dir).expanduser().resolve()
@@ -453,10 +694,28 @@ def main():
             args.voltage = float(summary["energy_estimate"]["voltage_v"])
         except Exception:
             pass
+    expected_duration_ms = None
+    if summary and summary.get("cnn_latency_us"):
+        try:
+            expected_duration_ms = float(summary["cnn_latency_us"]["avg"]) / 1000.0
+        except Exception:
+            expected_duration_ms = None
 
     peak_specs = find_period_peaks(times_ms, currents_ua, args.expected_peaks, args.period_ms)
     metrics = compute_peak_metrics(
-        times_ms, currents_ua, peak_specs, args.threshold_fraction, args.voltage
+        times_ms,
+        currents_ua,
+        peak_specs,
+        args.window_mode,
+        args.threshold_fraction,
+        args.voltage,
+        args.local_baseline_window_ms,
+        args.local_baseline_guard_ms,
+        args.transition_start_fraction,
+        args.transition_end_fraction,
+        args.transition_settle_ms,
+        args.transition_smooth_ms,
+        expected_duration_ms,
     )
 
     write_peak_csv(out_dir / "peak_metrics.csv", metrics)
@@ -479,13 +738,21 @@ def main():
 
     report = {
         "csv": str(csv_path),
+        "config": str(config_path) if config_path else None,
         "summary_json": str(summary_path) if summary_path else None,
         "sample_interval_ms": dt_ms,
         "sample_rate_hz": sample_rate_hz,
         "total_duration_ms": times_ms[-1] - times_ms[0],
         "expected_peaks": args.expected_peaks,
         "detected_peaks": len(metrics),
+        "window_mode": args.window_mode,
         "threshold_fraction": args.threshold_fraction,
+        "local_baseline_window_ms": args.local_baseline_window_ms,
+        "local_baseline_guard_ms": args.local_baseline_guard_ms,
+        "transition_start_fraction": args.transition_start_fraction,
+        "transition_end_fraction": args.transition_end_fraction,
+        "transition_settle_ms": args.transition_settle_ms,
+        "transition_smooth_ms": args.transition_smooth_ms,
         "voltage_v": args.voltage,
         "avg_peak_duration_ms": avg_duration_ms,
         "avg_peak_mean_current_ua": avg_mean_current_ua,
@@ -504,6 +771,44 @@ def main():
             avg_duration_ms / (summary["cnn_latency_us"]["avg"] / 1000.0)
         )
 
+    if summary and summary.get("energy_estimate"):
+        energy = summary["energy_estimate"]
+        try:
+            report["summary_voltage_v"] = float(energy["voltage_v"])
+        except Exception:
+            pass
+        try:
+            report["summary_current_ma"] = float(energy["current_ma"])
+        except Exception:
+            pass
+        try:
+            report["summary_power_w"] = float(energy["power_w"])
+        except Exception:
+            pass
+        try:
+            report["summary_energy_per_inference_uj"] = float(energy["energy_per_inference_uj"])
+        except Exception:
+            pass
+
+        if report.get("summary_current_ma") is not None:
+            summary_current_ua = report["summary_current_ma"] * 1000.0
+            report["avg_peak_mean_current_vs_summary_current_ratio"] = (
+                avg_mean_current_ua / summary_current_ua
+            )
+            report["avg_peak_mean_excess_current_vs_summary_current_ratio"] = (
+                avg_mean_excess_ua / summary_current_ua
+            )
+
+        if report.get("summary_energy_per_inference_uj") is not None:
+            if avg_energy_total_uj is not None:
+                report["avg_peak_energy_total_vs_summary_ratio"] = (
+                    avg_energy_total_uj / report["summary_energy_per_inference_uj"]
+                )
+            if avg_energy_uj is not None:
+                report["avg_peak_excess_energy_vs_summary_ratio"] = (
+                    avg_energy_uj / report["summary_energy_per_inference_uj"]
+                )
+
     (out_dir / "peak_report.json").write_text(json.dumps(report, indent=2))
 
     print(json.dumps({
@@ -518,6 +823,11 @@ def main():
         "avg_peak_energy_total_uj": avg_energy_total_uj,
         "summary_cnn_latency_ms_avg": report.get("summary_cnn_latency_ms_avg"),
         "duration_vs_summary_ratio": report.get("duration_vs_summary_ratio"),
+        "summary_energy_per_inference_uj": report.get("summary_energy_per_inference_uj"),
+        "avg_peak_energy_total_vs_summary_ratio": report.get("avg_peak_energy_total_vs_summary_ratio"),
+        "avg_peak_excess_energy_vs_summary_ratio": report.get("avg_peak_excess_energy_vs_summary_ratio"),
+        "avg_peak_mean_current_vs_summary_current_ratio": report.get("avg_peak_mean_current_vs_summary_current_ratio"),
+        "avg_peak_mean_excess_current_vs_summary_current_ratio": report.get("avg_peak_mean_excess_current_vs_summary_current_ratio"),
         "out_dir": str(out_dir),
     }, indent=2))
 

@@ -161,6 +161,8 @@
 
 /* **** Globals **** */
 volatile uint32_t cnn_time; // Stopwatch
+volatile uint32_t cnn_timer_ticks; // Raw hardware timer ticks at CNN completion
+volatile uint32_t cnn_timer_cycles; // Timer source cycles at CNN completion
 volatile uint32_t fileCount = 0;
 
 int8_t micBuff[SAMPLE_SIZE];
@@ -427,6 +429,15 @@ int main(void)
     MXC_WUT_Init(MXC_WUT_PRES_1);
     //Config WUT
     MXC_WUT_Config(&cfg);
+
+    PR_INFO("BENCH,event=model_info,mode=live,input_elems=%u,output_elems=%u,macc=%u,ops=%u\n",
+            (unsigned int)SAMPLE_SIZE, (unsigned int)NUM_OUTPUTS, (unsigned int)8345344u,
+            (unsigned int)8402528u);
+    PR_INFO("BENCH,event=acquisition,mode=live,sample_rate_hz=%u,sample_count=%u,audio_window_ms=%u,chunk=%u,preamble=%u,threshold_high=%u,threshold_low=%u\n",
+            (unsigned int)SAMPLE_RATE, (unsigned int)SAMPLE_SIZE,
+            (unsigned int)(((uint32_t)SAMPLE_SIZE * 1000u) / SAMPLE_RATE), (unsigned int)CHUNK,
+            (unsigned int)PREAMBLE_SIZE, (unsigned int)THRESHOLD_HIGH,
+            (unsigned int)THRESHOLD_LOW);
 
     MXC_LP_EnableWUTAlarmWakeup();
     NVIC_EnableIRQ(WUT_IRQn);
@@ -819,6 +830,12 @@ if (!cnn_start()) {
                     PR_DEBUG("Detected word: %s (%0.1f%%)", keywords[out_class], probability);
                 }
                 PR_DEBUG("\n----------------------------------------- \n");
+                PR_INFO("BENCH,event=inference,run=%u,mode=live,cnn_us=%u,timer_ticks=%u,cycles=%u,pred_idx=%d,confidence_x10=%u,sample_counter=%u,word_counter=%u\n",
+                        (unsigned int)wordCounter, (unsigned int)cnn_time,
+                        (unsigned int)cnn_timer_ticks, (unsigned int)cnn_timer_cycles,
+                        (int)out_class,
+                        (unsigned int)((probability >= 0.0) ? (probability * 10.0 + 0.5) : 0u),
+                        (unsigned int)sampleCounter, (unsigned int)wordCounter);
 
                 Max = 0;
                 Min = 0;

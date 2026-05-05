@@ -128,6 +128,18 @@ def parse_cnn_time(line):
     return None
 
 
+def parse_bench_fields(line):
+    if not line.startswith("BENCH,"):
+        return None
+    out = {}
+    for part in line.split(",")[1:]:
+        if "=" not in part:
+            continue
+        key, value = part.split("=", 1)
+        out[key.strip()] = value.strip()
+    return out
+
+
 def parse_prediction(line):
     s = line.strip().lower()
     if "cnn time" in s or s.startswith("bench,"):
@@ -182,6 +194,9 @@ def collect_uart_live(ser, baud, timeout_s, out_dir):
     uart_rows = []
     inf_rows = []
     pred_rows = []
+    model_info = None
+    acquisition = None
+    saw_bench_inference = False
     start = time.time()
 
     with open(raw_path, "w") as raw:
@@ -205,8 +220,44 @@ def collect_uart_live(ser, baud, timeout_s, out_dir):
                 "raw": line,
             })
 
+            bench = parse_bench_fields(line)
+            if bench:
+                event = bench.get("event")
+                if event == "model_info":
+                    model_info = bench
+                elif event == "acquisition":
+                    acquisition = bench
+                elif event == "inference":
+                    saw_bench_inference = True
+                    row = {
+                        "time_iso": iso,
+                        "elapsed_s": elapsed,
+                        "raw": line,
+                    }
+                    for key in ("run", "cnn_us", "timer_ticks", "cycles", "pred_idx",
+                                "confidence_x10", "sample_counter", "word_counter"):
+                        if key in bench:
+                            row[key] = bench[key]
+                    inf_rows.append(row)
+                    pred_idx = bench.get("pred_idx", "")
+                    pred_label = pred_idx
+                    if pred_idx.lstrip("-").isdigit():
+                        idx = int(pred_idx)
+                        if 0 <= idx < len(KEYWORDS):
+                            pred_label = KEYWORDS[idx]
+                    pred = {
+                        "prediction": pred_label,
+                        "confidence": (float(bench["confidence_x10"]) / 10.0)
+                        if "confidence_x10" in bench else None,
+                        "raw": line.strip(),
+                        "time_iso": iso,
+                        "elapsed_s": elapsed,
+                    }
+                    pred_rows.append(pred)
+                    continue
+
             cnn = parse_cnn_time(line)
-            if cnn is not None:
+            if cnn is not None and not saw_bench_inference:
                 inf_rows.append({
                     "time_iso": iso,
                     "elapsed_s": elapsed,
@@ -215,11 +266,11 @@ def collect_uart_live(ser, baud, timeout_s, out_dir):
                 })
 
             pred = parse_prediction(line)
-            if pred:
+            if pred and not saw_bench_inference:
                 pred.update({"time_iso": iso, "elapsed_s": elapsed})
                 pred_rows.append(pred)
 
-    return uart_rows, inf_rows, pred_rows
+    return uart_rows, inf_rows, pred_rows, model_info, acquisition
 
 
 def add_derived(summary, args):
@@ -232,21 +283,22 @@ def add_derived(summary, args):
     summary["cnn_latency_ms_avg"] = avg_us / 1000.0
     summary["inferences_per_second_from_cnn_time"] = 1.0 / avg_s if avg_s > 0 else None
 
-    summary["sensor_acquisition"] = {
-        "sample_rate_hz": args.sample_rate,
-        "sample_count": args.sample_count,
-        "audio_window_s": args.sample_count / args.sample_rate,
-        "audio_window_ms": (args.sample_count / args.sample_rate) * 1000.0,
-    }
+    if "sensor_acquisition" not in summary:
+        summary["sensor_acquisition"] = {
+            "sample_rate_hz": args.sample_rate,
+            "sample_count": args.sample_count,
+            "audio_window_s": args.sample_count / args.sample_rate,
+            "audio_window_ms": (args.sample_count / args.sample_rate) * 1000.0,
+        }
     summary["estimated_end_to_end_lower_bound_ms"] = summary["sensor_acquisition"]["audio_window_ms"] + (avg_us / 1000.0)
 
-    summary["cycles_estimate"] = {
-        "clock_mhz": args.clock_mhz,
-        "cycles_per_inference_avg": avg_s * args.clock_mhz * 1e6,
-    }
+    cycles = summary.get("cycles")
+    if cycles:
+        summary["mac_ops_per_cycle"] = None
+        if args.mac_ops and cycles.get("avg"):
+            summary["mac_ops_per_cycle"] = args.mac_ops / cycles["avg"]
 
     if args.mac_ops:
-        summary["cycles_estimate"]["mac_ops_per_cycle"] = args.mac_ops / summary["cycles_estimate"]["cycles_per_inference_avg"]
         summary["compute_estimate"] = {
             "mac_ops_per_inference": args.mac_ops,
             "mac_ops_per_second": args.mac_ops / avg_s,
@@ -354,13 +406,16 @@ def main():
     with serial.Serial(args.port, args.baud, timeout=0.2) as ser:
         time.sleep(1.0)
         ser.reset_input_buffer()
-        uart_rows, inf_rows, pred_rows = collect_uart_live(ser, args.baud, args.timeout, out_dir)
+        uart_rows, inf_rows, pred_rows, model_info, acquisition = collect_uart_live(
+            ser, args.baud, args.timeout, out_dir
+        )
 
     write_csv(out_dir / "uart_events.csv", uart_rows)
     write_csv(out_dir / "inference_events.csv", inf_rows)
     write_csv(out_dir / "prediction_events.csv", pred_rows)
 
     cnn_us_values = [float(r["cnn_us"]) for r in inf_rows if "cnn_us" in r]
+    cycle_values = [float(r["cycles"]) for r in inf_rows if "cycles" in r]
     uart_tx_values = [r["uart_tx_time_s_est"] for r in uart_rows]
     pred_hist = {}
     for row in pred_rows:
@@ -374,8 +429,22 @@ def main():
         "num_prediction_events": len(pred_rows),
     }
     summary["prediction_histogram"] = pred_hist
+    summary["model_info"] = model_info
     summary["cnn_latency_us"] = stats(cnn_us_values)
+    summary["cycles"] = stats(cycle_values)
     summary["uart_transmission_time_estimate_s"] = stats(uart_tx_values)
+
+    if acquisition:
+        try:
+            summary["sensor_acquisition"] = {
+                "sample_rate_hz": float(acquisition["sample_rate_hz"]),
+                "sample_count": float(acquisition["sample_count"]),
+                "audio_window_s": float(acquisition["audio_window_ms"]) / 1000.0,
+                "audio_window_ms": float(acquisition["audio_window_ms"]),
+                "fw_reported": acquisition,
+            }
+        except (KeyError, ValueError):
+            pass
 
     add_derived(summary, args)
 
@@ -388,9 +457,12 @@ def main():
         "memory": summary.get("memory"),
         "static_sram_usage": summary.get("static_sram_usage"),
         "elf_size_bytes": summary.get("elf_size_bytes"),
+        "model_info": summary.get("model_info"),
         "cnn_latency_us": summary.get("cnn_latency_us"),
+        "cycles": summary.get("cycles"),
         "sensor_acquisition": summary.get("sensor_acquisition"),
         "estimated_end_to_end_lower_bound_ms": summary.get("estimated_end_to_end_lower_bound_ms"),
+        "mac_ops_per_cycle": summary.get("mac_ops_per_cycle"),
         "compute_estimate": summary.get("compute_estimate"),
         "energy_estimate": summary.get("energy_estimate"),
         "counts": summary.get("counts"),

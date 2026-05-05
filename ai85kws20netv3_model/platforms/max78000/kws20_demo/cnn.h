@@ -72,6 +72,8 @@ void softmax_shift_q17p14_q15(q31_t * vec_in, const uint16_t dim_vec, uint8_t in
 
 /* Stopwatch - holds the runtime when accelerator finishes */
 extern volatile uint32_t cnn_time;
+extern volatile uint32_t cnn_timer_ticks;
+extern volatile uint32_t cnn_timer_cycles;
 
 /* Custom memcopy routines used for weights and data */
 void memcpy32(uint32_t *dst, const uint32_t *src, int n);

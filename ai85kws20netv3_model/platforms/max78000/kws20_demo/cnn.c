@@ -54,8 +54,14 @@ void CNN_ISR(void)
 
     CNN_COMPLETE; // Signal that processing is complete
 #ifdef CNN_INFERENCE_TIMER
+    cnn_timer_ticks = MXC_TMR_GetCount(CNN_INFERENCE_TIMER);
+    cnn_timer_cycles = cnn_timer_ticks *
+                       (1u << ((CNN_INFERENCE_TIMER->ctrl0 & MXC_F_TMR_REVB_CTRL0_CLKDIV_A) >>
+                               MXC_F_TMR_REVB_CTRL0_CLKDIV_A_POS));
     cnn_time = MXC_TMR_SW_Stop(CNN_INFERENCE_TIMER);
 #else
+    cnn_timer_ticks = 0;
+    cnn_timer_cycles = 0;
     cnn_time = 1;
 #endif
 }
@@ -63,6 +69,8 @@ void CNN_ISR(void)
 int cnn_continue(void)
 {
     cnn_time = 0;
+    cnn_timer_ticks = 0;
+    cnn_timer_cycles = 0;
 
     *((volatile uint32_t *)0x50100000) |= 1; // Re-enable quadrant 0
 
@@ -562,6 +570,8 @@ int cnn_configure(void)
 int cnn_start(void)
 {
     cnn_time = 0;
+    cnn_timer_ticks = 0;
+    cnn_timer_cycles = 0;
 
     *((volatile uint32_t *)0x50100000) = 0x00100808; // Enable quadrant 0
     *((volatile uint32_t *)0x50500000) = 0x00100809; // Enable quadrant 1

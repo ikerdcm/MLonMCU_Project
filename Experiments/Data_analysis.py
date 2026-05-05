@@ -509,7 +509,7 @@ def detect_pulses(t_ms: np.ndarray, c_uA: np.ndarray,
         sl = c[s:e]
         ts = t[s:e]
         # ∫ I dt in uA*ms = nC. Energy(nJ) = V * nC. /1000 -> uJ. (V applied later.)
-        charge_nC = float(np.trapezoid(sl, ts)) if len(sl) > 1 else 0.0
+        charge_nC = float(np.trapz(sl, ts)) if len(sl) > 1 else 0.0
         pulses.append({
             "start_idx": int(s),
             "end_idx": int(e),

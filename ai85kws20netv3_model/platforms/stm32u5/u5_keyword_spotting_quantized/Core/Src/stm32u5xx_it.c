@@ -22,6 +22,7 @@
 #include "stm32u5xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "../../Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_audio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -201,3 +202,18 @@ void SysTick_Handler(void)
 /* USER CODE BEGIN 1 */
 
 /* USER CODE END 1 */
+
+/**
+  * @brief This function handles GPDMA1 Channel 6 global interrupt.
+  */
+void GPDMA1_Channel6_IRQHandler(void)
+{
+  BSP_AUDIO_IN_IRQHandler(0, AUDIO_IN_DEVICE_DIGITAL_MIC1);
+}
+
+
+/* MIC2 DMA IRQ */
+void GPDMA1_Channel0_IRQHandler(void)
+{
+  BSP_AUDIO_IN_IRQHandler(0, AUDIO_IN_DEVICE_DIGITAL_MIC2);
+}

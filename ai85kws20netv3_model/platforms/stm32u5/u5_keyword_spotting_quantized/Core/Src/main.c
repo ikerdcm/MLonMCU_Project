@@ -19,8 +19,14 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "app_x-cube-ai.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "mic_debug.h"
+#include "kws20_mode_config.h"
+#include "kws20_measure.h"
+#include "kws20_test.h"
+#include "kws20_live.h"
 
 /* USER CODE END Includes */
 
@@ -52,6 +58,10 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_ICACHE_Init(void);
 /* USER CODE BEGIN PFP */
+void mic2_poll_run_forever(void);
+void mic2_input_test_run_once(void);
+void audio_hw_probe_run_once(void);
+void audio_st_minimal_run_once(void);
 
 /* USER CODE END PFP */
 
@@ -92,7 +102,21 @@ int main(void)
   MX_ICACHE_Init();
   MX_X_CUBE_AI_Init();
   /* USER CODE BEGIN 2 */
-
+#if KWS20_CFG_APP_MODE == KWS20_CFG_APP_MODE_MIC2_POLL
+  mic2_poll_run_forever();
+#elif KWS20_CFG_APP_MODE == KWS20_CFG_APP_MODE_AUDIO_HW_PROBE
+  audio_hw_probe_run_once();
+#elif KWS20_CFG_APP_MODE == KWS20_CFG_APP_MODE_AUDIO_MINIMAL
+  audio_st_minimal_run_once();
+#elif KWS20_CFG_ENABLE_MEASURE
+#if KWS20_CFG_MEASURE_LIVE
+  kws20_live_run_once();
+#else
+  kws20_measure_run_once();
+#endif
+#else
+  kws20_live_run_once();
+#endif
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -101,7 +125,7 @@ int main(void)
   {
     /* USER CODE END WHILE */
 
-  MX_X_CUBE_AI_Process();
+  /* MX_X_CUBE_AI_Process(); */
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */

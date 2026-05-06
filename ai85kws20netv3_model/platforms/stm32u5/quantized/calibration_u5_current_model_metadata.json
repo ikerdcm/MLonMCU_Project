@@ -1,0 +1,61 @@
+{
+  "dataset_root": "/home/pascal/max78000/datasets/speech_commands_v2",
+  "model_path": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/models/kws20_v3_qat_true2d_nchw_allconst_folded_for_cubeai.onnx",
+  "detected_model_layout": "nchw",
+  "num_samples": 260,
+  "x_nhwc_shape": [
+    260,
+    128,
+    128,
+    1
+  ],
+  "x_nchw_shape": [
+    260,
+    1,
+    128,
+    128
+  ],
+  "labels": [
+    "librispeech",
+    "three",
+    "five",
+    "stop",
+    "zero",
+    "seven",
+    "six",
+    "two",
+    "wow",
+    "off",
+    "up",
+    "one",
+    "_silence_",
+    "on",
+    "happy",
+    "four",
+    "right",
+    "nine",
+    "eight",
+    "learn",
+    "cat",
+    "follow",
+    "backward",
+    "house",
+    "bed",
+    "tree",
+    "bird",
+    "marvin",
+    "down",
+    "sheila",
+    "no",
+    "yes",
+    "left",
+    "visual",
+    "go",
+    "forward",
+    "dog"
+  ],
+  "value_range": {
+    "min": -1.0,
+    "max": 0.9921875
+  }
+}

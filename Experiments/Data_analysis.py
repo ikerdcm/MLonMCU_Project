@@ -250,7 +250,7 @@ def pick_compare(catalog: Catalog) -> CompareSet | None:
 
     axis = _ask_select(
         "Compare across:",
-        ["word", "mode (online vs offline)", "platform", "model"],
+        ["word", "mode (online vs offline)", "platform", "model", "custom combo (platform + model)"],
     )
     if not axis:
         return None
@@ -386,6 +386,57 @@ def pick_compare(catalog: Catalog) -> CompareSet | None:
             cs.selections.append(
                 Selection(platform, m, mode, word, catalog[platform][m][mode][word])
             )
+
+    elif axis == "custom":
+        render_tree(catalog)
+        all_modes = sorted({mode for platform in catalog.values() for model in platform.values() for mode in model})
+        mode = _ask_select("Mode:", all_modes)
+        if not mode:
+            return None
+
+        common_words: set[str] = set()
+        first = True
+        for platform, models in catalog.items():
+            for model, modes in models.items():
+                if mode not in modes:
+                    continue
+                words = {word for word, entry in modes[mode].items() if entry.has_json or entry.has_csv}
+                if not words:
+                    continue
+                if first:
+                    common_words = set(words)
+                    first = False
+                else:
+                    common_words |= set(words)
+        if not common_words:
+            console.print("[red]No words available for this mode.[/]")
+            return None
+
+        word = _ask_select("Word:", sorted(common_words))
+        if not word:
+            return None
+
+        candidates: list[tuple[str, Selection]] = []
+        for platform, models in sorted(catalog.items()):
+            for model, modes in sorted(models.items()):
+                entry = modes.get(mode, {}).get(word)
+                if entry is None:
+                    continue
+                label = f"{platform} / {model} / {mode} / {word}"
+                candidates.append((label, Selection(platform, model, mode, word, entry)))
+
+        if len(candidates) < 2:
+            console.print("[red]Need at least 2 matching experiments for this word/mode.[/]")
+            return None
+
+        picked_labels = _ask_checkbox("Experiments to compare:", [label for label, _ in candidates])
+        if not picked_labels:
+            return None
+
+        picked_set = set(picked_labels)
+        for label, selection in candidates:
+            if label in picked_set:
+                cs.selections.append(selection)
 
     if len(cs.selections) < 2:
         console.print("[red]Comparison needs at least 2 items.[/]")

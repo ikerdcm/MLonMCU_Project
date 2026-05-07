@@ -17,7 +17,7 @@
  *   In live measurement mode, suppress non-essential status/prediction prints
  *   so the UART stream is mostly BENCH lines plus real errors.
  */
-#define KWS20_CFG_ENABLE_MEASURE 0
+#define KWS20_CFG_ENABLE_MEASURE 1
 #define KWS20_CFG_MEASURE_LIVE   0
 #define KWS20_CFG_LIVE_MEASURE_MINIMAL_OUTPUT 0
 

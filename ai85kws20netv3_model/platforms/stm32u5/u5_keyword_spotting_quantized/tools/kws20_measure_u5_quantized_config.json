@@ -9,8 +9,8 @@
   "mac_ops": 8915270.0,
   "sample_rate": 16000.0,
   "sample_count": 16384.0,
-  "voltage": null,
-  "current_ma": null,
+  "voltage": 3.28,
+  "current_ma": 22.36,
   "timeout": 30.0,
   "no_build": true
 }

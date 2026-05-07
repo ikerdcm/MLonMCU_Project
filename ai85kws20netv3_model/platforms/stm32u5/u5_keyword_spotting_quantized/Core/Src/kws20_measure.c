@@ -35,13 +35,13 @@ static void fill_measure_input(void)
     }
 }
 
-static int best_index(void)
+static int best_index(const ai_buffer *ai_output)
 {
     int best = 0;
-    float best_val = kws20_output_score(measure_output_data[0]);
+    float best_val = kws20_output_score(ai_output, 0, measure_output_data[0]);
 
     for (int i = 1; i < AI_NETWORK_OUT_1_SIZE; i++) {
-        float score = kws20_output_score(measure_output_data[i]);
+        float score = kws20_output_score(ai_output, i, measure_output_data[i]);
 
         if (score > best_val) {
             best = i;
@@ -124,7 +124,7 @@ void kws20_measure_run_once(void)
 
         cycles = end_cycles - start_cycles;
         time_us = (hclk > 0) ? (uint32_t)(((uint64_t)cycles * 1000000ULL) / hclk) : 0U;
-        pred = best_index();
+        pred = best_index(ai_output);
 
         printf("BENCH,event=inference,run=%lu,cnn_us=%lu,cycles=%lu,pred_idx=%d\r\n",
                (unsigned long)run,

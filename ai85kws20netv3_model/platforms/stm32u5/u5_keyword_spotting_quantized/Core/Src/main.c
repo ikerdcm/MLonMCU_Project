@@ -27,6 +27,7 @@
 #include "kws20_measure.h"
 #include "kws20_test.h"
 #include "kws20_live.h"
+#include <stdio.h>
 
 /* USER CODE END Includes */
 
@@ -98,6 +99,7 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
+
   MX_GPIO_Init();
   MX_ICACHE_Init();
   MX_X_CUBE_AI_Init();

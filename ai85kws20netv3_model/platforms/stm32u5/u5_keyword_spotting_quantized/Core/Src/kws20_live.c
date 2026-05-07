@@ -32,7 +32,7 @@
 /* Log shows premature triggers at avg=37-56 (background noise sustains 3 chunks
  * just above 35).  Real speech in the log reaches avg 200-450.  Setting 80
  * eliminates noise triggers while still firing well before the vowel peak. */
-#define DEMO_THRESHOLD_HIGH         80u
+#define DEMO_THRESHOLD_HIGH         40u
 #define DEMO_QUIET_THRESHOLD        20u
 #define DEMO_ARM_QUIET_CHUNKS       0u
 /* Scale PCM→int8.  The STM32U5 X-CUBE-AI float model expects the same int8-as-float
@@ -75,9 +75,13 @@ typedef struct {
     uint32_t warmup_samples;
 } live_capture_ctx_t;
 
+AI_ALIGNED(32)
 static ai_u8 activations[AI_NETWORK_DATA_ACTIVATIONS_SIZE];
 
+AI_ALIGNED(32)
 static kws20_input_elem_t ai_input_data[AI_NETWORK_IN_1_SIZE];
+
+AI_ALIGNED(32)
 static kws20_output_elem_t ai_output_data[AI_NETWORK_OUT_1_SIZE];
 
 static int16_t mic_dma[LIVE_DMA_SAMPLES];
@@ -132,6 +136,45 @@ static int32_t iabs32(int32_t x)
 
 static int16_t live_hpf_x1 = 0;
 static int32_t live_hpf_y1 = 0;
+
+static long score_to_norm_x1000(float score, float min_score, float max_score)
+{
+    float norm;
+
+    if (max_score <= min_score) {
+        return 0;
+    }
+
+    norm = (score - min_score) / (max_score - min_score);
+    if (norm < 0.0f) {
+        norm = 0.0f;
+    }
+    if (norm > 1.0f) {
+        norm = 1.0f;
+    }
+
+    return (long)(norm * 1000.0f + 0.5f);
+}
+
+static void output_score_range(const ai_buffer *ai_output, float *min_score, float *max_score)
+{
+    float min_v = kws20_output_score(ai_output, 0, ai_output_data[0]);
+    float max_v = min_v;
+
+    for (uint32_t i = 1; i < KWS_OUTPUT_SIZE; i++) {
+        float score = kws20_output_score(ai_output, i, ai_output_data[i]);
+
+        if (score < min_v) {
+            min_v = score;
+        }
+        if (score > max_v) {
+            max_v = score;
+        }
+    }
+
+    *min_score = min_v;
+    *max_score = max_v;
+}
 
 static const char *live_audio_device_desc(void)
 {
@@ -317,7 +360,6 @@ static int process_capture_sample(live_capture_ctx_t *ctx, int16_t raw)
                     ctx->post_trigger_samples = 0;
                     ctx->silence_run = 0;
                     ctx->high_run = 0;
-
                 }
             } else {
                 /* --- silence detection after keyword onset (like MAX78000 demo) --- */
@@ -336,6 +378,10 @@ static int process_capture_sample(live_capture_ctx_t *ctx, int16_t raw)
                 }
 
                 if (ctx->post_trigger_samples >= DEMO_POST_TRIGGER_SAMPLES) {
+#if !KWS20_LIVE_MINIMAL_OUTPUT_ENABLED
+                    printf("POST_TRIGGER_FULL post_samples=%lu\r\n",
+                           (unsigned long)ctx->post_trigger_samples);
+#endif
                     copy_demo_ring_to_live_i8(ctx->trigger_ring_index,
                                               DEMO_POST_TRIGGER_SAMPLES);
                     live_last_post_trigger_samples = DEMO_POST_TRIGGER_SAMPLES;
@@ -444,7 +490,7 @@ static void load_ai_input_from_i8(int transpose, int invert)
     }
 }
 
-static void print_top5(void)
+static void print_top5(const ai_buffer *ai_output, float min_score, float max_score)
 {
     int used[KWS_OUTPUT_SIZE];
     memset(used, 0, sizeof(used));
@@ -456,7 +502,7 @@ static void print_top5(void)
         float best_val = -3.4e38f;
 
         for (uint32_t i = 0; i < KWS_OUTPUT_SIZE; i++) {
-            float score = kws20_output_score(ai_output_data[i]);
+            float score = kws20_output_score(ai_output, i, ai_output_data[i]);
 
             if (!used[i] && score > best_val) {
                 best_val = score;
@@ -468,7 +514,7 @@ static void print_top5(void)
         printf("  %02lu %-8s %ld\r\n",
                (unsigned long)best,
                labels[best],
-               (long)(best_val * 1000.0f));
+               score_to_norm_x1000(best_val, min_score, max_score));
     }
 }
 
@@ -484,6 +530,8 @@ static void run_inference(ai_handle network,
     ai_i32 batch;
     uint32_t best = 0;
     float best_val;
+    float min_score;
+    float max_score;
 #if KWS20_LIVE_BENCH_ENABLED
     uint32_t start_cycles;
     uint32_t end_cycles;
@@ -513,15 +561,17 @@ static void run_inference(ai_handle network,
         return;
     }
 
-    best_val = kws20_output_score(ai_output_data[0]);
+    best_val = kws20_output_score(ai_output, 0, ai_output_data[0]);
     for (uint32_t i = 1; i < KWS_OUTPUT_SIZE; i++) {
-        float score = kws20_output_score(ai_output_data[i]);
+        float score = kws20_output_score(ai_output, i, ai_output_data[i]);
 
         if (score > best_val) {
             best_val = score;
             best = i;
         }
     }
+
+    output_score_range(ai_output, &min_score, &max_score);
 
 #if KWS20_LIVE_BENCH_ENABLED
     cycles = end_cycles - start_cycles;
@@ -542,11 +592,11 @@ static void run_inference(ai_handle network,
     printf("\r\nLIVE inference layout=%s invert=%d\r\n",
            (transpose != 0) ? "simple_transpose" : "raw",
            invert);
-    printf("best index: %lu predicted: %s logit_x1000: %ld\r\n",
+    printf("best index: %lu predicted: %s conf_x1000: %ld\r\n",
            (unsigned long)best,
            labels[best],
-           (long)(best_val * 1000.0f));
-    print_top5();
+           score_to_norm_x1000(best_val, min_score, max_score));
+    print_top5(ai_output, min_score, max_score);
 #endif
 }
 

@@ -216,6 +216,11 @@ def compute_transition_window_metrics(
         pre_level = percentile(pre_samples, 0.5) if pre_samples else percentile(segment_currents, 0.8)
         post_level = percentile(post_samples, 0.5) if post_samples else percentile(segment_currents, 0.2)
 
+        if pre_samples and pre_level <= post_level:
+            boosted_pre_level = percentile(pre_samples, 0.8)
+            if boosted_pre_level > post_level:
+                pre_level = boosted_pre_level
+
         if pre_level <= post_level:
             fallback = compute_positive_peak_metrics(
                 times_ms,
@@ -237,14 +242,17 @@ def compute_transition_window_metrics(
         search_back_samples = max(1, int(round(local_baseline_window_ms / dt_ms)))
         start_search_lo = max(0, local_peak_idx - search_back_samples)
         candidate_starts = []
-        prev_above = True
-        for j in range(start_search_lo, local_peak_idx + 1):
-            cur_below = smoothed[j] <= start_threshold
-            if cur_below and prev_above:
+        prev_below = smoothed[start_search_lo] <= start_threshold
+        for j in range(start_search_lo + 1, local_peak_idx + 1):
+            cur_above = smoothed[j] >= start_threshold
+            if cur_above and prev_below:
                 candidate_starts.append(j)
-            prev_above = not cur_below
+            prev_below = not cur_above
         if not candidate_starts:
-            candidate_starts = [max(start_search_lo, local_peak_idx - search_back_samples // 2)]
+            if expected_duration_ms is not None:
+                candidate_starts = [max(start_search_lo, local_peak_idx - int(round(expected_duration_ms / dt_ms)))]
+            else:
+                candidate_starts = [max(start_search_lo, local_peak_idx - search_back_samples // 2)]
 
         end_local = local_peak_idx
         found_end = False
@@ -263,6 +271,12 @@ def compute_transition_window_metrics(
             )
         else:
             start_local = candidate_starts[0]
+
+        if expected_duration_ms is not None:
+            detected_duration_ms = (segment_times[end_local] - segment_times[start_local]) + dt_ms
+            if detected_duration_ms < (0.85 * expected_duration_ms):
+                fallback_span = max(1, int(round(expected_duration_ms / dt_ms)))
+                start_local = max(0, end_local - fallback_span + 1)
 
         start_idx = i0 + start_local
         end_idx = i0 + end_local
@@ -352,8 +366,10 @@ def write_peak_csv(path: Path, metrics):
 
 def write_zoom_csvs(out_dir: Path, times_ms, currents_ua, metrics, zoom_half_window_ms):
     for m in metrics:
-        z0 = m.peak_time_ms - zoom_half_window_ms
-        z1 = m.peak_time_ms + zoom_half_window_ms
+        duration = max(0.0, m.end_ms - m.start_ms)
+        margin = max(zoom_half_window_ms * 0.25, duration * 0.15, 1.0)
+        z0 = min(m.peak_time_ms - zoom_half_window_ms, m.start_ms - margin)
+        z1 = max(m.peak_time_ms + zoom_half_window_ms, m.end_ms + margin)
         i0 = nearest_index(times_ms, z0)
         i1 = min(len(times_ms) - 1, nearest_index(times_ms, z1))
         out_path = out_dir / f"peak_{m.peak_number:02d}_zoom.csv"
@@ -362,6 +378,24 @@ def write_zoom_csvs(out_dir: Path, times_ms, currents_ua, metrics, zoom_half_win
             writer.writerow(["time_ms", "time_relative_ms", "current_ua"])
             for idx in range(i0, i1 + 1):
                 writer.writerow([times_ms[idx], times_ms[idx] - m.peak_time_ms, currents_ua[idx]])
+
+
+def cleanup_old_peak_outputs(out_dir: Path):
+    for pattern in (
+        "peak_*_zoom.csv",
+        "peak_*_zoom.svg",
+        "peak_*_zoom.png",
+    ):
+        for path in out_dir.glob(pattern):
+            path.unlink(missing_ok=True)
+    if plt is None:
+        for name in (
+            "full_trace.png",
+            "peak_overlay.png",
+            "peak_zoom_grid.png",
+            "peak_zoom.png",
+        ):
+            (out_dir / name).unlink(missing_ok=True)
 
 
 def downsample_pairs(xs, ys, max_points):
@@ -507,11 +541,24 @@ def save_full_plot(path: Path, times_ms, currents_ua, metrics):
 
 def save_zoom_grid(path: Path, times_ms, currents_ua, metrics, zoom_half_window_ms):
     if plt is None:
+        overlay_series = []
         for m in metrics:
-            z0 = m.peak_time_ms - zoom_half_window_ms
-            z1 = m.peak_time_ms + zoom_half_window_ms
+            duration = max(0.0, m.end_ms - m.start_ms)
+            margin = max(zoom_half_window_ms * 0.25, duration * 0.15, 1.0)
+            z0 = min(m.peak_time_ms - zoom_half_window_ms, m.start_ms - margin)
+            z1 = max(m.peak_time_ms + zoom_half_window_ms, m.end_ms + margin)
             i0 = nearest_index(times_ms, z0)
             i1 = min(len(times_ms) - 1, nearest_index(times_ms, z1))
+            overlay_series.append(
+                {
+                    "x": [t - m.peak_time_ms for t in times_ms[i0:i1 + 1]],
+                    "y": currents_ua[i0:i1 + 1],
+                    "label": f"peak {m.peak_number}",
+                    "color": ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b"][(m.peak_number - 1) % 6],
+                    "max_points": 2500,
+                    "stroke_width": 1.0,
+                }
+            )
             save_svg_multiline(
                 path.parent / f"peak_{m.peak_number:02d}_zoom.svg",
                 [{"x": times_ms[i0:i1 + 1], "y": currents_ua[i0:i1 + 1], "label": f"peak {m.peak_number}", "color": "#1f77b4", "max_points": 6000, "stroke_width": 1.0}],
@@ -526,6 +573,15 @@ def save_zoom_grid(path: Path, times_ms, currents_ua, metrics, zoom_half_window_
                 ],
                 legend=False,
             )
+        if overlay_series:
+            save_svg_multiline(
+                path.with_suffix(".svg"),
+                overlay_series,
+                "Peak zoom windows",
+                "Time relative to peak max (ms)",
+                "Current (uA)",
+                legend=True,
+            )
         return
     n = len(metrics)
     cols = 2
@@ -536,8 +592,10 @@ def save_zoom_grid(path: Path, times_ms, currents_ua, metrics, zoom_half_window_
         ax.axis("off")
 
     for ax, m in zip(axes.flat, metrics):
-        z0 = m.peak_time_ms - zoom_half_window_ms
-        z1 = m.peak_time_ms + zoom_half_window_ms
+        duration = max(0.0, m.end_ms - m.start_ms)
+        margin = max(zoom_half_window_ms * 0.25, duration * 0.15, 1.0)
+        z0 = min(m.peak_time_ms - zoom_half_window_ms, m.start_ms - margin)
+        z1 = max(m.peak_time_ms + zoom_half_window_ms, m.end_ms + margin)
         i0 = nearest_index(times_ms, z0)
         i1 = min(len(times_ms) - 1, nearest_index(times_ms, z1))
         xt = times_ms[i0:i1 + 1]
@@ -561,6 +619,9 @@ def save_zoom_grid(path: Path, times_ms, currents_ua, metrics, zoom_half_window_
         fig.legend(handles, labels, loc="upper right")
     fig.tight_layout()
     fig.savefig(path, dpi=300)
+    alt_path = path.with_name("peak_zoom.png")
+    if alt_path != path:
+        fig.savefig(alt_path, dpi=300)
     plt.close(fig)
 
 
@@ -616,6 +677,19 @@ def load_summary_json(path: Path | None):
     return json.loads(path.read_text())
 
 
+def summary_inference_count(summary):
+    if not summary:
+        return None
+    try:
+        value = summary.get("counts", {}).get("num_inference_events")
+        if value is None:
+            return None
+        value = int(value)
+        return value if value > 0 else None
+    except Exception:
+        return None
+
+
 def load_config(path: Path | None):
     if path is None or not path.exists():
         return {}
@@ -651,7 +725,6 @@ def main():
     ap.add_argument("--transition-settle-ms", type=float)
     ap.add_argument("--transition-smooth-ms", type=float)
     args = ap.parse_args()
-
     config_path = Path(args.config).expanduser().resolve() if args.config else None
     config = load_config(config_path)
 
@@ -687,8 +760,10 @@ def main():
     times_ms, currents_ua = read_power_csv(csv_path)
     dt_ms = times_ms[1] - times_ms[0]
     sample_rate_hz = 1000.0 / dt_ms
+    total_duration_ms = times_ms[-1] - times_ms[0]
 
     summary = load_summary_json(summary_path)
+    inferred_peaks = summary_inference_count(summary)
     if args.voltage is None and summary:
         try:
             args.voltage = float(summary["energy_estimate"]["voltage_v"])
@@ -718,6 +793,7 @@ def main():
         expected_duration_ms,
     )
 
+    cleanup_old_peak_outputs(out_dir)
     write_peak_csv(out_dir / "peak_metrics.csv", metrics)
     write_zoom_csvs(out_dir, times_ms, currents_ua, metrics, args.zoom_half_window_ms)
     save_full_plot(out_dir / "full_trace.png", times_ms, currents_ua, metrics)
@@ -742,9 +818,11 @@ def main():
         "summary_json": str(summary_path) if summary_path else None,
         "sample_interval_ms": dt_ms,
         "sample_rate_hz": sample_rate_hz,
-        "total_duration_ms": times_ms[-1] - times_ms[0],
+        "total_duration_ms": total_duration_ms,
         "expected_peaks": args.expected_peaks,
         "detected_peaks": len(metrics),
+        "period_ms": args.period_ms,
+        "summary_inference_events": inferred_peaks,
         "window_mode": args.window_mode,
         "threshold_fraction": args.threshold_fraction,
         "local_baseline_window_ms": args.local_baseline_window_ms,

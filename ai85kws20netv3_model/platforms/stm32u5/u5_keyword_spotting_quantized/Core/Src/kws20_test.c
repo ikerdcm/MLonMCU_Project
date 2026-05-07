@@ -63,6 +63,25 @@ static long safe_x1000(float x)
     return (long)(x * 1000.0f);
 }
 
+static long score_to_norm_x1000(float score, float min_score, float max_score)
+{
+    float norm;
+
+    if (max_score <= min_score) {
+        return 0;
+    }
+
+    norm = (score - min_score) / (max_score - min_score);
+    if (norm < 0.0f) {
+        norm = 0.0f;
+    }
+    if (norm > 1.0f) {
+        norm = 1.0f;
+    }
+
+    return (long)(norm * 1000.0f + 0.5f);
+}
+
 static const char *label_or_qmark(int idx)
 {
     if (idx >= 0 && idx < KWS_OUTPUT_SIZE) {
@@ -87,7 +106,27 @@ static void fill_input_from(const float *src, float scale, int transpose)
     }
 }
 
-static void print_top5(void)
+static void output_score_range(const ai_buffer *ai_output, float *min_score, float *max_score)
+{
+    float min_v = kws20_output_score(ai_output, 0, ai_output_data[0]);
+    float max_v = min_v;
+
+    for (int i = 1; i < KWS_OUTPUT_SIZE; i++) {
+        float score = kws20_output_score(ai_output, i, ai_output_data[i]);
+
+        if (score < min_v) {
+            min_v = score;
+        }
+        if (score > max_v) {
+            max_v = score;
+        }
+    }
+
+    *min_score = min_v;
+    *max_score = max_v;
+}
+
+static void print_top5(const ai_buffer *ai_output, float min_score, float max_score)
 {
     int used[KWS_OUTPUT_SIZE] = {0};
 
@@ -98,7 +137,7 @@ static void print_top5(void)
         float best_val = -3.4e38f;
 
         for (int i = 0; i < KWS_OUTPUT_SIZE; i++) {
-            float score = kws20_output_score(ai_output_data[i]);
+            float score = kws20_output_score(ai_output, i, ai_output_data[i]);
 
             if (!used[i] && score > best_val) {
                 best = i;
@@ -111,11 +150,11 @@ static void print_top5(void)
         printf("  %02d %-8s %ld\r\n",
                best,
                labels[best],
-               safe_x1000(best_val));
+               score_to_norm_x1000(best_val, min_score, max_score));
     }
 }
 
-static int find_rank(int target_idx)
+static int find_rank(const ai_buffer *ai_output, int target_idx)
 {
     if (target_idx < 0 || target_idx >= KWS_OUTPUT_SIZE) {
         return -1;
@@ -125,8 +164,8 @@ static int find_rank(int target_idx)
 
     for (int i = 0; i < KWS_OUTPUT_SIZE; i++) {
         if (i != target_idx &&
-            kws20_output_score(ai_output_data[i]) >
-                kws20_output_score(ai_output_data[target_idx])) {
+            kws20_output_score(ai_output, i, ai_output_data[i]) >
+                kws20_output_score(ai_output, target_idx, ai_output_data[target_idx])) {
             rank++;
         }
     }
@@ -185,10 +224,12 @@ static int run_one_with(const float *src, ai_handle network, ai_buffer *ai_input
     }
 
     int best = 0;
-    float best_val = kws20_output_score(ai_output_data[0]);
+    float best_val = kws20_output_score(ai_output, 0, ai_output_data[0]);
+    float min_score;
+    float max_score;
 
     for (int i = 1; i < KWS_OUTPUT_SIZE; i++) {
-        float score = kws20_output_score(ai_output_data[i]);
+        float score = kws20_output_score(ai_output, i, ai_output_data[i]);
 
         if (score > best_val) {
             best = i;
@@ -207,14 +248,16 @@ static int run_one_with(const float *src, ai_handle network, ai_buffer *ai_input
         result->best_val = best_val;
     }
 
+    output_score_range(ai_output, &min_score, &max_score);
+
     printf("\r\nscale x1e9: %ld  transpose: %d\r\n",
            (long)(scale * 1000000000.0f), transpose);
     printf("cycles: %lu  time_us: %lu\r\n",
            (unsigned long)cycles, (unsigned long)time_us);
-    printf("best index: %d  predicted: %s  logit_x1000: %ld\r\n",
-           best, labels[best], safe_x1000(best_val));
+    printf("best index: %d  predicted: %s  conf_x1000: %ld\r\n",
+           best, labels[best], score_to_norm_x1000(best_val, min_score, max_score));
 
-    print_top5();
+    print_top5(ai_output, min_score, max_score);
 
     return best;
 }
@@ -284,7 +327,7 @@ void kws20_test_run_once(void)
 
         predicted = run_one_with(cases[i].src, network, ai_input, ai_output,
                                  cases[i].scale, cases[i].transpose, &result);
-        expected_rank = find_rank(cases[i].expected_idx);
+        expected_rank = find_rank(ai_output, cases[i].expected_idx);
         total++;
 
         printf("expected: %s  reference: %s  expected_rank=%d\r\n",

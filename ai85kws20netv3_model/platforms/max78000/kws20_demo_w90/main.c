@@ -104,7 +104,9 @@
 //#define ENABLE_CLASSIFICATION_DISPLAY  // enables printing classification result
 #define ENABLE_SILENCE_DETECTION // Starts collecting only after avg > THRESHOLD_HIGH, otherwise starts from first sample
 #undef EIGHT_BIT_SAMPLES // samples from Mic or Test vectors are eight bit, otherwise 16-bit
+#if !KWS20_CFG_FORCE_OFFLINE
 #define ENABLE_MIC_PROCESSING // enables capturing Mic, otherwise a header file Test vector is used as sample data
+#endif
 #if !(KWS20_MEASURE_LIVE_ACTIVE && KWS20_CFG_MINIMAL_OUTPUT)
 #define ENABLE_MIC_DEBUG_STATUS // periodic mic/I2S status to avoid silent live-mode failures
 #endif
@@ -146,7 +148,7 @@
 #define SILENCE_COUNTER_THRESHOLD \
     20 // [>20] number of back to back CHUNK periods with avg < THRESHOLD_LOW to declare the end of a word
 #define PREAMBLE_SIZE 30 * CHUNK // how many samples before beginning of a keyword to include
-#define INFERENCE_THRESHOLD 49 // min probability (0-100) to accept an inference
+#define INFERENCE_THRESHOLD 27 // min probability (0-100) to accept an inference
 #endif
 
 #if defined(ENABLE_CODEC_MIC)
@@ -168,6 +170,12 @@
 #define PR_INFO(fmt, args...) \
     if (1)                    \
     printf(fmt, ##args)
+#endif
+
+#ifdef ENABLE_MIC_PROCESSING
+#define KWS20_BENCH_MODE_STR "live"
+#else
+#define KWS20_BENCH_MODE_STR "offline"
 #endif
 
 /* **** Globals **** */
@@ -478,10 +486,12 @@ int main(void)
     //Config WUT
     MXC_WUT_Config(&cfg);
 
-    PR_INFO("BENCH,event=model_info,mode=live,input_elems=%u,output_elems=%u,macc=%u,ops=%u\n",
+    PR_INFO("BENCH,event=model_info,mode=%s,input_elems=%u,output_elems=%u,macc=%u,ops=%u\n",
+            KWS20_BENCH_MODE_STR,
             (unsigned int)SAMPLE_SIZE, (unsigned int)NUM_OUTPUTS, (unsigned int)7207328u,
             (unsigned int)7259928u);
-    PR_INFO("BENCH,event=acquisition,mode=live,sample_rate_hz=%u,sample_count=%u,audio_window_ms=%u,chunk=%u,preamble=%u,threshold_high=%u,threshold_low=%u\n",
+    PR_INFO("BENCH,event=acquisition,mode=%s,sample_rate_hz=%u,sample_count=%u,audio_window_ms=%u,chunk=%u,preamble=%u,threshold_high=%u,threshold_low=%u\n",
+            KWS20_BENCH_MODE_STR,
             (unsigned int)SAMPLE_RATE, (unsigned int)SAMPLE_SIZE,
             (unsigned int)(((uint32_t)SAMPLE_SIZE * 1000u) / SAMPLE_RATE), (unsigned int)CHUNK,
             (unsigned int)PREAMBLE_SIZE, (unsigned int)THRESHOLD_HIGH,
@@ -668,6 +678,7 @@ int main(void)
             /* if enough samples are collected, start CNN */
             if (ai85Counter >= SAMPLE_SIZE) {
                 int16_t out_class = -1;
+                int16_t reported_class = -1;
                 double probability = 0;
 
                 /* end of the utterance */
@@ -845,15 +856,20 @@ int main(void)
 
                 /* Treat low confidence detections as unknown*/
                 if (!ret || out_class == NUM_OUTPUTS - 1) {
+                    reported_class = NUM_OUTPUTS - 1;
                     PR_INFO("Detected word: %s", "Unknown");
                 } else {
+                    reported_class = out_class;
                     PR_INFO("Detected word: %s (%0.1f%%)", keywords[out_class], probability);
                 }
                 PR_INFO("\n");
-                PR_INFO("BENCH,event=inference,run=%u,mode=live,cnn_us=%u,timer_ticks=%u,cycles=%u,pred_idx=%d,confidence_x10=%u,sample_counter=%u,word_counter=%u\n",
-                        (unsigned int)wordCounter, (unsigned int)cnn_time,
+                PR_INFO("BENCH,event=inference,run=%u,mode=%s,cnn_us=%u,timer_ticks=%u,cycles=%u,pred_idx=%d,pred_reported_idx=%d,accepted=%u,confidence_x10=%u,sample_counter=%u,word_counter=%u\n",
+                        (unsigned int)wordCounter, KWS20_BENCH_MODE_STR,
+                        (unsigned int)cnn_time,
                         (unsigned int)cnn_timer_ticks, (unsigned int)cnn_timer_cycles,
                         (int)out_class,
+                        (int)reported_class,
+                        (unsigned int)((ret && out_class != NUM_OUTPUTS - 1) ? 1u : 0u),
                         (unsigned int)((probability >= 0.0) ? (probability * 10.0 + 0.5) : 0u),
                         (unsigned int)sampleCounter, (unsigned int)wordCounter);
 

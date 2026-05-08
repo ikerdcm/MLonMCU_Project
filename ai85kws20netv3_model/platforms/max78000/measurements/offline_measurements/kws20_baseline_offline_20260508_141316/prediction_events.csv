@@ -1,0 +1,11 @@
+prediction,confidence,raw,time_iso,elapsed_s
+five,100.0,Detected word: FIVE (100.0%),2026-05-08T14:13:21.912,4.041359901428223
+five,100.0,"BENCH,event=inference,run=1,mode=offline,cnn_us=1850,timer_ticks=1129,cycles=72256,pred_idx=14,confidence_x10=1000,sample_counter=12800,word_counter=1",2026-05-08T14:13:21.925,4.054512023925781
+five,100.0,"BENCH,event=inference,run=1,mode=offline,cnn_us=1850,timer_ticks=1129,cycles=72256,pred_idx=14,confidence_x10=1000,sample_counter=12800,word_counter=1",2026-05-08T14:13:26.786,8.915613889694214
+five,100.0,"BENCH,event=inference,run=1,mode=offline,cnn_us=1850,timer_ticks=1130,cycles=72320,pred_idx=14,confidence_x10=1000,sample_counter=12800,word_counter=1",2026-05-08T14:13:32.164,14.293510437011719
+five,100.0,"BENCH,event=inference,run=1,mode=offline,cnn_us=1850,timer_ticks=1130,cycles=72320,pred_idx=14,confidence_x10=1000,sample_counter=12800,word_counter=1",2026-05-08T14:13:36.799,18.928534030914307
+five,100.0,"BENCH,event=inference,run=1,mode=offline,cnn_us=1850,timer_ticks=1130,cycles=72320,pred_idx=14,confidence_x10=1000,sample_counter=12800,word_counter=1",2026-05-08T14:13:40.667,22.797032117843628
+five,100.0,"BENCH,event=inference,run=1,mode=offline,cnn_us=1850,timer_ticks=1129,cycles=72256,pred_idx=14,confidence_x10=1000,sample_counter=12800,word_counter=1",2026-05-08T14:13:44.835,26.964516639709473
+five,100.0,"BENCH,event=inference,run=1,mode=offline,cnn_us=1850,timer_ticks=1130,cycles=72320,pred_idx=14,confidence_x10=1000,sample_counter=12800,word_counter=1",2026-05-08T14:13:48.665,30.795159339904785
+five,100.0,"BENCH,event=inference,run=1,mode=offline,cnn_us=1850,timer_ticks=1130,cycles=72320,pred_idx=14,confidence_x10=1000,sample_counter=12800,word_counter=1",2026-05-08T14:13:52.947,35.076220989227295
+five,100.0,"BENCH,event=inference,run=1,mode=offline,cnn_us=1850,timer_ticks=1129,cycles=72256,pred_idx=14,confidence_x10=1000,sample_counter=12800,word_counter=1",2026-05-08T14:13:57.312,39.441476345062256

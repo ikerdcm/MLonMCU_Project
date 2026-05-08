@@ -1,0 +1,11 @@
+time_iso,elapsed_s,cnn_us,raw,run,timer_ticks,cycles,pred_idx,confidence_x10,sample_counter,word_counter
+2026-05-08T14:13:21.908,4.037394285202026,1850,CNN Time: 1850 us,,,,,,,
+2026-05-08T14:13:21.925,4.054512023925781,1850,"BENCH,event=inference,run=1,mode=offline,cnn_us=1850,timer_ticks=1129,cycles=72256,pred_idx=14,confidence_x10=1000,sample_counter=12800,word_counter=1",1,1129,72256,14,1000,12800,1
+2026-05-08T14:13:26.786,8.915613889694214,1850,"BENCH,event=inference,run=1,mode=offline,cnn_us=1850,timer_ticks=1129,cycles=72256,pred_idx=14,confidence_x10=1000,sample_counter=12800,word_counter=1",1,1129,72256,14,1000,12800,1
+2026-05-08T14:13:32.164,14.293510437011719,1850,"BENCH,event=inference,run=1,mode=offline,cnn_us=1850,timer_ticks=1130,cycles=72320,pred_idx=14,confidence_x10=1000,sample_counter=12800,word_counter=1",1,1130,72320,14,1000,12800,1
+2026-05-08T14:13:36.799,18.928534030914307,1850,"BENCH,event=inference,run=1,mode=offline,cnn_us=1850,timer_ticks=1130,cycles=72320,pred_idx=14,confidence_x10=1000,sample_counter=12800,word_counter=1",1,1130,72320,14,1000,12800,1
+2026-05-08T14:13:40.667,22.797032117843628,1850,"BENCH,event=inference,run=1,mode=offline,cnn_us=1850,timer_ticks=1130,cycles=72320,pred_idx=14,confidence_x10=1000,sample_counter=12800,word_counter=1",1,1130,72320,14,1000,12800,1
+2026-05-08T14:13:44.835,26.964516639709473,1850,"BENCH,event=inference,run=1,mode=offline,cnn_us=1850,timer_ticks=1129,cycles=72256,pred_idx=14,confidence_x10=1000,sample_counter=12800,word_counter=1",1,1129,72256,14,1000,12800,1
+2026-05-08T14:13:48.665,30.795159339904785,1850,"BENCH,event=inference,run=1,mode=offline,cnn_us=1850,timer_ticks=1130,cycles=72320,pred_idx=14,confidence_x10=1000,sample_counter=12800,word_counter=1",1,1130,72320,14,1000,12800,1
+2026-05-08T14:13:52.947,35.076220989227295,1850,"BENCH,event=inference,run=1,mode=offline,cnn_us=1850,timer_ticks=1130,cycles=72320,pred_idx=14,confidence_x10=1000,sample_counter=12800,word_counter=1",1,1130,72320,14,1000,12800,1
+2026-05-08T14:13:57.312,39.441476345062256,1850,"BENCH,event=inference,run=1,mode=offline,cnn_us=1850,timer_ticks=1129,cycles=72256,pred_idx=14,confidence_x10=1000,sample_counter=12800,word_counter=1",1,1129,72256,14,1000,12800,1

@@ -1,10 +1,10 @@
 {
-  "mode": "live",
+  "mode": "offline",
   "project": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/max78000/kws20_demo",
   "elf": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/max78000/kws20_demo/build/max78000.elf",
   "port": "/dev/ttyACM0",
   "baud": 115200,
-  "timeout": 30.0,
+  "timeout": 40.0,
   "clock_mhz": 100.0,
   "sample_rate": 16000.0,
   "sample_count": 16384.0,

@@ -189,6 +189,13 @@ def load_config(path):
     return cfg_path, data
 
 
+def slugify_variant(value):
+    text = str(value).strip().lower()
+    text = re.sub(r"[^a-z0-9]+", "_", text)
+    text = re.sub(r"_+", "_", text).strip("_")
+    return text or "unnamed"
+
+
 def collect_uart_live(ser, baud, timeout_s, out_dir):
     raw_path = out_dir / "serial_raw.log"
     uart_rows = []
@@ -238,11 +245,12 @@ def collect_uart_live(ser, baud, timeout_s, out_dir):
                             "raw": line,
                         }
                         for key in ("run", "cnn_us", "timer_ticks", "cycles", "pred_idx",
+                                    "pred_reported_idx", "accepted",
                                     "confidence_x10", "sample_counter", "word_counter"):
                             if key in bench:
                                 row[key] = bench[key]
                         inf_rows.append(row)
-                        pred_idx = bench.get("pred_idx", "")
+                        pred_idx = bench.get("pred_reported_idx", bench.get("pred_idx", ""))
                         pred_label = pred_idx
                         if pred_idx.lstrip("-").isdigit():
                             idx = int(pred_idx)
@@ -289,14 +297,17 @@ def add_derived(summary, args):
     summary["cnn_latency_ms_avg"] = avg_us / 1000.0
     summary["inferences_per_second_from_cnn_time"] = 1.0 / avg_s if avg_s > 0 else None
 
-    if "sensor_acquisition" not in summary:
-        summary["sensor_acquisition"] = {
-            "sample_rate_hz": args.sample_rate,
-            "sample_count": args.sample_count,
-            "audio_window_s": args.sample_count / args.sample_rate,
-            "audio_window_ms": (args.sample_count / args.sample_rate) * 1000.0,
-        }
-    summary["estimated_end_to_end_lower_bound_ms"] = summary["sensor_acquisition"]["audio_window_ms"] + (avg_us / 1000.0)
+    if args.mode == "live":
+        if "sensor_acquisition" not in summary:
+            summary["sensor_acquisition"] = {
+                "sample_rate_hz": args.sample_rate,
+                "sample_count": args.sample_count,
+                "audio_window_s": args.sample_count / args.sample_rate,
+                "audio_window_ms": (args.sample_count / args.sample_rate) * 1000.0,
+            }
+        summary["estimated_end_to_end_lower_bound_ms"] = (
+            summary["sensor_acquisition"]["audio_window_ms"] + (avg_us / 1000.0)
+        )
 
     cycles = summary.get("cycles")
     if cycles:
@@ -347,22 +358,25 @@ def main():
     ap.add_argument("--voltage", type=float, default=config.get("voltage"))
     ap.add_argument("--current-ma", type=float, default=config.get("current_ma"))
     ap.add_argument("--board", default=config.get("board", "FTHR_RevA"))
+    ap.add_argument("--variant-name", default=config.get("variant_name"))
     ap.add_argument("--maxim-path", default=config.get("maxim_path"))
     ap.add_argument("--openocd-root", default=config.get("openocd_root"))
     ap.add_argument("--no-build", action="store_true", default=bool(config.get("no_build", True)))
     ap.add_argument("--no-flash", action="store_true", default=bool(config.get("no_flash", True)))
     args = ap.parse_args()
-    if args.mode != "live":
-        raise RuntimeError("MAX78000 measurement currently supports only --mode live.")
-
     project = Path(args.project).expanduser().resolve()
-    repo_measure_root = Path(__file__).resolve().parent.parent / "measurements" / "live_measurements"
-    out_dir = repo_measure_root / datetime.now().strftime("kws20_live_%Y%m%d_%H%M%S")
+    variant_name = args.variant_name or project.name
+    variant_slug = slugify_variant(variant_name)
+    measure_subdir = "live_measurements" if args.mode == "live" else "offline_measurements"
+    prefix = f"kws20_{variant_slug}_{args.mode}"
+    repo_measure_root = Path(__file__).resolve().parent.parent / "measurements" / measure_subdir
+    out_dir = repo_measure_root / datetime.now().strftime(f"{prefix}_%Y%m%d_%H%M%S")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     summary = {
         "timestamp": datetime.now().isoformat(),
         "mode": args.mode,
+        "variant_name": variant_name,
         "config": str(Path(args.config).expanduser().resolve()),
         "project": str(project),
         "port": args.port,

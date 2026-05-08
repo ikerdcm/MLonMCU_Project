@@ -1,0 +1,19 @@
+{
+  "mode": "live",
+  "project": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/max78000/kws20_demo_w90",
+  "elf": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/max78000/kws20_demo_w90/build/max78000.elf",
+  "port": "/dev/ttyACM0",
+  "baud": 115200,
+  "timeout": 30.0,
+  "clock_mhz": 100.0,
+  "sample_rate": 16000.0,
+  "sample_count": 16384.0,
+  "board": "FTHR_RevA",
+  "mac_ops": 7207328.0,
+  "voltage": 3.7,
+  "current_ma": 36.69,
+  "maxim_path": null,
+  "openocd_root": "/home/pascal/max78000/ai8x-synthesis/openocd",
+  "no_build": true,
+  "no_flash": true
+}

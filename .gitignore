@@ -252,3 +252,14 @@ ai85kws20netv3_model/platforms/stm32u5/u5_keyword_spotting/Core/Inc/kws_max78000
 
 chatgpt_log.txt
 .claude/settings.json
+ai85kws20netv3_model/platforms/max78000/kws20_demo_w90/Utility/requirements.txt
+ai85kws20netv3_model/platforms/max78000/kws20_demo_w90/TFT/fthr/bmp/template.txt
+ai85kws20netv3_model/platforms/max78000/kws20_demo_w90/Resources/KWS_Demo_flowchart.vsd
+ai85kws20netv3_model/platforms/max78000/kws20_demo_w90/.vscode/flash.gdb
+ai85kws20netv3_model/platforms/max78000/kws20_demo_w90/.settings/org.eclipse.cdt.core.prefs
+ai85kws20netv3_model/platforms/max78000/kws20_demo_w90/.settings/org.eclipse.cdt.codan.core.prefs
+
+ai85kws20netv3_model/platforms/max78000/kws20_demo_w90/.project
+ai85kws20netv3_model/platforms/max78000/kws20_demo_w90/.cproject
+train_log.txt
+log.txt

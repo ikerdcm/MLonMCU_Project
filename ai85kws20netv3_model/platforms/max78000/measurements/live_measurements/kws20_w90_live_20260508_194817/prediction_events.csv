@@ -1,0 +1,13 @@
+prediction,confidence,raw,time_iso,elapsed_s
+unknown,,Detected word: Unknown,2026-05-08T19:48:23.326,4.563301086425781
+unknown,15.4,"BENCH,event=inference,run=1,mode=live,cnn_us=1711,timer_ticks=1045,cycles=66880,pred_idx=15,pred_reported_idx=20,accepted=0,confidence_x10=154,sample_counter=42624,word_counter=1",2026-05-08T19:48:23.341,4.57825231552124
+unknown,50.4,"BENCH,event=inference,run=2,mode=live,cnn_us=1711,timer_ticks=1044,cycles=66816,pred_idx=14,pred_reported_idx=20,accepted=0,confidence_x10=504,sample_counter=55424,word_counter=2",2026-05-08T19:48:24.170,5.407736539840698
+unknown,4.8,"BENCH,event=inference,run=3,mode=live,cnn_us=1711,timer_ticks=1044,cycles=66816,pred_idx=8,pred_reported_idx=20,accepted=0,confidence_x10=48,sample_counter=66048,word_counter=3",2026-05-08T19:48:24.861,6.098923444747925
+unknown,51.6,"BENCH,event=inference,run=4,mode=live,cnn_us=1711,timer_ticks=1044,cycles=66816,pred_idx=14,pred_reported_idx=20,accepted=0,confidence_x10=516,sample_counter=80640,word_counter=4",2026-05-08T19:48:25.803,7.041130304336548
+unknown,29.9,"BENCH,event=inference,run=5,mode=live,cnn_us=1711,timer_ticks=1045,cycles=66880,pred_idx=13,pred_reported_idx=20,accepted=0,confidence_x10=299,sample_counter=140160,word_counter=5",2026-05-08T19:48:29.572,10.809718608856201
+unknown,7.0,"BENCH,event=inference,run=6,mode=live,cnn_us=1711,timer_ticks=1045,cycles=66880,pred_idx=9,pred_reported_idx=20,accepted=0,confidence_x10=70,sample_counter=147072,word_counter=6",2026-05-08T19:48:30.031,11.268178939819336
+unknown,10.0,"BENCH,event=inference,run=7,mode=live,cnn_us=1711,timer_ticks=1045,cycles=66880,pred_idx=14,pred_reported_idx=20,accepted=0,confidence_x10=100,sample_counter=174976,word_counter=7",2026-05-08T19:48:31.810,13.047568559646606
+unknown,31.8,"BENCH,event=inference,run=8,mode=live,cnn_us=1711,timer_ticks=1045,cycles=66880,pred_idx=13,pred_reported_idx=20,accepted=0,confidence_x10=318,sample_counter=220288,word_counter=8",2026-05-08T19:48:34.686,15.923985481262207
+unknown,4.9,"BENCH,event=inference,run=9,mode=live,cnn_us=1711,timer_ticks=1044,cycles=66816,pred_idx=3,pred_reported_idx=20,accepted=0,confidence_x10=49,sample_counter=228864,word_counter=9",2026-05-08T19:48:35.248,16.485417127609253
+unknown,19.8,"BENCH,event=inference,run=10,mode=live,cnn_us=1711,timer_ticks=1044,cycles=66816,pred_idx=11,pred_reported_idx=20,accepted=0,confidence_x10=198,sample_counter=264448,word_counter=10",2026-05-08T19:48:37.511,18.748361587524414
+unknown,19.5,"BENCH,event=inference,run=11,mode=live,cnn_us=1711,timer_ticks=1045,cycles=66880,pred_idx=11,pred_reported_idx=20,accepted=0,confidence_x10=195,sample_counter=291712,word_counter=11",2026-05-08T19:48:39.250,20.487903594970703

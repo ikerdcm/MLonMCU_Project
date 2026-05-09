@@ -1,0 +1,18 @@
+{
+  "csv": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/Experiments/PWR Consumption/MAX78000/ai85kws20netv3_model_v1/online/on.csv",
+  "summary_json": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/Experiments/General Profiling/MAX78000/ai85kws20netv3_model_v1/online/on.json",
+  "out_dir": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/Experiments/PWR Consumption/MAX78000/ai85kws20netv3_model_v1/online/on_peak_analysis",
+  "expected_peaks": 6,
+  "period_ms": 5000.0,
+  "window_mode": "positive_peak",
+  "threshold_fraction": 0.20,
+  "local_baseline_window_ms": 5.0,
+  "local_baseline_guard_ms": 1.0,
+  "transition_start_fraction": 0.20,
+  "transition_end_fraction": 0.20,
+  "transition_settle_ms": 5.0,
+  "transition_smooth_ms": 1.0,
+  "zoom_half_window_ms": 1.0,
+  "overlay_half_window_ms": 1.0,
+  "voltage": 3.28
+}

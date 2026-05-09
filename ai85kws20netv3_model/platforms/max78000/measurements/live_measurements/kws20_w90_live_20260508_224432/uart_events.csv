@@ -1,0 +1,15 @@
+time_iso,elapsed_s,bytes,uart_tx_time_s_est,raw
+2026-05-08T22:44:34.552,1.4039306640625,22,0.0019097222222222222,Detected word: Unknown
+2026-05-08T22:44:34.567,1.419144868850708,179,0.015538194444444445,"BENCH,event=inference,run=3,mode=live,cnn_us=1711,timer_ticks=1045,cycles=66880,pred_idx=20,pred_reported_idx=20,accepted=0,confidence_x10=767,sample_counter=233088,word_counter=3"
+2026-05-08T22:44:35.486,2.338454008102417,28,0.0024305555555555556,Detected word: RIGHT (35.3%)
+2026-05-08T22:44:35.502,2.35386323928833,177,0.015364583333333333,"BENCH,event=inference,run=4,mode=live,cnn_us=1711,timer_ticks=1045,cycles=66880,pred_idx=3,pred_reported_idx=3,accepted=1,confidence_x10=353,sample_counter=247552,word_counter=4"
+2026-05-08T22:44:36.952,3.803826332092285,26,0.0022569444444444442,Detected word: TWO (42.0%)
+2026-05-08T22:44:36.967,3.8192508220672607,179,0.015538194444444445,"BENCH,event=inference,run=5,mode=live,cnn_us=1711,timer_ticks=1045,cycles=66880,pred_idx=11,pred_reported_idx=11,accepted=1,confidence_x10=420,sample_counter=270464,word_counter=5"
+2026-05-08T22:44:38.353,5.204973936080933,25,0.002170138888888889,Detected word: GO (28.9%)
+2026-05-08T22:44:38.367,5.219714641571045,177,0.015364583333333333,"BENCH,event=inference,run=6,mode=live,cnn_us=1711,timer_ticks=1045,cycles=66880,pred_idx=5,pred_reported_idx=5,accepted=1,confidence_x10=289,sample_counter=292352,word_counter=6"
+2026-05-08T22:44:39.729,6.5812036991119385,27,0.00234375,Detected word: LEFT (43.7%)
+2026-05-08T22:44:39.746,6.59881854057312,177,0.015364583333333333,"BENCH,event=inference,run=7,mode=live,cnn_us=1711,timer_ticks=1045,cycles=66880,pred_idx=2,pred_reported_idx=2,accepted=1,confidence_x10=437,sample_counter=313856,word_counter=7"
+2026-05-08T22:44:42.355,9.207074880599976,22,0.0019097222222222222,Detected word: Unknown
+2026-05-08T22:44:42.370,9.222824573516846,179,0.015538194444444445,"BENCH,event=inference,run=8,mode=live,cnn_us=1711,timer_ticks=1045,cycles=66880,pred_idx=20,pred_reported_idx=20,accepted=0,confidence_x10=372,sample_counter=355200,word_counter=8"
+2026-05-08T22:44:45.375,12.226977348327637,22,0.0019097222222222222,Detected word: Unknown
+2026-05-08T22:44:45.390,12.241946458816528,179,0.015538194444444445,"BENCH,event=inference,run=9,mode=live,cnn_us=1711,timer_ticks=1044,cycles=66816,pred_idx=20,pred_reported_idx=20,accepted=0,confidence_x10=692,sample_counter=402816,word_counter=9"

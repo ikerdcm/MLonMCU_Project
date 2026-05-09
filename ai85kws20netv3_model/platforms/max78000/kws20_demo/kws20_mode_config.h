@@ -5,7 +5,7 @@
 #define KWS20_CFG_ENABLE_MEASURE 1
 
 /* 0 = offline / fixed test vector measurement, 1 = live microphone measurement */
-#define KWS20_CFG_MEASURE_LIVE 0
+#define KWS20_CFG_MEASURE_LIVE 1
 
 /* 1 = suppress noisy live debug prints, keep BENCH + prediction output */
 #define KWS20_CFG_MINIMAL_OUTPUT 1
@@ -14,6 +14,6 @@
 #define KWS20_CFG_ENABLE_AI_INPUT_DUMP 0
 
 /* 0 = microphone live path, 1 = offline fixed-vector path */
-#define KWS20_CFG_FORCE_OFFLINE 1
+#define KWS20_CFG_FORCE_OFFLINE 0
 
 #endif

@@ -139,7 +139,7 @@
 #define SILENCE_COUNTER_THRESHOLD \
     20 // [>20] number of back to back CHUNK periods with avg < THRESHOLD_LOW to declare the end of a word
 #define PREAMBLE_SIZE 30 * CHUNK // how many samples before beginning of a keyword to include
-#define INFERENCE_THRESHOLD 91 // min probability (0-100) to accept an inference
+#define INFERENCE_THRESHOLD 27 // min probability (0-100) to accept an inference
 #else
 #define SAMPLE_SCALE_FACTOR \
     1 // multiplies 16-bit samples by this scale factor before converting to 8-bit

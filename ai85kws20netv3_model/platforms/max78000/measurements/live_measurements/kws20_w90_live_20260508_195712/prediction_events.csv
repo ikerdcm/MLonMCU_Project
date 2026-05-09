@@ -1,0 +1,10 @@
+prediction,confidence,raw,time_iso,elapsed_s
+four,33.2,Detected word: FOUR (33.2%),2026-05-08T19:57:14.230,0.529118537902832
+four,33.2,"BENCH,event=inference,run=31,mode=live,cnn_us=1711,timer_ticks=1044,cycles=66816,pred_idx=13,pred_reported_idx=13,accepted=1,confidence_x10=332,sample_counter=786816,word_counter=31",2026-05-08T19:57:14.250,0.5487661361694336
+two,35.2,"BENCH,event=inference,run=32,mode=live,cnn_us=1711,timer_ticks=1045,cycles=66880,pred_idx=11,pred_reported_idx=11,accepted=1,confidence_x10=352,sample_counter=826752,word_counter=32",2026-05-08T19:57:16.783,3.0824429988861084
+unknown,19.5,"BENCH,event=inference,run=33,mode=live,cnn_us=1711,timer_ticks=1045,cycles=66880,pred_idx=11,pred_reported_idx=20,accepted=0,confidence_x10=195,sample_counter=839552,word_counter=33",2026-05-08T19:57:17.613,3.911616086959839
+unknown,16.7,"BENCH,event=inference,run=34,mode=live,cnn_us=1711,timer_ticks=1045,cycles=66880,pred_idx=13,pred_reported_idx=20,accepted=0,confidence_x10=167,sample_counter=920448,word_counter=34",2026-05-08T19:57:22.727,9.026416063308716
+unknown,62.3,"BENCH,event=inference,run=35,mode=live,cnn_us=1711,timer_ticks=1044,cycles=66816,pred_idx=20,pred_reported_idx=20,accepted=0,confidence_x10=623,sample_counter=933248,word_counter=35",2026-05-08T19:57:23.556,9.85477066040039
+unknown,20.7,"BENCH,event=inference,run=36,mode=live,cnn_us=1711,timer_ticks=1044,cycles=66816,pred_idx=15,pred_reported_idx=20,accepted=0,confidence_x10=207,sample_counter=949376,word_counter=36",2026-05-08T19:57:24.594,10.893481016159058
+unknown,17.1,"BENCH,event=inference,run=37,mode=live,cnn_us=1711,timer_ticks=1044,cycles=66816,pred_idx=2,pred_reported_idx=20,accepted=0,confidence_x10=171,sample_counter=962432,word_counter=37",2026-05-08T19:57:25.439,11.737678289413452
+two,36.1,"BENCH,event=inference,run=38,mode=live,cnn_us=1711,timer_ticks=1045,cycles=66880,pred_idx=11,pred_reported_idx=11,accepted=1,confidence_x10=361,sample_counter=1019776,word_counter=38",2026-05-08T19:57:29.072,15.371133089065552

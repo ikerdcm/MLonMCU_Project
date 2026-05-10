@@ -83,6 +83,38 @@ def find_period_peaks(times_ms, currents_ua, expected_peaks, period_ms):
     return peaks
 
 
+def find_target_peaks(times_ms, currents_ua, peak_times_ms, search_half_window_ms):
+    peaks = []
+    if not peak_times_ms:
+        return peaks
+
+    ordered_targets = sorted(float(v) for v in peak_times_ms)
+    total_start = times_ms[0]
+    total_end = times_ms[-1]
+
+    for i, target_ms in enumerate(ordered_targets):
+        if i == 0:
+            w0 = total_start
+        else:
+            w0 = 0.5 * (ordered_targets[i - 1] + target_ms)
+
+        if i == len(ordered_targets) - 1:
+            w1 = total_end
+        else:
+            w1 = 0.5 * (target_ms + ordered_targets[i + 1])
+
+        search_lo = max(w0, target_ms - search_half_window_ms)
+        search_hi = min(w1, target_ms + search_half_window_ms)
+        i0 = nearest_index(times_ms, search_lo)
+        i1 = min(len(times_ms) - 1, nearest_index(times_ms, search_hi))
+        if i1 <= i0:
+            continue
+        local_max_idx = max(range(i0, i1 + 1), key=lambda idx: currents_ua[idx])
+        peaks.append((i + 1, w0, w1, local_max_idx))
+
+    return peaks
+
+
 def moving_average(values, radius):
     if radius <= 0:
         return list(values)
@@ -316,6 +348,102 @@ def compute_transition_window_metrics(
     return metrics
 
 
+def compute_plateau_window_metrics(
+    times_ms,
+    currents_ua,
+    peak_specs,
+    threshold_fraction,
+    voltage_v,
+    local_baseline_window_ms,
+    local_baseline_guard_ms,
+    transition_settle_ms,
+    transition_smooth_ms,
+    plateau_coarse_fraction,
+):
+    dt_ms = times_ms[1] - times_ms[0]
+    smooth_radius = max(1, int(round((transition_smooth_ms / dt_ms) / 2.0)))
+    settle_samples = max(1, int(round(transition_settle_ms / dt_ms)))
+    metrics = []
+
+    smoothed = moving_average(currents_ua, smooth_radius)
+
+    for peak_number, w0, w1, peak_idx in peak_specs:
+        i0 = nearest_index(times_ms, w0)
+        i1 = min(len(times_ms) - 1, nearest_index(times_ms, w1))
+        peak_time_ms = times_ms[peak_idx]
+        peak_current_ua = currents_ua[peak_idx]
+
+        pre0 = max(i0, nearest_index(times_ms, peak_time_ms - local_baseline_window_ms))
+        pre1 = max(pre0 + 1, min(peak_idx, nearest_index(times_ms, peak_time_ms - local_baseline_guard_ms)))
+        pre_samples = currents_ua[pre0:pre1]
+        baseline_ua = percentile(pre_samples, 0.5) if pre_samples else percentile(currents_ua[i0:i1], 0.2)
+
+        coarse_threshold_ua = baseline_ua + plateau_coarse_fraction * (peak_current_ua - baseline_ua)
+
+        coarse_start_idx = peak_idx
+        while coarse_start_idx > i0 and currents_ua[coarse_start_idx] >= coarse_threshold_ua:
+            coarse_start_idx -= 1
+        if coarse_start_idx < peak_idx:
+            coarse_start_idx += 1
+
+        coarse_end_idx = peak_idx
+        while coarse_end_idx < i1 - 1 and currents_ua[coarse_end_idx] >= coarse_threshold_ua:
+            coarse_end_idx += 1
+        if coarse_end_idx > peak_idx:
+            coarse_end_idx -= 1
+
+        plateau_samples = currents_ua[coarse_start_idx:coarse_end_idx + 1]
+        plateau_level_ua = percentile(plateau_samples, 0.5) if plateau_samples else peak_current_ua
+        threshold_ua = baseline_ua + threshold_fraction * (plateau_level_ua - baseline_ua)
+
+        search_back_samples = max(1, int(round(local_baseline_window_ms / dt_ms)))
+        start_search_lo = max(i0, coarse_start_idx - search_back_samples)
+        start_idx = coarse_start_idx
+        for idx in range(start_search_lo, coarse_start_idx + 1):
+            if smoothed[idx] >= threshold_ua:
+                start_idx = idx
+                break
+
+        end_search_hi = min(i1 - 1, coarse_end_idx + search_back_samples)
+        end_idx = coarse_end_idx
+        for idx in range(coarse_end_idx, max(coarse_end_idx + 1, end_search_hi - settle_samples + 1)):
+            if all(v < threshold_ua for v in smoothed[idx:idx + settle_samples]):
+                end_idx = idx
+                break
+
+        event_currents = currents_ua[start_idx:end_idx + 1]
+        mean_current_ua = sum(event_currents) / len(event_currents)
+        mean_excess_ua = sum((v - baseline_ua) for v in event_currents) / len(event_currents)
+        duration_ms = times_ms[end_idx] - times_ms[start_idx] + dt_ms
+        charge_total_uc = sum(v * dt_ms / 1000.0 for v in event_currents)
+        charge_uc = sum((v - baseline_ua) * dt_ms / 1000.0 for v in event_currents)
+        energy_total_uj = None if voltage_v is None else charge_total_uc * voltage_v
+        energy_uj = None if voltage_v is None else charge_uc * voltage_v
+
+        metrics.append(
+            PeakMetrics(
+                peak_number=peak_number,
+                window_start_ms=w0,
+                window_end_ms=w1,
+                peak_time_ms=peak_time_ms,
+                peak_current_ua=peak_current_ua,
+                baseline_current_ua=baseline_ua,
+                threshold_current_ua=threshold_ua,
+                start_ms=times_ms[start_idx],
+                end_ms=times_ms[end_idx],
+                duration_ms=duration_ms,
+                mean_current_ua=mean_current_ua,
+                mean_excess_current_ua=mean_excess_ua,
+                charge_total_uc=charge_total_uc,
+                charge_uc=charge_uc,
+                energy_total_uj=energy_total_uj,
+                energy_uj=energy_uj,
+            )
+        )
+
+    return metrics
+
+
 def compute_peak_metrics(
     times_ms,
     currents_ua,
@@ -330,7 +458,21 @@ def compute_peak_metrics(
     transition_settle_ms,
     transition_smooth_ms,
     expected_duration_ms,
+    plateau_coarse_fraction,
 ):
+    if window_mode == "plateau_window":
+        return compute_plateau_window_metrics(
+            times_ms,
+            currents_ua,
+            peak_specs,
+            threshold_fraction,
+            voltage_v,
+            local_baseline_window_ms,
+            local_baseline_guard_ms,
+            transition_settle_ms,
+            transition_smooth_ms,
+            plateau_coarse_fraction,
+        )
     if window_mode == "transition_window":
         return compute_transition_window_metrics(
             times_ms,
@@ -717,6 +859,8 @@ def main():
     ap.add_argument("--zoom-half-window-ms", type=float)
     ap.add_argument("--overlay-half-window-ms", type=float)
     ap.add_argument("--voltage", type=float)
+    ap.add_argument("--peak-times-ms", nargs="*", type=float)
+    ap.add_argument("--peak-search-half-window-ms", type=float)
     ap.add_argument("--local-baseline-window-ms", type=float)
     ap.add_argument("--local-baseline-guard-ms", type=float)
     ap.add_argument("--window-mode")
@@ -724,6 +868,7 @@ def main():
     ap.add_argument("--transition-end-fraction", type=float)
     ap.add_argument("--transition-settle-ms", type=float)
     ap.add_argument("--transition-smooth-ms", type=float)
+    ap.add_argument("--plateau-coarse-fraction", type=float)
     args = ap.parse_args()
     config_path = Path(args.config).expanduser().resolve() if args.config else None
     config = load_config(config_path)
@@ -740,6 +885,10 @@ def main():
     args.zoom_half_window_ms = float(pick_value(args.zoom_half_window_ms, config, "zoom_half_window_ms", 15.0))
     args.overlay_half_window_ms = float(pick_value(args.overlay_half_window_ms, config, "overlay_half_window_ms", 5.0))
     args.voltage = pick_value(args.voltage, config, "voltage")
+    args.peak_times_ms = pick_value(args.peak_times_ms, config, "peak_times_ms")
+    args.peak_search_half_window_ms = float(
+        pick_value(args.peak_search_half_window_ms, config, "peak_search_half_window_ms", 120.0)
+    )
     args.local_baseline_window_ms = float(pick_value(args.local_baseline_window_ms, config, "local_baseline_window_ms", 5.0))
     args.local_baseline_guard_ms = float(pick_value(args.local_baseline_guard_ms, config, "local_baseline_guard_ms", 0.2))
     args.window_mode = str(pick_value(args.window_mode, config, "window_mode", "positive_peak"))
@@ -747,6 +896,7 @@ def main():
     args.transition_end_fraction = float(pick_value(args.transition_end_fraction, config, "transition_end_fraction", 0.2))
     args.transition_settle_ms = float(pick_value(args.transition_settle_ms, config, "transition_settle_ms", 20.0))
     args.transition_smooth_ms = float(pick_value(args.transition_smooth_ms, config, "transition_smooth_ms", 5.0))
+    args.plateau_coarse_fraction = float(pick_value(args.plateau_coarse_fraction, config, "plateau_coarse_fraction", 0.3))
 
     csv_path = Path(csv_value).expanduser().resolve()
     summary_path = Path(args.summary_json).expanduser().resolve() if args.summary_json else None
@@ -776,7 +926,15 @@ def main():
         except Exception:
             expected_duration_ms = None
 
-    peak_specs = find_period_peaks(times_ms, currents_ua, args.expected_peaks, args.period_ms)
+    if args.peak_times_ms:
+        peak_specs = find_target_peaks(
+            times_ms,
+            currents_ua,
+            args.peak_times_ms,
+            args.peak_search_half_window_ms,
+        )
+    else:
+        peak_specs = find_period_peaks(times_ms, currents_ua, args.expected_peaks, args.period_ms)
     metrics = compute_peak_metrics(
         times_ms,
         currents_ua,
@@ -791,6 +949,7 @@ def main():
         args.transition_settle_ms,
         args.transition_smooth_ms,
         expected_duration_ms,
+        args.plateau_coarse_fraction,
     )
 
     cleanup_old_peak_outputs(out_dir)
@@ -822,6 +981,8 @@ def main():
         "expected_peaks": args.expected_peaks,
         "detected_peaks": len(metrics),
         "period_ms": args.period_ms,
+        "peak_times_ms": args.peak_times_ms,
+        "peak_search_half_window_ms": args.peak_search_half_window_ms,
         "summary_inference_events": inferred_peaks,
         "window_mode": args.window_mode,
         "threshold_fraction": args.threshold_fraction,
@@ -831,6 +992,7 @@ def main():
         "transition_end_fraction": args.transition_end_fraction,
         "transition_settle_ms": args.transition_settle_ms,
         "transition_smooth_ms": args.transition_smooth_ms,
+        "plateau_coarse_fraction": args.plateau_coarse_fraction,
         "voltage_v": args.voltage,
         "avg_peak_duration_ms": avg_duration_ms,
         "avg_peak_mean_current_ua": avg_mean_current_ua,

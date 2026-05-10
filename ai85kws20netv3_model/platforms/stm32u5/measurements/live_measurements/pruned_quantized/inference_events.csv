@@ -1,0 +1,14 @@
+event,run,mode,layout,invert,cnn_us,cycles,pred_idx,post_trigger_samples,audio_window_ms
+inference,0,live,raw,0,152921,24467447,8,7552,712
+inference,1,live,raw,0,152921,24467509,8,8320,760
+inference,2,live,raw,0,152922,24467528,8,8448,768
+inference,3,live,raw,0,152922,24467530,8,9216,816
+inference,4,live,raw,0,152922,24467541,8,8960,800
+inference,5,live,raw,0,152921,24467510,5,9088,808
+inference,6,live,raw,0,152922,24467556,8,8832,792
+inference,7,live,raw,0,152922,24467562,8,7936,736
+inference,8,live,raw,0,152921,24467484,8,7936,736
+inference,9,live,raw,0,152922,24467550,14,8576,776
+inference,10,live,raw,0,152922,24467526,8,8192,752
+inference,11,live,raw,0,152921,24467506,16,7552,712
+inference,12,live,raw,0,152922,24467539,20,7936,736

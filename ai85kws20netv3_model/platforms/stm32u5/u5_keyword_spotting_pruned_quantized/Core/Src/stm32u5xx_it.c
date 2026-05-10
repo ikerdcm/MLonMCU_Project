@@ -202,3 +202,19 @@ void SysTick_Handler(void)
 /* USER CODE BEGIN 1 */
 
 /* USER CODE END 1 */
+
+/**
+  * @brief This function handles GPDMA1 Channel 6 global interrupt.
+  */
+void GPDMA1_Channel6_IRQHandler(void)
+{
+  BSP_AUDIO_IN_IRQHandler(0, AUDIO_IN_DEVICE_DIGITAL_MIC1);
+}
+
+/**
+  * @brief This function handles GPDMA1 Channel 0 global interrupt.
+  */
+void GPDMA1_Channel0_IRQHandler(void)
+{
+  BSP_AUDIO_IN_IRQHandler(0, AUDIO_IN_DEVICE_DIGITAL_MIC2);
+}

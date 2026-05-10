@@ -1,4 +1,5 @@
 #include "kws20_measure.h"
+#include "kws20_mode_config.h"
 #include "kws20_model_io.h"
 
 #include "kws_five_stm32.h"
@@ -10,7 +11,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#define KWS_MEASURE_RUNS 50
+#ifndef KWS20_CFG_MEASURE_RUNS
+#define KWS20_CFG_MEASURE_RUNS 50
+#endif
+
+#define KWS_MEASURE_RUNS KWS20_CFG_MEASURE_RUNS
 
 AI_ALIGNED(32)
 static ai_u8 measure_activations[AI_NETWORK_DATA_ACTIVATIONS_SIZE];

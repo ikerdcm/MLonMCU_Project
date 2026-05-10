@@ -1,0 +1,324 @@
+ST Edge AI Core v2.2.0-20266 2adc00962
+Created date          : 2026-05-10 11:12:35
+Parameters            : generate --target stm32u5 --name network -m /home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/models/kws20_v3_w90_conv2d_float_for_stm32u5.onnx --compression none --verbosity 1 --workspace /tmp/mxAI_workspace1826911363884725765014598377808570 --output /home/pascal/.stm32cubemx/network_output
+
+Exec/report summary (generate)
+-------------------------------------------------------------------------------------------------------------------------------------------------
+model file         :   /home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/models/kws20_v3_w90_conv2d_float_for_stm32u5.onnx   
+type               :   onnx                                                                                                                      
+c_name             :   network                                                                                                                   
+compression        :   none                                                                                                                      
+options            :   allocate-inputs, allocate-outputs                                                                                         
+optimization       :   balanced                                                                                                                  
+target/series      :   stm32u5                                                                                                                   
+workspace dir      :   /tmp/mxAI_workspace1826911363884725765014598377808570                                                                     
+output dir         :   /home/pascal/.stm32cubemx/network_output                                                                                  
+model_fmt          :   float                                                                                                                     
+model_name         :   kws20_v3_w90_conv2d_float_for_stm32u5                                                                                     
+model_hash         :   0x505bcfd5105ebe5078e1ed806bd95f5b                                                                                        
+params #           :   146,637 items (572.80 KiB)                                                                                                
+-------------------------------------------------------------------------------------------------------------------------------------------------
+input 1/1          :   'kws_input', f32(1x128x128x1), 64.00 KBytes, activations                                                                  
+output 1/1         :   'kws_logits', f32(1x21), 84 Bytes, activations                                                                            
+macc               :   7,268,845                                                                                                                 
+weights (ro)       :   586,548 B (572.80 KiB) (1 segment)                                                                                        
+activations (rw)   :   131,072 B (128.00 KiB) (1 segment) *                                                                                      
+ram (total)        :   131,072 B (128.00 KiB) = 131,072 + 0 + 0                                                                                  
+-------------------------------------------------------------------------------------------------------------------------------------------------
+(*) 'input'/'output' buffers are allocated in the activations buffer
+
+Model name - kws20_v3_w90_conv2d_float_for_stm32u5
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+m_id   layer (type,original)                                oshape                  param/size              macc                     connected to   | c_size             c_macc                  c_type                           
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+23     fc_weight (Placeholder, Gemm)                        [b:21,c:240]            5,040/20,160                                                    | +84(+0.4%)         +5,061(+100.0%)         Dense_[o][14]                    
+       fc_bias (Placeholder, Gemm)                          [b:21]                  21/84                                                           | -84(-100.0%)                               
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+0      kws_input (Input, )                                  [b:1,h:128,w:1,c:128]                                                                   |                                            
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+1      _voice_conv1_Conv_output_0 (Conv2D, Conv)            [b:1,h:128,w:1,c:92]    11,868/47,472      1,507,420                        kws_input   |                                            Conv2D_[1]                       
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+2      _relu_Relu_output_0 (Nonlinearity, Relu)             [b:1,h:128,w:1,c:92]                          11,776       _voice_conv1_Conv_output_0   |                    +8,192(+69.6%)          Transpose_/Nonlinearity_[0, 2]   
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+3      _voice_conv2_Conv_output_0 (Conv2D, Conv)            [b:1,h:126,w:1,c:88]    24,376/97,504      3,060,376              _relu_Relu_output_0   | -97,504(-100.0%)   -3,060,376(-100.0%)     
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+4      _relu_1_Relu_output_0 (Nonlinearity, Relu)           [b:1,h:126,w:1,c:88]                          11,088       _voice_conv2_Conv_output_0   |                    -11,088(-100.0%)        
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+5      _voice_pool3_MaxPool_output_0 (Pool, MaxPool)        [b:1,h:63,w:1,c:88]                           11,088            _relu_1_Relu_output_0   | +97,504(+100.0%)   +3,071,464(+27700.8%)   Conv2D_[3]                       
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+6      _voice_conv3_Conv_output_0 (Conv2D, Conv)            [b:1,h:63,w:1,c:60]     15,900/63,600        997,980    _voice_pool3_MaxPool_output_0   |                                            Conv2D_[4]                       
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+7      _relu_2_Relu_output_0 (Nonlinearity, Relu)           [b:1,h:63,w:1,c:60]                            3,780       _voice_conv3_Conv_output_0   |                                            Nonlinearity_[5]                 
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+8      _voice_conv4_Conv_output_0 (Conv2D, Conv)            [b:1,h:61,w:1,c:44]     7,964/31,856         483,164            _relu_2_Relu_output_0   | -31,856(-100.0%)   -483,164(-100.0%)       
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+9      _relu_3_Relu_output_0 (Nonlinearity, Relu)           [b:1,h:61,w:1,c:44]                            2,684       _voice_conv4_Conv_output_0   |                    -2,684(-100.0%)         
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+10     _kws_pool1_MaxPool_output_0 (Pool, MaxPool)          [b:1,h:30,w:1,c:44]                            2,640            _relu_3_Relu_output_0   | +31,856(+100.0%)   +485,848(+18403.3%)     Conv2D_[6]                       
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+11     _kws_conv1_Conv_output_0 (Conv2D, Conv)              [b:1,h:30,w:1,c:60]     7,980/31,920         237,660      _kws_pool1_MaxPool_output_0   |                                            Conv2D_[7]                       
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+12     _relu_4_Relu_output_0 (Nonlinearity, Relu)           [b:1,h:30,w:1,c:60]                            1,800         _kws_conv1_Conv_output_0   |                                            Nonlinearity_[8]                 
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+13     _kws_conv2_Conv_output_0 (Conv2D, Conv)              [b:1,h:28,w:1,c:88]     15,928/63,712        443,608            _relu_4_Relu_output_0   | -63,712(-100.0%)   -443,608(-100.0%)       
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+14     _relu_5_Relu_output_0 (Nonlinearity, Relu)           [b:1,h:28,w:1,c:88]                            2,464         _kws_conv2_Conv_output_0   |                    -2,464(-100.0%)         
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+15     _kws_pool3_Average..l_output_0 (Pool, AveragePool)   [b:1,h:14,w:1,c:88]                            2,464            _relu_5_Relu_output_0   | +63,712(+100.0%)   +446,072(+18103.6%)     Conv2D_[9]                       
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+16     _kws_conv3_Conv_output_0 (Conv2D, Conv)              [b:1,h:14,w:1,c:92]     24,380/97,520        340,124   _kws_pool3_Average..l_output_0   | -97,520(-100.0%)   -340,124(-100.0%)       
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+17     _relu_6_Relu_output_0 (Nonlinearity, Relu)           [b:1,h:14,w:1,c:92]                            1,288         _kws_conv3_Conv_output_0   |                    -1,288(-100.0%)         
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+18     _kws_pool4_MaxPool_output_0 (Pool, MaxPool)          [b:1,h:7,w:1,c:92]                             1,288            _relu_6_Relu_output_0   | +97,520(+100.0%)   +341,412(+26507.1%)     Conv2D_[10]                      
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+19     _kws_conv4_Conv_output_0 (Conv2D, Conv)              [b:1,h:4,w:1,c:60]      33,180/132,720       132,540      _kws_pool4_MaxPool_output_0   |                                            Conv2D_[11]                      
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+20     _relu_7_Relu_output_0 (Nonlinearity, Relu)           [b:1,h:4,w:1,c:60]                               240         _kws_conv4_Conv_output_0   |                                            Nonlinearity_[12]                
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+22     _Reshape_output_0 (Reshape, Reshape)                 [b:1,c:240]                                                     _relu_7_Relu_output_0   |                    +120(+100.0%)           Transpose_[13]                   
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+23     kws_logits (Gemm, Gemm)                              [b:1,c:21]                                     5,061                _Reshape_output_0   |                    -5,061(-100.0%)         
+                                                                                                                                        fc_weight   | 
+                                                                                                                                          fc_bias   | 
+------ ---------------------------------------------------- ----------------------- ---------------- ----------- -------------------------------- --- ------------------ ----------------------- -------------------------------- 
+model/c-model: macc=7,260,533/7,268,845 +8,312(+0.1%) weights=586,548/586,548  activations=--/131,072 io=--/0
+
+
+
+Generated C-graph summary
+------------------------------------------------------------------------------------------------------------------------
+model name            : kws20_v3_w90_conv2d_float_for_stm32u5
+c-name                : network
+c-node #              : 15
+c-array #             : 46
+activations size      : 131072 (1 segment)
+weights size          : 586548 (1 segment)
+macc                  : 7268845
+inputs                : ['kws_input_output']
+outputs               : ['kws_logits_output']
+
+C-Arrays (46)
+------ ------------------------------------- -------------- ------------------------- ------------- --------- 
+c_id   name (*_array)                        item/size      domain/mem-pool           c-type        comment   
+------ ------------------------------------- -------------- ------------------------- ------------- --------- 
+0      _Reshape_output_0_to_chlast_output    240/960        activations/**default**   float                   
+1      _kws_conv1_Conv_output_0_bias         60/240         weights/weights           const float             
+2      _kws_conv1_Conv_output_0_output       1800/7200      activations/**default**   float                   
+3      _kws_conv1_Conv_output_0_scratch0     132/528        activations/**default**   float                   
+4      _kws_conv1_Conv_output_0_weights      7920/31680     weights/weights           const float             
+5      _kws_conv2_Conv_output_0_bias         88/352         weights/weights           const float             
+6      _kws_conv2_Conv_output_0_output       1232/4928      activations/**default**   float                   
+7      _kws_conv2_Conv_output_0_scratch0     180/720        activations/**default**   float                   
+8      _kws_conv2_Conv_output_0_scratch1     176/704        activations/**default**   float                   
+9      _kws_conv2_Conv_output_0_weights      15840/63360    weights/weights           const float             
+10     _kws_conv3_Conv_output_0_bias         92/368         weights/weights           const float             
+11     _kws_conv3_Conv_output_0_output       644/2576       activations/**default**   float                   
+12     _kws_conv3_Conv_output_0_scratch0     264/1056       activations/**default**   float                   
+13     _kws_conv3_Conv_output_0_scratch1     184/736        activations/**default**   float                   
+14     _kws_conv3_Conv_output_0_weights      24288/97152    weights/weights           const float             
+15     _kws_conv4_Conv_output_0_bias         60/240         weights/weights           const float             
+16     _kws_conv4_Conv_output_0_output       240/960        activations/**default**   float                   
+17     _kws_conv4_Conv_output_0_scratch0     552/2208       activations/**default**   float                   
+18     _kws_conv4_Conv_output_0_weights      33120/132480   weights/weights           const float             
+19     _relu_2_Relu_output_0_output          3780/15120     activations/**default**   float                   
+20     _relu_4_Relu_output_0_output          1800/7200      activations/**default**   float                   
+21     _relu_7_Relu_output_0_output          240/960        activations/**default**   float                   
+22     _relu_Relu_output_0_output            11776/47104    activations/**default**   float                   
+23     _voice_conv1_Conv_output_0_bias       92/368         weights/weights           const float             
+24     _voice_conv1_Conv_output_0_output     11776/47104    activations/**default**   float                   
+25     _voice_conv1_Conv_output_0_scratch0   128/512        activations/**default**   float                   
+26     _voice_conv1_Conv_output_0_weights    11776/47104    weights/weights           const float             
+27     _voice_conv2_Conv_output_0_bias       88/352         weights/weights           const float             
+28     _voice_conv2_Conv_output_0_output     5544/22176     activations/**default**   float                   
+29     _voice_conv2_Conv_output_0_scratch0   276/1104       activations/**default**   float                   
+30     _voice_conv2_Conv_output_0_scratch1   176/704        activations/**default**   float                   
+31     _voice_conv2_Conv_output_0_weights    24288/97152    weights/weights           const float             
+32     _voice_conv3_Conv_output_0_bias       60/240         weights/weights           const float             
+33     _voice_conv3_Conv_output_0_output     3780/15120     activations/**default**   float                   
+34     _voice_conv3_Conv_output_0_scratch0   264/1056       activations/**default**   float                   
+35     _voice_conv3_Conv_output_0_weights    15840/63360    weights/weights           const float             
+36     _voice_conv4_Conv_output_0_bias       44/176         weights/weights           const float             
+37     _voice_conv4_Conv_output_0_output     1320/5280      activations/**default**   float                   
+38     _voice_conv4_Conv_output_0_scratch0   180/720        activations/**default**   float                   
+39     _voice_conv4_Conv_output_0_scratch1   88/352         activations/**default**   float                   
+40     _voice_conv4_Conv_output_0_weights    7920/31680     weights/weights           const float             
+41     kws_input_Transpose_output            16384/65536    activations/**default**   float                   
+42     kws_input_output                      16384/65536    activations/**default**   float         /input    
+43     kws_logits_bias                       21/84          weights/weights           const float             
+44     kws_logits_output                     21/84          activations/**default**   float         /output   
+45     kws_logits_weights                    5040/20160     weights/weights           const float             
+------ ------------------------------------- -------------- ------------------------- ------------- --------- 
+
+C-Layers (15)
+------ ----------------------------- ---- --------------- --------- -------- ---------------------------------------- ----------------------- 
+c_id   name (*_layer)                id   layer_type      macc      rom      tensors                                  shape (array id)        
+------ ----------------------------- ---- --------------- --------- -------- ---------------------------------------- ----------------------- 
+0      kws_input_Transpose           2    Transpose       8192      0        I: kws_input_output                      f32(1x128x128x1) (42)   
+                                                                             O: kws_input_Transpose_output            f32(1x128x1x128) (41)   
+------ ----------------------------- ---- --------------- --------- -------- ---------------------------------------- ----------------------- 
+1      _voice_conv1_Conv_output_0    1    Conv2D          1507420   47472    I: kws_input_Transpose_output            f32(1x128x1x128) (41)   
+                                                                             S: _voice_conv1_Conv_output_0_scratch0                           
+                                                                             W: _voice_conv1_Conv_output_0_weights    f32(92x1x1x128) (26)    
+                                                                             W: _voice_conv1_Conv_output_0_bias       f32(92) (23)            
+                                                                             O: _voice_conv1_Conv_output_0_output     f32(1x128x1x92) (24)    
+------ ----------------------------- ---- --------------- --------- -------- ---------------------------------------- ----------------------- 
+2      _relu_Relu_output_0           2    Nonlinearity    11776     0        I: _voice_conv1_Conv_output_0_output     f32(1x128x1x92) (24)    
+                                                                             O: _relu_Relu_output_0_output            f32(1x128x1x92) (22)    
+------ ----------------------------- ---- --------------- --------- -------- ---------------------------------------- ----------------------- 
+3      _voice_conv2_Conv_output_0    5    Conv2D          3082552   97504    I: _relu_Relu_output_0_output            f32(1x128x1x92) (22)    
+                                                                             S: _voice_conv2_Conv_output_0_scratch0                           
+                                                                             S: _voice_conv2_Conv_output_0_scratch1                           
+                                                                             W: _voice_conv2_Conv_output_0_weights    f32(88x3x1x92) (31)     
+                                                                             W: _voice_conv2_Conv_output_0_bias       f32(88) (27)            
+                                                                             O: _voice_conv2_Conv_output_0_output     f32(1x63x1x88) (28)     
+------ ----------------------------- ---- --------------- --------- -------- ---------------------------------------- ----------------------- 
+4      _voice_conv3_Conv_output_0    6    Conv2D          997980    63600    I: _voice_conv2_Conv_output_0_output     f32(1x63x1x88) (28)     
+                                                                             S: _voice_conv3_Conv_output_0_scratch0                           
+                                                                             W: _voice_conv3_Conv_output_0_weights    f32(60x3x1x88) (35)     
+                                                                             W: _voice_conv3_Conv_output_0_bias       f32(60) (32)            
+                                                                             O: _voice_conv3_Conv_output_0_output     f32(1x63x1x60) (33)     
+------ ----------------------------- ---- --------------- --------- -------- ---------------------------------------- ----------------------- 
+5      _relu_2_Relu_output_0         7    Nonlinearity    3780      0        I: _voice_conv3_Conv_output_0_output     f32(1x63x1x60) (33)     
+                                                                             O: _relu_2_Relu_output_0_output          f32(1x63x1x60) (19)     
+------ ----------------------------- ---- --------------- --------- -------- ---------------------------------------- ----------------------- 
+6      _voice_conv4_Conv_output_0    10   Conv2D          488488    31856    I: _relu_2_Relu_output_0_output          f32(1x63x1x60) (19)     
+                                                                             S: _voice_conv4_Conv_output_0_scratch0                           
+                                                                             S: _voice_conv4_Conv_output_0_scratch1                           
+                                                                             W: _voice_conv4_Conv_output_0_weights    f32(44x3x1x60) (40)     
+                                                                             W: _voice_conv4_Conv_output_0_bias       f32(44) (36)            
+                                                                             O: _voice_conv4_Conv_output_0_output     f32(1x30x1x44) (37)     
+------ ----------------------------- ---- --------------- --------- -------- ---------------------------------------- ----------------------- 
+7      _kws_conv1_Conv_output_0      11   Conv2D          237660    31920    I: _voice_conv4_Conv_output_0_output     f32(1x30x1x44) (37)     
+                                                                             S: _kws_conv1_Conv_output_0_scratch0                             
+                                                                             W: _kws_conv1_Conv_output_0_weights      f32(60x3x1x44) (4)      
+                                                                             W: _kws_conv1_Conv_output_0_bias         f32(60) (1)             
+                                                                             O: _kws_conv1_Conv_output_0_output       f32(1x30x1x60) (2)      
+------ ----------------------------- ---- --------------- --------- -------- ---------------------------------------- ----------------------- 
+8      _relu_4_Relu_output_0         12   Nonlinearity    1800      0        I: _kws_conv1_Conv_output_0_output       f32(1x30x1x60) (2)      
+                                                                             O: _relu_4_Relu_output_0_output          f32(1x30x1x60) (20)     
+------ ----------------------------- ---- --------------- --------- -------- ---------------------------------------- ----------------------- 
+9      _kws_conv2_Conv_output_0      15   Conv2D          448536    63712    I: _relu_4_Relu_output_0_output          f32(1x30x1x60) (20)     
+                                                                             S: _kws_conv2_Conv_output_0_scratch0                             
+                                                                             S: _kws_conv2_Conv_output_0_scratch1                             
+                                                                             W: _kws_conv2_Conv_output_0_weights      f32(88x3x1x60) (9)      
+                                                                             W: _kws_conv2_Conv_output_0_bias         f32(88) (5)             
+                                                                             O: _kws_conv2_Conv_output_0_output       f32(1x14x1x88) (6)      
+------ ----------------------------- ---- --------------- --------- -------- ---------------------------------------- ----------------------- 
+10     _kws_conv3_Conv_output_0      18   Conv2D          342700    97520    I: _kws_conv2_Conv_output_0_output       f32(1x14x1x88) (6)      
+                                                                             S: _kws_conv3_Conv_output_0_scratch0                             
+                                                                             S: _kws_conv3_Conv_output_0_scratch1                             
+                                                                             W: _kws_conv3_Conv_output_0_weights      f32(92x3x1x88) (14)     
+                                                                             W: _kws_conv3_Conv_output_0_bias         f32(92) (10)            
+                                                                             O: _kws_conv3_Conv_output_0_output       f32(1x7x1x92) (11)      
+------ ----------------------------- ---- --------------- --------- -------- ---------------------------------------- ----------------------- 
+11     _kws_conv4_Conv_output_0      19   Conv2D          132540    132720   I: _kws_conv3_Conv_output_0_output       f32(1x7x1x92) (11)      
+                                                                             S: _kws_conv4_Conv_output_0_scratch0                             
+                                                                             W: _kws_conv4_Conv_output_0_weights      f32(60x6x1x92) (18)     
+                                                                             W: _kws_conv4_Conv_output_0_bias         f32(60) (15)            
+                                                                             O: _kws_conv4_Conv_output_0_output       f32(1x4x1x60) (16)      
+------ ----------------------------- ---- --------------- --------- -------- ---------------------------------------- ----------------------- 
+12     _relu_7_Relu_output_0         20   Nonlinearity    240       0        I: _kws_conv4_Conv_output_0_output       f32(1x4x1x60) (16)      
+                                                                             O: _relu_7_Relu_output_0_output          f32(1x4x1x60) (21)      
+------ ----------------------------- ---- --------------- --------- -------- ---------------------------------------- ----------------------- 
+13     _Reshape_output_0_to_chlast   22   Transpose       120       0        I: _relu_7_Relu_output_0_output          f32(1x4x1x60) (21)      
+                                                                             O: _Reshape_output_0_to_chlast_output    f32(1x60x4x1) (0)       
+------ ----------------------------- ---- --------------- --------- -------- ---------------------------------------- ----------------------- 
+14     kws_logits                    23   Dense           5061      20244    I: _Reshape_output_0_to_chlast_output    f32(1x60x4x1) (0)       
+                                                                             W: kws_logits_weights                    f32(21x240) (45)        
+                                                                             W: kws_logits_bias                       f32(21) (43)            
+                                                                             O: kws_logits_output                     f32(1x21) (44)          
+------ ----------------------------- ---- --------------- --------- -------- ---------------------------------------- ----------------------- 
+
+
+
+Number of operations per c-layer
+------- ------ ----------------------------------------- ----------- -------------- 
+c_id    m_id   name (type)                                       #op           type 
+------- ------ ----------------------------------------- ----------- -------------- 
+0       2      kws_input_Transpose (Transpose)                 8,192   smul_f32_f32 
+1       1      _voice_conv1_Conv_output_0 (Conv2D)         1,507,420   smul_f32_f32 
+2       2      _relu_Relu_output_0 (Nonlinearity)             11,776     op_f32_f32 
+3       5      _voice_conv2_Conv_output_0 (Conv2D)         3,082,552   smul_f32_f32 
+4       6      _voice_conv3_Conv_output_0 (Conv2D)           997,980   smul_f32_f32 
+5       7      _relu_2_Relu_output_0 (Nonlinearity)            3,780     op_f32_f32 
+6       10     _voice_conv4_Conv_output_0 (Conv2D)           488,488   smul_f32_f32 
+7       11     _kws_conv1_Conv_output_0 (Conv2D)             237,660   smul_f32_f32 
+8       12     _relu_4_Relu_output_0 (Nonlinearity)            1,800     op_f32_f32 
+9       15     _kws_conv2_Conv_output_0 (Conv2D)             448,536   smul_f32_f32 
+10      18     _kws_conv3_Conv_output_0 (Conv2D)             342,700   smul_f32_f32 
+11      19     _kws_conv4_Conv_output_0 (Conv2D)             132,540   smul_f32_f32 
+12      20     _relu_7_Relu_output_0 (Nonlinearity)              240     op_f32_f32 
+13      22     _Reshape_output_0_to_chlast (Transpose)           120   smul_f32_f32 
+14      23     kws_logits (Dense)                              5,061   smul_f32_f32 
+------- ------ ----------------------------------------- ----------- -------------- 
+total                                                      7,268,845 
+
+Number of operation types
+---------------- ----------- ----------- 
+operation type             #           % 
+---------------- ----------- ----------- 
+smul_f32_f32       7,251,249       99.8% 
+op_f32_f32            17,596        0.2% 
+
+Complexity report (model)
+------ --------------------------------- ------------------------- ------------------------- -------- 
+m_id   name                              c_macc                    c_rom                     c_id     
+------ --------------------------------- ------------------------- ------------------------- -------- 
+23     fc_weight                         |                  0.1%   |||                3.5%   [14]     
+1      _voice_conv1_Conv_output_0        ||||||||          20.7%   ||||||             8.1%   [1]      
+2      _relu_Relu_output_0               |                  0.3%   |                  0.0%   [0, 2]   
+5      _voice_pool3_MaxPool_output_0     ||||||||||||||||  42.4%   ||||||||||||      16.6%   [3]      
+6      _voice_conv3_Conv_output_0        |||||             13.7%   ||||||||          10.8%   [4]      
+7      _relu_2_Relu_output_0             |                  0.1%   |                  0.0%   [5]      
+10     _kws_pool1_MaxPool_output_0       |||                6.7%   ||||               5.4%   [6]      
+11     _kws_conv1_Conv_output_0          ||                 3.3%   ||||               5.4%   [7]      
+12     _relu_4_Relu_output_0             |                  0.0%   |                  0.0%   [8]      
+15     _kws_pool3_AveragePool_output_0   |||                6.2%   ||||||||          10.9%   [9]      
+18     _kws_pool4_MaxPool_output_0       ||                 4.7%   ||||||||||||      16.6%   [10]     
+19     _kws_conv4_Conv_output_0          |                  1.8%   ||||||||||||||||  22.6%   [11]     
+20     _relu_7_Relu_output_0             |                  0.0%   |                  0.0%   [12]     
+22     _Reshape_output_0                 |                  0.0%   |                  0.0%   [13]     
+------ --------------------------------- ------------------------- ------------------------- -------- 
+macc=7,268,845 weights=586,548 act=131,072 ram_io=0
+ 
+ Requested memory size by section - "stm32u5" target
+ ------------------------------- -------- --------- ------- --------- 
+ module                              text    rodata    data       bss 
+ ------------------------------- -------- --------- ------- --------- 
+ NetworkRuntime1020_CM33_GCC.a     14,092         0       0         0 
+ network.o                          1,128       120   5,780       292 
+ network_data.o                        48        16      88         0 
+ lib (toolchain)*                       0         0       0         0 
+ ------------------------------- -------- --------- ------- --------- 
+ RT total**                        15,268       136   5,868       292 
+ ------------------------------- -------- --------- ------- --------- 
+ weights                                0   586,552       0         0 
+ activations                            0         0       0   131,072 
+ io                                     0         0       0         0 
+ ------------------------------- -------- --------- ------- --------- 
+ TOTAL                             15,268   586,688   5,868   131,364 
+ ------------------------------- -------- --------- ------- --------- 
+ *  toolchain objects (libm/libgcc*)
+ ** RT AI runtime objects (kernels+infrastructure)
+  
+  Summary - "stm32u5" target
+  -------------------------------------------------
+               FLASH (ro)     %*   RAM (rw)      % 
+  -------------------------------------------------
+  RT total         21,272   3.5%      6,160   4.5% 
+  -------------------------------------------------
+  TOTAL           607,824           137,232        
+  -------------------------------------------------
+  *  rt/total
+
+
+Generated files (7)
+---------------------------------------------------------------- 
+/home/pascal/.stm32cubemx/network_output/network_data_params.h   
+/home/pascal/.stm32cubemx/network_output/network_data_params.c   
+/home/pascal/.stm32cubemx/network_output/network_data.h          
+/home/pascal/.stm32cubemx/network_output/network_data.c          
+/home/pascal/.stm32cubemx/network_output/network_config.h        
+/home/pascal/.stm32cubemx/network_output/network.h               
+/home/pascal/.stm32cubemx/network_output/network.c               

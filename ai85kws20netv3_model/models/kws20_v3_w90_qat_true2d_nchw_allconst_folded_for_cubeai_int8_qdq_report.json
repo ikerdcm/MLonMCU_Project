@@ -1,0 +1,22 @@
+{
+  "input_model": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/models/kws20_v3_w90_qat_true2d_nchw_allconst_folded_for_cubeai.onnx",
+  "output_model": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/models/kws20_v3_w90_qat_true2d_nchw_allconst_folded_for_cubeai_int8_qdq.onnx",
+  "input_name": "kws_input",
+  "input_layout": "nchw",
+  "calibration_file": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/stm32u5/quantized/calibration_u5_current_model_nchw.npz",
+  "input_model_size_bytes": 599137,
+  "output_model_size_bytes": 221800,
+  "ops": {
+    "DequantizeLinear": 97,
+    "QuantizeLinear": 52,
+    "Conv": 8,
+    "Mul": 27,
+    "Round": 9,
+    "Div": 10,
+    "MaxPool": 3,
+    "AveragePool": 1,
+    "Floor": 1,
+    "Reshape": 1,
+    "Gemm": 1
+  }
+}

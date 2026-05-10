@@ -1,0 +1,75 @@
+{
+  "timestamp": "2026-05-10T11:44:03.401240",
+  "mode": "offline",
+  "config": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/stm32u5/tools/kws20_measure_u5_pruned_unquantized_config.json",
+  "project": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/stm32u5/u5_keyword_spotting_pruned_unquantized",
+  "port": "/dev/ttyACM0",
+  "baud": 115200,
+  "elf": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/stm32u5/u5_keyword_spotting_pruned_unquantized/Debug/u5_keyword_spotting_pruned_unquantized.elf",
+  "elf_size_bytes": 2549352,
+  "memory": {
+    "text_bytes": 701717,
+    "data_bytes": 6340,
+    "bss_bytes": 222376,
+    "dec_bytes": 930433,
+    "hex": "e3281"
+  },
+  "static_sram_usage": {
+    "static_sram_bytes": 228716,
+    "static_sram_kib": 223.35546875,
+    "data_bytes": 6340,
+    "bss_bytes": 222376
+  },
+  "counts": {
+    "num_uart_events": 50,
+    "num_inference_events": 49,
+    "done_seen": true
+  },
+  "model_info": null,
+  "sensor_acquisition": {
+    "sample_rate_hz": 16000.0,
+    "sample_count": 16384.0,
+    "audio_window_s": 1.024,
+    "audio_window_ms": 1024.0
+  },
+  "cnn_latency_us": {
+    "count": 49,
+    "min": 357376.0,
+    "max": 357377.0,
+    "avg": 357376.4081632653,
+    "median": 357376.0,
+    "std": 0.49658699082414787,
+    "p95": 357377.0
+  },
+  "cycles": {
+    "count": 49,
+    "min": 57180164.0,
+    "max": 57180394.0,
+    "avg": 57180300.448979594,
+    "median": 57180301.0,
+    "std": 57.72458359330458,
+    "p95": 57180374.0
+  },
+  "uart_transmission_time_estimate_s": {
+    "count": 50,
+    "min": 0.001388888888888889,
+    "max": 0.006076388888888889,
+    "avg": 0.005967013888888893,
+    "median": 0.006076388888888889,
+    "std": 0.0006615123143381195,
+    "p95": 0.006076388888888889
+  },
+  "cnn_latency_ms_avg": 357.37640816326535,
+  "inferences_per_second_from_cnn_time": 2.7981701566130126,
+  "estimated_end_to_end_lower_bound_ms": 1381.3764081632653,
+  "cycles_estimate": {
+    "clock_mhz": 160.0,
+    "cycles_per_inference_avg": 57180225.30612245,
+    "mac_ops_per_cycle": 0.1271216572002857
+  },
+  "compute_estimate": {
+    "mac_ops_per_inference": 7268845.0,
+    "mac_ops_per_second": 20339465.152045712,
+    "mops_per_second": 20.33946515204571
+  }
+}

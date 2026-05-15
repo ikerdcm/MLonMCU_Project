@@ -59,7 +59,7 @@ def _ds_cnn_body(inputs, filters, num_ds_blocks, weight_decay=1e-4):
 
   for _ in range(num_ds_blocks):
     x = DepthwiseConv2D(depth_multiplier=1, kernel_size=(3, 3), padding='same',
-                        kernel_regularizer=regularizer)(x)
+                        depthwise_regularizer=regularizer)(x)
     x = BatchNormalization()(x)
     x = Activation('relu')(x)
     x = Conv2D(filters, (1, 1), padding='same', kernel_regularizer=regularizer)(x)
@@ -144,7 +144,7 @@ def get_model(args):
 
     for _ in range(4):
       x = DepthwiseConv2D(depth_multiplier=1, kernel_size=(3, 3), padding='same',
-                          kernel_regularizer=regularizer)(x)
+                          depthwise_regularizer=regularizer)(x)
       x = BatchNormalization()(x)
       x = Activation('relu')(x)
       x = Conv2D(filters, (1, 1), padding='same', kernel_regularizer=regularizer)(x)
@@ -164,6 +164,7 @@ def get_model(args):
     optimizer=keras.optimizers.Adam(learning_rate=args.learning_rate),
     loss=keras.losses.SparseCategoricalCrossentropy(),
     metrics=[keras.metrics.SparseCategoricalAccuracy()],
+    jit_compile=False,
   )
 
   return model

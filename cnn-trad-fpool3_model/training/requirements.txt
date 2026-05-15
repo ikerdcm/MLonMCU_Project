@@ -2,3 +2,5 @@ tensorflow>=2.20
 tensorflow-datasets>=4.8
 numpy>=1.23
 matplotlib>=3.5
+importlib-resources
+pydub

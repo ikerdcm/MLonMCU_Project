@@ -1,4 +1,5 @@
 #include "kws20_live.h"
+#include "ds_cnn_frontend.h"
 #include "kws20_mode_config.h"
 #include "kws20_model_io.h"
 
@@ -19,9 +20,6 @@
 #define DS_CNN_SAMPLE_RATE          16000u
 #define DS_CNN_FEATURE_FRAMES       49u
 #define DS_CNN_FEATURE_BINS         10u
-#define DS_CNN_FRAME_SIZE           480u
-#define DS_CNN_FRAME_STEP           320u
-#define DS_CNN_SUBFRAME_SIZE        (DS_CNN_FRAME_SIZE / DS_CNN_FEATURE_BINS)
 
 #define LIVE_DMA_SAMPLES            2048u
 #define LIVE_DMA_BYTES              (LIVE_DMA_SAMPLES * sizeof(int16_t))
@@ -35,7 +33,6 @@
 #define DEMO_THRESHOLD_HIGH         40u
 #define DEMO_QUIET_THRESHOLD        20u
 #define DEMO_ARM_QUIET_CHUNKS       0u
-#define DEMO_SAMPLE_SCALE           20
 #define DEMO_INITIAL_WARMUP_SAMPLES 32000u
 #define DEMO_POST_TRIGGER_SAMPLES   (DS_CNN_AUDIO_WINDOW_SAMPLES - DEMO_PREAMBLE_SIZE)
 #define DEMO_SILENCE_COUNTER_THRESHOLD 20u
@@ -68,8 +65,8 @@ static kws20_output_elem_t ai_output_data[AI_NETWORK_OUT_1_SIZE];
 
 static int16_t mic_dma[LIVE_DMA_SAMPLES];
 static int16_t live_block_fifo[LIVE_BLOCK_FIFO_DEPTH][LIVE_DMA_HALF_SAMPLES];
-static int8_t live_audio_i8[DS_CNN_AUDIO_WINDOW_SAMPLES];
-static int8_t mic_ring[DS_CNN_AUDIO_WINDOW_SAMPLES];
+static int16_t live_audio_pcm[DS_CNN_AUDIO_WINDOW_SAMPLES];
+static int16_t mic_ring_pcm[DS_CNN_AUDIO_WINDOW_SAMPLES];
 
 static volatile uint32_t live_dma_half_count = 0;
 static volatile uint32_t live_dma_full_count = 0;
@@ -198,18 +195,16 @@ static void copy_demo_ring_to_live_audio(uint32_t trigger_ring_index, uint32_t n
     }
 
     for (uint32_t i = 0; i < valid; i++) {
-        live_audio_i8[i] = mic_ring[(start + i) % DS_CNN_AUDIO_WINDOW_SAMPLES];
+        live_audio_pcm[i] = mic_ring_pcm[(start + i) % DS_CNN_AUDIO_WINDOW_SAMPLES];
     }
     for (uint32_t i = valid; i < DS_CNN_AUDIO_WINDOW_SAMPLES; i++) {
-        live_audio_i8[i] = 0;
+        live_audio_pcm[i] = 0;
     }
 }
 
 static int process_capture_sample(live_capture_ctx_t *ctx, int16_t raw)
 {
     int16_t hpf = live_hpf(raw);
-    int32_t v;
-
     ctx->global_samples++;
     if (ctx->global_samples <= ctx->warmup_samples) {
         if (ctx->global_samples == ctx->warmup_samples) {
@@ -222,11 +217,7 @@ static int process_capture_sample(live_capture_ctx_t *ctx, int16_t raw)
         return 0;
     }
 
-    v = ((int32_t)hpf * DEMO_SAMPLE_SCALE) / 256;
-    if (v > 127) v = 127;
-    if (v < -128) v = -128;
-
-    mic_ring[ctx->ring_index] = (int8_t)v;
+    mic_ring_pcm[ctx->ring_index] = raw;
     ctx->ring_index = (ctx->ring_index + 1u) % DS_CNN_AUDIO_WINDOW_SAMPLES;
     if (ctx->ring_filled < DS_CNN_AUDIO_WINDOW_SAMPLES) {
         ctx->ring_filled++;
@@ -333,8 +324,8 @@ static int capture_keyword_like_demo_to_audio(void)
     int capture_result = 0;
 
     memset(&ctx, 0, sizeof(ctx));
-    memset(mic_ring, 0, sizeof(mic_ring));
-    memset(live_audio_i8, 0, sizeof(live_audio_i8));
+    memset(mic_ring_pcm, 0, sizeof(mic_ring_pcm));
+    memset(live_audio_pcm, 0, sizeof(live_audio_pcm));
     live_last_post_trigger_samples = 0;
 
     live_hpf_init();
@@ -437,35 +428,12 @@ static void record_audio_once(void)
 
 static void fill_input_from_live_audio(void)
 {
-    float features[DS_CNN_FEATURE_FRAMES * DS_CNN_FEATURE_BINS];
-
-    memset(features, 0, sizeof(features));
     memset(ai_input_data, 0, sizeof(ai_input_data));
-
-    for (uint32_t frame = 0; frame < DS_CNN_FEATURE_FRAMES; frame++) {
-        uint32_t frame_start = frame * DS_CNN_FRAME_STEP;
-        float frame_mean = 0.0f;
-
-        for (uint32_t bin = 0; bin < DS_CNN_FEATURE_BINS; bin++) {
-            uint32_t sub_start = frame_start + bin * DS_CNN_SUBFRAME_SIZE;
-            float energy = 0.0f;
-
-            for (uint32_t i = 0; i < DS_CNN_SUBFRAME_SIZE; i++) {
-                int32_t s = (int32_t)live_audio_i8[sub_start + i];
-                energy += (float)(s * s);
-            }
-
-            energy /= (float)DS_CNN_SUBFRAME_SIZE;
-            features[frame * DS_CNN_FEATURE_BINS + bin] = log1pf(energy * (1.0f / 64.0f));
-            frame_mean += features[frame * DS_CNN_FEATURE_BINS + bin];
-        }
-
-        frame_mean /= (float)DS_CNN_FEATURE_BINS;
-        for (uint32_t bin = 0; bin < DS_CNN_FEATURE_BINS; bin++) {
-            uint32_t idx = frame * DS_CNN_FEATURE_BINS + bin;
-            float centered = features[idx] - frame_mean;
-            ai_input_data[idx] = kws20_input_from_float(centered);
-        }
+    if (!ds_cnn_frontend_compute(live_audio_pcm,
+                                 DS_CNN_AUDIO_WINDOW_SAMPLES,
+                                 ai_input_data,
+                                 AI_NETWORK_IN_1_SIZE)) {
+        printf("ds_cnn_frontend_compute failed\r\n");
     }
 }
 
@@ -554,7 +522,7 @@ static void run_inference(ai_handle network,
     cycles = end_cycles - start_cycles;
     time_us = (hclk_hz > 0u) ? (uint32_t)(((uint64_t)cycles * 1000000ULL) / hclk_hz) : 0u;
 
-    printf("BENCH,event=inference,run=%lu,mode=live,frontend=pseudo_mfcc_49x10,cnn_us=%lu,cycles=%lu,pred_idx=%lu,post_trigger_samples=%lu,audio_window_ms=%lu\r\n",
+    printf("BENCH,event=inference,run=%lu,mode=live,frontend=mfcc_tf_49x10,cnn_us=%lu,cycles=%lu,pred_idx=%lu,post_trigger_samples=%lu,audio_window_ms=%lu\r\n",
            (unsigned long)run_index,
            (unsigned long)time_us,
            (unsigned long)cycles,
@@ -564,7 +532,7 @@ static void run_inference(ai_handle network,
 #endif
 
 #if !KWS20_LIVE_MINIMAL_OUTPUT_ENABLED
-    printf("\r\nDS-CNN live inference frontend=pseudo_mfcc_49x10\r\n");
+    printf("\r\nDS-CNN live inference frontend=mfcc_tf_49x10\r\n");
     printf("best index: %lu predicted: %s conf_x1000: %ld\r\n",
            (unsigned long)best,
            labels[best],

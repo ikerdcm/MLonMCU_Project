@@ -490,6 +490,7 @@ static void run_inference(ai_handle network,
 
     memset(ai_output_data, 0, sizeof(ai_output_data));
     fill_input_from_live_audio();
+    memcpy(ai_input[0].data, ai_input_data, AI_NETWORK_IN_1_SIZE_BYTES);
 
 #if KWS20_LIVE_BENCH_ENABLED
     DWT->CYCCNT = 0;
@@ -506,6 +507,7 @@ static void run_inference(ai_handle network,
         return;
     }
 
+    memcpy(ai_output_data, ai_output[0].data, AI_NETWORK_OUT_1_SIZE_BYTES);
     best_val = kws20_output_score(ai_output, 0, ai_output_data[0]);
     for (uint32_t i = 1; i < DS_CNN_OUTPUT_SIZE; i++) {
         float score = kws20_output_score(ai_output, i, ai_output_data[i]);
@@ -634,8 +636,6 @@ void kws20_live_run_once(void)
             return;
         }
 
-        ai_input[0].data = AI_HANDLE_PTR(ai_input_data);
-        ai_output[0].data = AI_HANDLE_PTR(ai_output_data);
         live_dwt_init();
 
 #if KWS20_LIVE_BENCH_ENABLED

@@ -1,5 +1,6 @@
-#include "kws20_test.h"
+jetzt #include "kws20_test.h"
 #include "kws20_model_io.h"
+#include "ds_cnn_test_input_left.h"
 
 #include "main.h"
 #include "network.h"
@@ -32,7 +33,9 @@ static void dwt_init(void)
 
 static void fill_test_input(void)
 {
-    memset(ai_input_data, 0, sizeof(ai_input_data));
+    for (uint32_t i = 0; i < AI_NETWORK_IN_1_SIZE && i < DS_CNN_TEST_INPUT_LEFT_SIZE; i++) {
+        ai_input_data[i] = kws20_input_from_float(ds_cnn_test_input_left[i]);
+    }
 }
 
 static void output_score_range(const ai_buffer *ai_output, float *min_score, float *max_score)
@@ -135,9 +138,8 @@ void kws20_test_run_once(void)
             return;
         }
 
-        ai_input[0].data = AI_HANDLE_PTR(ai_input_data);
-        ai_output[0].data = AI_HANDLE_PTR(ai_output_data);
         fill_test_input();
+        memcpy(ai_input[0].data, ai_input_data, AI_NETWORK_IN_1_SIZE_BYTES);
         dwt_init();
 
         memset(ai_output_data, 0, sizeof(ai_output_data));
@@ -153,6 +155,8 @@ void kws20_test_run_once(void)
             return;
         }
 
+        memcpy(ai_output_data, ai_output[0].data, AI_NETWORK_OUT_1_SIZE_BYTES);
+
         cycles = end_cycles - start_cycles;
         time_us = (hclk > 0u) ? (uint32_t)(((uint64_t)cycles * 1000000ULL) / hclk) : 0u;
 
@@ -167,13 +171,15 @@ void kws20_test_run_once(void)
 
         output_score_range(ai_output, &min_score, &max_score);
 
-        printf("feature input: zero tensor (%u elems)\r\n", (unsigned int)AI_NETWORK_IN_1_SIZE);
+        printf("feature input: MFCC of 'left' keyword (%u elems, expected idx=%d)\r\n",
+               (unsigned int)AI_NETWORK_IN_1_SIZE, DS_CNN_TEST_INPUT_LEFT_EXPECTED_IDX);
         printf("cycles: %lu  time_us: %lu\r\n",
                (unsigned long)cycles, (unsigned long)time_us);
-        printf("best index: %lu  predicted: %s  conf_x1000: %ld\r\n",
+        printf("best index: %lu  predicted: %s  conf_x1000: %ld  %s\r\n",
                (unsigned long)best,
                labels[best],
-               score_to_norm_x1000(best_val, min_score, max_score));
+               score_to_norm_x1000(best_val, min_score, max_score),
+               (best == DS_CNN_TEST_INPUT_LEFT_EXPECTED_IDX) ? "[PASS]" : "[FAIL]");
 
         print_top5(ai_output, min_score, max_score);
     }

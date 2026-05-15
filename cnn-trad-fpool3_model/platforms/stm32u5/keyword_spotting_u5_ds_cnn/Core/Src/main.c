@@ -114,6 +114,7 @@ int main(void)
 #if KWS20_CFG_MEASURE_LIVE
   kws20_live_run_once();
 #else
+  kws20_test_run_once();
   kws20_measure_run_once();
 #endif
 #else

@@ -81,10 +81,8 @@ void kws20_measure_run_once(void)
         return;
     }
 
-    ai_input[0].data = AI_HANDLE_PTR(measure_input_data);
-    ai_output[0].data = AI_HANDLE_PTR(measure_output_data);
-
     fill_measure_input();
+    memcpy(ai_input[0].data, measure_input_data, AI_NETWORK_IN_1_SIZE_BYTES);
     dwt_init();
     hclk = HAL_RCC_GetHCLKFreq();
 
@@ -128,6 +126,7 @@ void kws20_measure_run_once(void)
             return;
         }
 
+        memcpy(measure_output_data, ai_output[0].data, AI_NETWORK_OUT_1_SIZE_BYTES);
         cycles = end_cycles - start_cycles;
         time_us = (hclk > 0) ? (uint32_t)(((uint64_t)cycles * 1000000ULL) / hclk) : 0U;
         pred = best_index(ai_output);

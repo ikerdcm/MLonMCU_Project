@@ -1,0 +1,13 @@
+#ifndef KWS20_MODE_CONFIG_H
+#define KWS20_MODE_CONFIG_H
+
+/*
+ * KWS20_CFG_ENABLE_MEASURE = 0  → live demo mode (no BENCH output)
+ * KWS20_CFG_ENABLE_MEASURE = 1, KWS20_CFG_MEASURE_LIVE = 0 → offline benchmark
+ * KWS20_CFG_ENABLE_MEASURE = 1, KWS20_CFG_MEASURE_LIVE = 1 → live benchmark with BENCH CSV
+ */
+#define KWS20_CFG_ENABLE_MEASURE 1
+#define KWS20_CFG_MEASURE_LIVE   0
+#define KWS20_CFG_MEASURE_RUNS   50
+
+#endif /* KWS20_MODE_CONFIG_H */

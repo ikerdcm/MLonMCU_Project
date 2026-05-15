@@ -1,4 +1,4 @@
-jetzt #include "kws20_test.h"
+#include "kws20_test.h"
 #include "kws20_model_io.h"
 #include "ds_cnn_test_input_left.h"
 

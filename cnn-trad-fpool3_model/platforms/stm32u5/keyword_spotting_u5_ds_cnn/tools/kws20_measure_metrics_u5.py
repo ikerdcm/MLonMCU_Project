@@ -18,7 +18,7 @@ except ImportError:
     sys.exit(1)
 
 
-DEFAULT_CONFIG_PATH = Path(__file__).with_name("kws20_measure_u5_config.json")
+DEFAULT_CONFIG_PATH = Path(__file__).with_name("kws20_measure_u5_ds_cnn_config.json")
 
 
 def run_cmd(cmd, cwd, env, log_path):

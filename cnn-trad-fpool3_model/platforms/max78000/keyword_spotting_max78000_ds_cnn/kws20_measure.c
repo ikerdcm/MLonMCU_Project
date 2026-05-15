@@ -1,6 +1,6 @@
 /**
  * DS-CNN-L offline benchmark for MAX78000 FTHR.
- * Measures inference latency using the DWT cycle counter.
+ * Measures inference latency using MXC_TMR0 (hardware timer, PCLK source).
  */
 
 #include "kws20_measure.h"
@@ -8,9 +8,7 @@
 #include "ds_cnn_inference.h"
 
 #include "mxc_device.h"
-
-/* Cortex-M4 DWT / CoreDebug registers — from CMSIS core_cm4.h */
-#include "core_cm4.h"
+#include "tmr.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -19,20 +17,13 @@
 #define KWS20_CFG_MEASURE_RUNS 50
 #endif
 
-#define DS_CNN_INPUT_ELEMS   490u
-#define DS_CNN_OUTPUT_ELEMS  12u
-#define DS_CNN_SAMPLE_RATE   16000u
+#define DS_CNN_INPUT_ELEMS    490u
+#define DS_CNN_OUTPUT_ELEMS   12u
+#define DS_CNN_SAMPLE_RATE    16000u
 #define DS_CNN_WINDOW_SAMPLES 16000u
 
 static float measure_input[DS_CNN_INPUT_ELEMS];
 static float measure_scores[DS_CNN_OUTPUT_ELEMS];
-
-static void dwt_init(void)
-{
-    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-    DWT->CYCCNT = 0;
-    DWT->CTRL  |= DWT_CTRL_CYCCNTENA_Msk;
-}
 
 void kws20_measure_run_once(void)
 {
@@ -43,7 +34,6 @@ void kws20_measure_run_once(void)
     printf("==============================\r\n");
 
     memset(measure_input, 0, sizeof(measure_input));
-    dwt_init();
 
     printf("BENCH,event=model_info,mode=offline"
            ",hclk_hz=%lu"
@@ -70,22 +60,17 @@ void kws20_measure_run_once(void)
            (unsigned int)((DS_CNN_WINDOW_SAMPLES * 1000u) / DS_CNN_SAMPLE_RATE));
 
     for (uint32_t run = 0; run < KWS20_CFG_MEASURE_RUNS; run++) {
-        uint32_t start_cycles;
-        uint32_t end_cycles;
-        uint32_t cycles;
         uint32_t time_us;
+        uint32_t cycles;
         int pred;
 
         memset(measure_scores, 0, sizeof(measure_scores));
-        DWT->CYCCNT = 0;
-        start_cycles = DWT->CYCCNT;
-        pred = ds_cnn_infer(measure_input, measure_scores);
-        end_cycles = DWT->CYCCNT;
 
-        cycles  = end_cycles - start_cycles;
-        time_us = (hclk > 0u)
-                  ? (uint32_t)(((uint64_t)cycles * 1000000ULL) / (uint64_t)hclk)
-                  : 0u;
+        MXC_TMR_SW_Start(MXC_TMR0);
+        pred = ds_cnn_infer(measure_input, measure_scores);
+        time_us = MXC_TMR_SW_Stop(MXC_TMR0);
+
+        cycles = (uint32_t)(((uint64_t)time_us * (uint64_t)hclk) / 1000000ULL);
 
         printf("BENCH,event=inference,run=%lu,mode=offline"
                ",cnn_us=%lu,cycles=%lu,pred_idx=%d\r\n",

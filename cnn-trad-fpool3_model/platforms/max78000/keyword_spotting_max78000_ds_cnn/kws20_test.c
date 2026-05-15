@@ -8,7 +8,7 @@
 #include "ds_cnn_test_input_left.h"
 
 #include "mxc_device.h"
-#include "core_cm4.h"
+#include "tmr.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -19,13 +19,6 @@ static const char *labels[12] = {
 };
 
 static float test_scores[12];
-
-static void dwt_init(void)
-{
-    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-    DWT->CYCCNT = 0;
-    DWT->CTRL  |= DWT_CTRL_CYCCNTENA_Msk;
-}
 
 static long score_to_norm_x1000(float score, float min_score, float max_score)
 {
@@ -69,29 +62,21 @@ static void print_top5(void)
 
 void kws20_test_run_once(void)
 {
-    uint32_t hclk = SystemCoreClock;
-    uint32_t start_cycles;
-    uint32_t end_cycles;
-    uint32_t cycles;
     uint32_t time_us;
+    uint32_t cycles;
     int pred;
 
     printf("\r\n==============================\r\n");
     printf("DS-CNN OFFLINE TEST\r\n");
     printf("==============================\r\n");
 
-    dwt_init();
-
     memset(test_scores, 0, sizeof(test_scores));
-    DWT->CYCCNT = 0;
-    start_cycles = DWT->CYCCNT;
-    pred = ds_cnn_infer(ds_cnn_test_input_left, test_scores);
-    end_cycles = DWT->CYCCNT;
 
-    cycles  = end_cycles - start_cycles;
-    time_us = (hclk > 0u)
-              ? (uint32_t)(((uint64_t)cycles * 1000000ULL) / (uint64_t)hclk)
-              : 0u;
+    MXC_TMR_SW_Start(MXC_TMR0);
+    pred = ds_cnn_infer(ds_cnn_test_input_left, test_scores);
+    time_us = MXC_TMR_SW_Stop(MXC_TMR0);
+
+    cycles = (uint32_t)(((uint64_t)time_us * (uint64_t)SystemCoreClock) / 1000000ULL);
 
     printf("feature input: MFCC of 'left' keyword (%u elems, expected idx=%d)\r\n",
            (unsigned int)DS_CNN_TEST_INPUT_LEFT_SIZE,

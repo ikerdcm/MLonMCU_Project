@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 #include "mxc.h"
+#include "tmr.h"
 #include "i2s.h"
 #include "i2s_regs.h"
 #include "board.h"
@@ -215,35 +216,29 @@ static void ring_extract(uint32_t offset_before_head, uint32_t n_samples)
  * ---------------------------------------------------------------------- */
 static void run_inference(uint32_t run_idx, uint32_t post_samples)
 {
-    uint32_t start_cyc, end_cyc, cycles, time_us;
+    uint32_t time_us;
     int pred;
 
     /* MFCC */
     memset(mfcc_in, 0, sizeof(mfcc_in));
     ds_cnn_frontend_compute(audio_win, LIVE_WINDOW_SAMPLES, mfcc_in, LIVE_INPUT_ELEMS);
 
-    /* Inference with DWT timing */
-    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-    DWT->CYCCNT = 0;
-    DWT->CTRL  |= DWT_CTRL_CYCCNTENA_Msk;
-
-    start_cyc = DWT->CYCCNT;
-    pred      = ds_cnn_infer(mfcc_in, scores);
-    end_cyc   = DWT->CYCCNT;
-
-    cycles  = end_cyc - start_cyc;
-    time_us = (SystemCoreClock > 0u)
-              ? (uint32_t)(((uint64_t)cycles * 1000000ULL) / SystemCoreClock)
-              : 0u;
+    /* Inference with hardware timer */
+    MXC_TMR_SW_Start(MXC_TMR0);
+    pred    = ds_cnn_infer(mfcc_in, scores);
+    time_us = MXC_TMR_SW_Stop(MXC_TMR0);
 
 #if LIVE_BENCH_ENABLED
-    printf("BENCH,event=inference,run=%lu,mode=live,frontend=mfcc_tf_49x10"
-           ",cnn_us=%lu,cycles=%lu,pred_idx=%d,audio_window_ms=%lu\r\n",
-           (unsigned long)run_idx,
-           (unsigned long)time_us,
-           (unsigned long)cycles,
-           pred,
-           (unsigned long)(((uint64_t)post_samples * 1000ULL) / LIVE_SAMPLE_RATE));
+    {
+        uint32_t cycles = (uint32_t)(((uint64_t)time_us * (uint64_t)SystemCoreClock) / 1000000ULL);
+        printf("BENCH,event=inference,run=%lu,mode=live,frontend=mfcc_tf_49x10"
+               ",cnn_us=%lu,cycles=%lu,pred_idx=%d,audio_window_ms=%lu\r\n",
+               (unsigned long)run_idx,
+               (unsigned long)time_us,
+               (unsigned long)cycles,
+               pred,
+               (unsigned long)(((uint64_t)post_samples * 1000ULL) / LIVE_SAMPLE_RATE));
+    }
 #endif
 
     /* Human-readable result */

@@ -1,0 +1,19 @@
+{
+  "mode": "live",
+  "project": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/cnn-trad-fpool3_model/platforms/max78000/keyword_spotting_max78000_ds_cnn_v1",
+  "board": "FTHR_RevA",
+  "port": "/dev/ttyACM0",
+  "baud": 115200,
+  "timeout": 300.0,
+  "clock_mhz": 100.0,
+  "sample_rate": 16000,
+  "sample_count": 16000,
+  "mac_ops": 1348032.0,
+  "variant_name": "ds_cnn_l_int8_cnn_accel",
+  "voltage": 3.7,
+  "current_ma": null,
+  "maxim_path": "/home/pascal/max78000/ai8x-synthesis/sdk",
+  "openocd_root": "/home/pascal/max78000/ai8x-synthesis/openocd",
+  "no_build": true,
+  "no_flash": true
+}

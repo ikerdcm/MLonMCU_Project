@@ -1,0 +1,100 @@
+#include "ds_cnn_frontend.h"
+
+#include <math.h>
+#include <stddef.h>
+
+#include "ds_cnn_frontend_tables.h"
+
+#define DS_CNN_FRONTEND_AUDIO_SAMPLES 16000u
+#define DS_CNN_FRONTEND_OUTPUT_ELEMS  (DS_CNN_FRONTEND_SPECTROGRAM_FRAMES * DS_CNN_FRONTEND_MFCC_BINS)
+#define DS_CNN_FRONTEND_LOG_EPSILON   1.0e-6f
+
+int ds_cnn_frontend_compute(const int16_t *audio,
+                            uint32_t sample_count,
+                            kws20_input_elem_t *out,
+                            uint32_t out_count)
+{
+    float windowed[DS_CNN_FRONTEND_FRAME_SIZE];
+    float spectrum[DS_CNN_FRONTEND_FFT_BINS];
+    float mel[DS_CNN_FRONTEND_MEL_BINS];
+    float norm_scale = 1.0f;
+    int16_t max_sample = 0;
+
+    if (audio == NULL || out == NULL) {
+        return 0;
+    }
+    if (sample_count < DS_CNN_FRONTEND_AUDIO_SAMPLES) {
+        return 0;
+    }
+    if (out_count < DS_CNN_FRONTEND_OUTPUT_ELEMS) {
+        return 0;
+    }
+
+    for (uint32_t i = 0; i < DS_CNN_FRONTEND_AUDIO_SAMPLES; i++) {
+        if (audio[i] > max_sample) {
+            max_sample = audio[i];
+        }
+    }
+    if (max_sample > 0) {
+        norm_scale = 1.0f / (float)max_sample;
+    }
+
+    for (uint32_t frame = 0; frame < DS_CNN_FRONTEND_SPECTROGRAM_FRAMES; frame++) {
+        uint32_t frame_start = frame * DS_CNN_FRONTEND_FRAME_STEP;
+
+        for (uint32_t i = 0; i < DS_CNN_FRONTEND_FRAME_SIZE; i++) {
+            windowed[i] = ((float)audio[frame_start + i] * norm_scale) *
+                          ds_cnn_frontend_window[i];
+        }
+
+        for (uint32_t bin = 0; bin < DS_CNN_FRONTEND_FFT_BINS; bin++) {
+            float coeff = ds_cnn_frontend_goertzel_coeff[bin];
+            float cos_omega = ds_cnn_frontend_goertzel_cos[bin];
+            float sin_omega = ds_cnn_frontend_goertzel_sin[bin];
+            float s1 = 0.0f;
+            float s2 = 0.0f;
+
+            for (uint32_t i = 0; i < DS_CNN_FRONTEND_FRAME_SIZE; i++) {
+                float s0 = windowed[i] + coeff * s1 - s2;
+                s2 = s1;
+                s1 = s0;
+            }
+            for (uint32_t i = DS_CNN_FRONTEND_FRAME_SIZE; i < DS_CNN_FRONTEND_FFT_SIZE; i++) {
+                float s0 = coeff * s1 - s2;
+                s2 = s1;
+                s1 = s0;
+            }
+
+            {
+                float real = s1 - s2 * cos_omega;
+                float imag = s2 * sin_omega;
+                spectrum[bin] = sqrtf(real * real + imag * imag);
+            }
+        }
+
+        for (uint32_t mel_bin = 0; mel_bin < DS_CNN_FRONTEND_MEL_BINS; mel_bin++) {
+            float mel_sum = 0.0f;
+
+            for (uint32_t bin = 0; bin < DS_CNN_FRONTEND_FFT_BINS; bin++) {
+                mel_sum += spectrum[bin] *
+                           ds_cnn_frontend_mel_matrix[bin * DS_CNN_FRONTEND_MEL_BINS + mel_bin];
+            }
+
+            mel[mel_bin] = logf(mel_sum + DS_CNN_FRONTEND_LOG_EPSILON);
+        }
+
+        for (uint32_t coeff_idx = 0; coeff_idx < DS_CNN_FRONTEND_MFCC_BINS; coeff_idx++) {
+            float mfcc = 0.0f;
+
+            for (uint32_t mel_bin = 0; mel_bin < DS_CNN_FRONTEND_MEL_BINS; mel_bin++) {
+                mfcc += mel[mel_bin] *
+                        ds_cnn_frontend_dct_matrix[mel_bin * DS_CNN_FRONTEND_MFCC_BINS + coeff_idx];
+            }
+
+            out[frame * DS_CNN_FRONTEND_MFCC_BINS + coeff_idx] =
+                kws20_input_from_float(mfcc);
+        }
+    }
+
+    return 1;
+}

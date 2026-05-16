@@ -1,0 +1,17 @@
+{
+  "mode": "live",
+  "project": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/cnn-trad-fpool3_model/platforms/stm32u5/keyword_spotting_u5_ds_cnn_v1",
+  "elf": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/cnn-trad-fpool3_model/platforms/stm32u5/keyword_spotting_u5_ds_cnn_v1/Debug/keyword_spotting_u5_ds_cnn_v1.elf",
+  "build_log": null,
+  "port": "/dev/ttyACM0",
+  "baud": 115200,
+  "clock_mhz": 160.0,
+  "mac_ops": 3937717.0,
+  "sample_rate": 16000.0,
+  "sample_count": 16000.0,
+  "voltage": 3.28,
+  "current_ma": 21.94,
+  "timeout": 120.0,
+  "no_build": true,
+  "min_inferences": 10
+}

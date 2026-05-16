@@ -140,7 +140,7 @@ def parse_bench_fields(line):
 
 # ── UART collection ────────────────────────────────────────────────────────────
 
-def collect_uart(ser, baud, timeout_s, out_dir, mode):
+def collect_uart(ser, baud, timeout_s, out_dir, mode, min_inferences=0):
     raw_path  = out_dir / "serial_raw.log"
     uart_rows = []
     inf_rows  = []
@@ -148,8 +148,10 @@ def collect_uart(ser, baud, timeout_s, out_dir, mode):
     acquisition  = None
     done_seen    = False
     start = time.time()
-    print(f"\n[UART] capturing for up to {timeout_s:.0f} s "
-          f"(Ctrl+C = stop early, summary still written)")
+    stop_msg = f"up to {timeout_s:.0f} s"
+    if min_inferences > 0 and mode == "live":
+        stop_msg += f" or {min_inferences} inferences (whichever comes first)"
+    print(f"\n[UART] capturing for {stop_msg} (Ctrl+C = stop early, summary still written)")
 
     with open(raw_path, "w") as raw:
         try:
@@ -187,6 +189,10 @@ def collect_uart(ser, baud, timeout_s, out_dir, mode):
                             if key in bench:
                                 row[key] = bench[key]
                         inf_rows.append(row)
+                        if mode == "live" and min_inferences > 0 and len(inf_rows) >= min_inferences:
+                            print(f"\n[UART] {min_inferences} inferences collected — stopping.")
+                            done_seen = True
+                            break
                     elif event == "done" and mode == "offline":
                         done_seen = True
                         break
@@ -277,8 +283,9 @@ def main():
     ap.add_argument("--variant-name", default=cfg.get("variant_name", "ds_cnn_l_float32"))
     ap.add_argument("--maxim-path",   default=cfg.get("maxim_path"))
     ap.add_argument("--openocd-root", default=cfg.get("openocd_root"))
-    ap.add_argument("--no-build",  action="store_true", default=bool(cfg.get("no_build", True)))
-    ap.add_argument("--no-flash",  action="store_true", default=bool(cfg.get("no_flash", True)))
+    ap.add_argument("--no-build",        action="store_true", default=bool(cfg.get("no_build", True)))
+    ap.add_argument("--no-flash",        action="store_true", default=bool(cfg.get("no_flash", True)))
+    ap.add_argument("--min-inferences",  type=int, default=cfg.get("min_inferences", 10))
     args = ap.parse_args()
 
     project = Path(args.project).expanduser().resolve()
@@ -354,7 +361,8 @@ def main():
         time.sleep(1.0)
         ser.reset_input_buffer()
         uart_rows, inf_rows, model_info, acquisition = collect_uart(
-            ser, args.baud, args.timeout, out_dir, args.mode
+            ser, args.baud, args.timeout, out_dir, args.mode,
+            min_inferences=args.min_inferences,
         )
 
     write_csv(out_dir / "uart_events.csv", uart_rows)

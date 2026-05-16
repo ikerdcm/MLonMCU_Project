@@ -15,5 +15,6 @@
   "maxim_path": "/home/pascal/max78000/ai8x-synthesis/sdk",
   "openocd_root": "/home/pascal/max78000/ai8x-synthesis/openocd",
   "no_build": true,
-  "no_flash": true
+  "no_flash": true,
+  "min_inferences": 10
 }

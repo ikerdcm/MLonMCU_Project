@@ -5,6 +5,7 @@ import json
 import math
 from dataclasses import dataclass, asdict
 from pathlib import Path
+from typing import Optional
 from xml.sax.saxutils import escape
 
 try:
@@ -29,8 +30,8 @@ class PeakMetrics:
     mean_excess_current_ua: float
     charge_total_uc: float
     charge_uc: float
-    energy_total_uj: float | None
-    energy_uj: float | None
+    energy_total_uj: Optional[float]
+    energy_uj: Optional[float]
 
 
 def percentile(values, q):
@@ -813,7 +814,7 @@ def save_overlay_plot(path: Path, times_ms, currents_ua, metrics, overlay_half_w
     plt.close(fig)
 
 
-def load_summary_json(path: Path | None):
+def load_summary_json(path: Optional[Path]):
     if path is None:
         return None
     return json.loads(path.read_text())
@@ -832,7 +833,7 @@ def summary_inference_count(summary):
         return None
 
 
-def load_config(path: Path | None):
+def load_config(path: Optional[Path]):
     if path is None or not path.exists():
         return {}
     return json.loads(path.read_text())

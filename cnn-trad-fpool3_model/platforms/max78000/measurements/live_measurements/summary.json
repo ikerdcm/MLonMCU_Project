@@ -1,0 +1,12 @@
+make[1]: Leaving directory '/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/cnn-trad-fpool3_model/platforms/max78000/keyword_spotting_max78000_ds_cnn'
+- LD /home/pascal/Documents/ml_on_mcu/MLonMCU_Project/cnn-trad-fpool3_model/platforms/max78000/keyword_spotting_max78000_ds_cnn/build/max78000.elf
+Memory region         Used Size  Region Size  %age Used
+             ROM:          0 GB        64 KB      0.00%
+           FLASH:      228096 B       512 KB     43.51%
+            SRAM:      135712 B       128 KB    103.54%
+/usr/lib/gcc/arm-none-eabi/9.2.1/../../../arm-none-eabi/bin/ld: /home/pascal/Documents/ml_on_mcu/MLonMCU_Project/cnn-trad-fpool3_model/platforms/max78000/keyword_spotting_max78000_ds_cnn/build/max78000.elf section `.bss' will not fit in region `SRAM'
+/usr/lib/gcc/arm-none-eabi/9.2.1/../../../arm-none-eabi/bin/ld: region RAM overflowed with stack
+/usr/lib/gcc/arm-none-eabi/9.2.1/../../../arm-none-eabi/bin/ld: region `SRAM' overflowed by 4640 bytes
+collect2: error: ld returned 1 exit status
+make: *** [/home/pascal/max78000/ai8x-synthesis/sdk/Libraries/CMSIS/Device/Maxim/GCC/gcc.mk:717: /home/pascal/Documents/ml_on_mcu/MLonMCU_Project/cnn-trad-fpool3_model/platforms/max78000/keyword_spotting_max78000_ds_cnn/build/max78000.elf] Error 1
+make: Leaving directory '/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/cnn-trad-fpool3_model/platforms/max78000/keyword_spotting_max78000_ds_cnn'

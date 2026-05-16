@@ -1,0 +1,26 @@
+time_iso,elapsed_s,bytes,uart_tx_time_s_est,raw
+2026-05-16T16:51:05.412,1.6085014343261719,0,0.0,
+2026-05-16T16:51:05.412,1.6093108654022217,1,8.680555555555556e-05,#
+2026-05-16T16:51:05.414,1.6106162071228027,19,0.0016493055555555556,# AI Validation 7.1
+2026-05-16T16:51:05.414,1.6111173629760742,1,8.680555555555556e-05,#
+2026-05-16T16:51:05.416,1.6131210327148438,24,0.0020833333333333333,Compiled with GCC 13.3.1
+2026-05-16T16:51:05.419,1.615901231765747,29,0.0025173611111111113,STM32 device configuration...
+2026-05-16T16:51:05.424,1.620999813079834,56,0.004861111111111111,Device       : DevID:0x0482 (STM32U575/585) RevID:0x2001
+2026-05-16T16:51:05.435,1.6315064430236816,30,0.0026041666666666665,Core Arch.   : M33 - FPU  used
+2026-05-16T16:51:05.436,1.6328227519989014,25,0.002170138888888889,HAL version  : 0x01060200
+2026-05-16T16:51:05.437,1.6337592601776123,22,0.0019097222222222222,SYSCLK clock : 160 MHz
+2026-05-16T16:51:05.439,1.6359405517578125,22,0.0019097222222222222,HCLK clock   : 160 MHz
+2026-05-16T16:51:05.442,1.638617992401123,19,0.0016493055555555556,ICACHE       : True
+2026-05-16T16:51:05.540,1.737257719039917,48,0.004166666666666667,Timestamp    : SysTick + DWT (delay(1)=1.003 ms)
+2026-05-16T16:51:05.559,1.7555017471313477,207,0.01796875,"BENCH,event=model_info,mode=live,hclk_hz=160000000,input_elems=490,input_bytes=1960,output_elems=12,output_bytes=48,activations_bytes=59648,weights_bytes=128816,sample_rate_hz=16000,full_window_samples=16000"
+2026-05-16T16:51:05.574,1.7708747386932373,175,0.015190972222222222,"BENCH,event=acquisition,mode=live,sample_rate_hz=16000,sample_count=16000,audio_window_ms=1000,chunk=128,preamble=3840,post_trigger_max=12160,feature_frames=49,feature_bins=10"
+2026-05-16T16:51:08.999,5.196394681930542,148,0.012847222222222222,"BENCH,event=inference,run=0,mode=live,frontend=mfcc_tf_49x10,cnn_us=224573,cycles=35931808,pred_idx=11,post_trigger_samples=5376,audio_window_ms=576"
+2026-05-16T16:51:12.521,8.717921018600464,149,0.012934027777777777,"BENCH,event=inference,run=1,mode=live,frontend=mfcc_tf_49x10,cnn_us=224574,cycles=35931860,pred_idx=5,post_trigger_samples=12160,audio_window_ms=1000"
+2026-05-16T16:51:15.287,11.483811616897583,147,0.012760416666666666,"BENCH,event=inference,run=2,mode=live,frontend=mfcc_tf_49x10,cnn_us=224573,cycles=35931770,pred_idx=5,post_trigger_samples=9216,audio_window_ms=816"
+2026-05-16T16:51:17.486,13.683077812194824,147,0.012760416666666666,"BENCH,event=inference,run=3,mode=live,frontend=mfcc_tf_49x10,cnn_us=224573,cycles=35931761,pred_idx=5,post_trigger_samples=9216,audio_window_ms=816"
+2026-05-16T16:51:19.498,15.694838285446167,147,0.012760416666666666,"BENCH,event=inference,run=4,mode=live,frontend=mfcc_tf_49x10,cnn_us=224573,cycles=35931729,pred_idx=5,post_trigger_samples=8064,audio_window_ms=744"
+2026-05-16T16:51:21.510,17.706985235214233,147,0.012760416666666666,"BENCH,event=inference,run=5,mode=live,frontend=mfcc_tf_49x10,cnn_us=224572,cycles=35931662,pred_idx=5,post_trigger_samples=8448,audio_window_ms=768"
+2026-05-16T16:51:23.458,19.655368328094482,148,0.012847222222222222,"BENCH,event=inference,run=6,mode=live,frontend=mfcc_tf_49x10,cnn_us=224573,cycles=35931745,pred_idx=11,post_trigger_samples=8448,audio_window_ms=768"
+2026-05-16T16:51:25.406,21.603036642074585,148,0.012847222222222222,"BENCH,event=inference,run=7,mode=live,frontend=mfcc_tf_49x10,cnn_us=224574,cycles=35931878,pred_idx=11,post_trigger_samples=8192,audio_window_ms=752"
+2026-05-16T16:51:27.480,23.677030563354492,148,0.012847222222222222,"BENCH,event=inference,run=8,mode=live,frontend=mfcc_tf_49x10,cnn_us=224573,cycles=35931791,pred_idx=11,post_trigger_samples=8448,audio_window_ms=768"
+2026-05-16T16:51:29.807,26.003540992736816,148,0.012847222222222222,"BENCH,event=inference,run=9,mode=live,frontend=mfcc_tf_49x10,cnn_us=224573,cycles=35931722,pred_idx=5,post_trigger_samples=10112,audio_window_ms=872"

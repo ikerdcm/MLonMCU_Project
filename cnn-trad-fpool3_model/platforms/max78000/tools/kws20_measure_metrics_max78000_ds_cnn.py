@@ -283,15 +283,19 @@ def main():
     ap.add_argument("--variant-name", default=cfg.get("variant_name", "ds_cnn_l_float32"))
     ap.add_argument("--maxim-path",   default=cfg.get("maxim_path"))
     ap.add_argument("--openocd-root", default=cfg.get("openocd_root"))
-    ap.add_argument("--no-build",        action="store_true", default=bool(cfg.get("no_build", True)))
-    ap.add_argument("--no-flash",        action="store_true", default=bool(cfg.get("no_flash", True)))
-    ap.add_argument("--min-inferences",  type=int, default=cfg.get("min_inferences", 10))
+    ap.add_argument("--no-build",         action="store_true", default=bool(cfg.get("no_build", True)))
+    ap.add_argument("--no-flash",         action="store_true", default=bool(cfg.get("no_flash", True)))
+    ap.add_argument("--min-inferences",   type=int,   default=cfg.get("min_inferences", 10))
+    ap.add_argument("--measurements-root", default=cfg.get("measurements_root", None))
     args = ap.parse_args()
 
     project = Path(args.project).expanduser().resolve()
     elf     = Path(args.elf).expanduser().resolve() if args.elf else (project / "build" / "max78000.elf")
 
-    measure_root = Path(__file__).resolve().parent.parent / "measurements"
+    if args.measurements_root:
+        measure_root = Path(args.measurements_root).expanduser().resolve()
+    else:
+        measure_root = Path(__file__).resolve().parent.parent / "measurements"
     subdir       = "offline_measurements" if args.mode == "offline" else "live_measurements"
     prefix       = f"kws20_{args.variant_name.replace(' ','_')}_{args.mode}"
     out_dir      = measure_root / subdir / datetime.now().strftime(f"{prefix}_%Y%m%d_%H%M%S")

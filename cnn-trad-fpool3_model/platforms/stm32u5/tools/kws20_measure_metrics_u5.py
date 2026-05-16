@@ -168,7 +168,7 @@ def collect_uart(ser, baud, timeout_s, out_dir):
     return uart_rows, inf_rows, model_info, acquisition, done
 
 
-def collect_uart_live(ser, baud, timeout_s, out_dir):
+def collect_uart_live(ser, baud, timeout_s, out_dir, min_inferences=0):
     raw_path = out_dir / "serial_raw.log"
     uart_rows = []
     inf_rows = []
@@ -176,6 +176,7 @@ def collect_uart_live(ser, baud, timeout_s, out_dir):
     acquisition = None
     start = time.time()
 
+    print(f"\n[UART] capturing for up to {timeout_s:.0f} s (speak keywords; stops after {min_inferences} inferences)")
     with open(raw_path, "w") as raw:
         while time.time() - start < timeout_s:
             data = ser.readline()
@@ -208,6 +209,9 @@ def collect_uart_live(ser, baud, timeout_s, out_dir):
                 acquisition = fields
             elif event == "inference":
                 inf_rows.append(fields)
+                if min_inferences > 0 and len(inf_rows) >= min_inferences:
+                    print(f"\n[UART] {min_inferences} inferences collected — stopping.")
+                    break
 
     return uart_rows, inf_rows, model_info, acquisition
 
@@ -234,6 +238,7 @@ def main():
     ap.add_argument("--current-ma", type=float, default=config.get("current_ma"))
     ap.add_argument("--timeout", type=float, default=config.get("timeout", 20.0))
     ap.add_argument("--no-build", action="store_true", default=bool(config.get("no_build", False)))
+    ap.add_argument("--min-inferences", type=int, default=int(config.get("min_inferences", 0)))
     args = ap.parse_args()
 
     project = Path(args.project).expanduser().resolve()
@@ -291,7 +296,7 @@ def main():
         ser.reset_input_buffer()
         if args.mode == "live":
             uart_rows, inf_rows, model_info, acquisition = collect_uart_live(
-                ser, args.baud, args.timeout, out_dir
+                ser, args.baud, args.timeout, out_dir, args.min_inferences
             )
             done = False
         else:

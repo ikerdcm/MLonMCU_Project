@@ -81,10 +81,12 @@ static uint32_t live_last_post_trigger_samples = 0;
 
 static int live_capture_ok = 0;
 
+#if !KWS20_CFG_LIVE_MEASURE_MINIMAL_OUTPUT
 static const char *labels[DS_CNN_OUTPUT_SIZE] = {
     "down", "go", "left", "no", "off", "on",
     "right", "stop", "up", "yes", "silence", "unknown"
 };
+#endif
 
 #if KWS20_CFG_ENABLE_MEASURE && KWS20_CFG_MEASURE_LIVE
 #define KWS20_LIVE_BENCH_ENABLED 1
@@ -113,6 +115,7 @@ static int32_t iabs32(int32_t x)
 static int16_t live_hpf_x1 = 0;
 static int32_t live_hpf_y1 = 0;
 
+#if !KWS20_LIVE_MINIMAL_OUTPUT_ENABLED
 static long score_to_norm_x1000(float score, float min_score, float max_score)
 {
     float norm;
@@ -131,7 +134,9 @@ static long score_to_norm_x1000(float score, float min_score, float max_score)
 
     return (long)(norm * 1000.0f + 0.5f);
 }
+#endif
 
+#if !KWS20_LIVE_MINIMAL_OUTPUT_ENABLED
 static void output_score_range(const ai_buffer *ai_output, float *min_score, float *max_score)
 {
     float min_v = kws20_output_score(ai_output, 0, ai_output_data[0]);
@@ -151,13 +156,16 @@ static void output_score_range(const ai_buffer *ai_output, float *min_score, flo
     *min_score = min_v;
     *max_score = max_v;
 }
+#endif
 
+#if !KWS20_LIVE_MINIMAL_OUTPUT_ENABLED
 static const char *live_audio_device_desc(void)
 {
     return (LIVE_AUDIO_DEVICE == AUDIO_IN_DEVICE_DIGITAL_MIC1)
                ? "DIGITAL_MIC1 / ADF1_Filter0"
                : "DIGITAL_MIC2 / MDF1_Filter0";
 }
+#endif
 
 static uint32_t live_audio_callback_slot(void)
 {
@@ -437,6 +445,7 @@ static void fill_input_from_live_audio(void)
     }
 }
 
+#if !KWS20_LIVE_MINIMAL_OUTPUT_ENABLED
 static void print_top5(const ai_buffer *ai_output, float min_score, float max_score)
 {
     int used[DS_CNN_OUTPUT_SIZE];
@@ -464,6 +473,7 @@ static void print_top5(const ai_buffer *ai_output, float min_score, float max_sc
                score_to_norm_x1000(best_val, min_score, max_score));
     }
 }
+#endif
 
 static void run_inference(ai_handle network,
                           ai_buffer *ai_input,
@@ -475,8 +485,10 @@ static void run_inference(ai_handle network,
     ai_i32 batch;
     uint32_t best = 0;
     float best_val;
+#if !KWS20_LIVE_MINIMAL_OUTPUT_ENABLED
     float min_score;
     float max_score;
+#endif
 #if KWS20_LIVE_BENCH_ENABLED
     uint32_t start_cycles;
     uint32_t end_cycles;
@@ -518,7 +530,9 @@ static void run_inference(ai_handle network,
         }
     }
 
+#if !KWS20_LIVE_MINIMAL_OUTPUT_ENABLED
     output_score_range(ai_output, &min_score, &max_score);
+#endif
 
 #if KWS20_LIVE_BENCH_ENABLED
     cycles = end_cycles - start_cycles;

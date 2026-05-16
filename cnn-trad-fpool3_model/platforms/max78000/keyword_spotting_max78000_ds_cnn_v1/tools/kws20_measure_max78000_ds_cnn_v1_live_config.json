@@ -16,5 +16,6 @@
   "openocd_root": "/home/pascal/max78000/ai8x-synthesis/openocd",
   "no_build": true,
   "no_flash": true,
-  "min_inferences": 10
+  "min_inferences": 10,
+  "measurements_root": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/cnn-trad-fpool3_model/platforms/max78000/keyword_spotting_max78000_ds_cnn_v1/measurements"
 }

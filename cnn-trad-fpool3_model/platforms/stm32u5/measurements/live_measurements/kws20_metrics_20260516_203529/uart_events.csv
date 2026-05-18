@@ -1,0 +1,11 @@
+time_iso,elapsed_s,bytes,uart_tx_time_s_est,raw
+2026-05-16T20:35:33.318,3.2505040168762207,146,0.012673611111111111,"BENCH,event=inference,run=0,mode=live,frontend=mfcc_tf_49x10,cnn_us=64073,cycles=10251804,pred_idx=5,post_trigger_samples=7424,audio_window_ms=704"
+2026-05-16T20:35:35.833,5.765144348144531,146,0.012673611111111111,"BENCH,event=inference,run=1,mode=live,frontend=mfcc_tf_49x10,cnn_us=64073,cycles=10251688,pred_idx=5,post_trigger_samples=8832,audio_window_ms=792"
+2026-05-16T20:35:38.032,7.964774131774902,146,0.012673611111111111,"BENCH,event=inference,run=2,mode=live,frontend=mfcc_tf_49x10,cnn_us=64071,cycles=10251415,pred_idx=5,post_trigger_samples=9856,audio_window_ms=856"
+2026-05-16T20:35:40.294,10.226602792739868,146,0.012673611111111111,"BENCH,event=inference,run=3,mode=live,frontend=mfcc_tf_49x10,cnn_us=64072,cycles=10251549,pred_idx=5,post_trigger_samples=9472,audio_window_ms=832"
+2026-05-16T20:35:41.928,11.860440254211426,147,0.012760416666666666,"BENCH,event=inference,run=4,mode=live,frontend=mfcc_tf_49x10,cnn_us=64085,cycles=10253664,pred_idx=11,post_trigger_samples=3968,audio_window_ms=488"
+2026-05-16T20:35:43.940,13.872346878051758,147,0.012760416666666666,"BENCH,event=inference,run=5,mode=live,frontend=mfcc_tf_49x10,cnn_us=64085,cycles=10253657,pred_idx=11,post_trigger_samples=9728,audio_window_ms=848"
+2026-05-16T20:35:45.510,15.44247055053711,146,0.012673611111111111,"BENCH,event=inference,run=6,mode=live,frontend=mfcc_tf_49x10,cnn_us=64083,cycles=10253393,pred_idx=4,post_trigger_samples=4096,audio_window_ms=496"
+2026-05-16T20:35:50.726,20.65802550315857,146,0.012673611111111111,"BENCH,event=inference,run=7,mode=live,frontend=mfcc_tf_49x10,cnn_us=64083,cycles=10253419,pred_idx=8,post_trigger_samples=4352,audio_window_ms=512"
+2026-05-16T20:35:52.862,22.794918298721313,147,0.012760416666666666,"BENCH,event=inference,run=8,mode=live,frontend=mfcc_tf_49x10,cnn_us=64085,cycles=10253752,pred_idx=11,post_trigger_samples=3968,audio_window_ms=488"
+2026-05-16T20:35:55.251,25.183549642562866,147,0.012760416666666666,"BENCH,event=inference,run=9,mode=live,frontend=mfcc_tf_49x10,cnn_us=64085,cycles=10253730,pred_idx=11,post_trigger_samples=5632,audio_window_ms=592"

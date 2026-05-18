@@ -1,5 +1,0 @@
-event,run,mode,frontend,cnn_us,cycles,pred_idx,post_trigger_samples,audio_window_ms
-inference,0,live,mfcc_tf_49x10,64085,10253659,8,3968,488
-inference,0,live,mfcc_tf_49x10,64075,10252066,5,6656,656
-inference,1,live,mfcc_tf_49x10,64083,10253334,11,6912,672
-inference,2,live,mfcc_tf_49x10,64085,10253648,11,6272,632

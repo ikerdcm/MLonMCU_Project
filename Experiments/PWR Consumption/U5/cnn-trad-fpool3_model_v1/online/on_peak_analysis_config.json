@@ -1,0 +1,20 @@
+{
+  "csv": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/Experiments/PWR Consumption/U5/cnn-trad-fpool3_model_v1/online/on.csv",
+  "summary_json": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/cnn-trad-fpool3_model/platforms/stm32u5/measurements/offline_measurements/kws20_metrics_20260516_202445/summary.json",
+  "out_dir": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/Experiments/PWR Consumption/U5/cnn-trad-fpool3_model_v1/online/on_peak_analysis",
+  "expected_peaks": 5,
+  "peak_times_ms": [7822.95, 13793.98, 20203.36, 25984.76, 29002.39],
+  "peak_search_half_window_ms": 40.0,
+  "window_mode": "plateau_window",
+  "threshold_fraction": 0.40,
+  "plateau_coarse_fraction": 0.25,
+  "zoom_half_window_ms": 80.0,
+  "overlay_half_window_ms": 70.0,
+  "voltage": 3.28,
+  "local_baseline_window_ms": 150.0,
+  "local_baseline_guard_ms": 90.0,
+  "transition_start_fraction": 0.10,
+  "transition_end_fraction": 0.0,
+  "transition_settle_ms": 1.0,
+  "transition_smooth_ms": 2.0
+}

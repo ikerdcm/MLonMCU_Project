@@ -1,0 +1,11 @@
+event,run,mode,frontend,cnn_us,cycles,pred_idx,post_trigger_samples,audio_window_ms
+inference,12,live,mfcc_tf_49x10,64071,10251492,5,7168,688
+inference,13,live,mfcc_tf_49x10,64073,10251737,5,6400,640
+inference,14,live,mfcc_tf_49x10,64085,10253701,11,3968,488
+inference,15,live,mfcc_tf_49x10,64085,10253654,11,4352,512
+inference,16,live,mfcc_tf_49x10,64084,10253454,11,5376,576
+inference,17,live,mfcc_tf_49x10,64084,10253462,11,7296,696
+inference,18,live,mfcc_tf_49x10,64085,10253734,8,4096,496
+inference,19,live,mfcc_tf_49x10,64084,10253457,11,6400,640
+inference,20,live,mfcc_tf_49x10,64075,10252025,5,5504,584
+inference,21,live,mfcc_tf_49x10,64083,10253399,9,4736,536

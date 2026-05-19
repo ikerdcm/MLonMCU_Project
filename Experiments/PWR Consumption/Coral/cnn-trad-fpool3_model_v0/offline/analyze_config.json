@@ -1,0 +1,14 @@
+{
+  "csv": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/Experiments/PWR Consumption/Coral/cnn-trad-fpool3_model_v0/offline/on.csv",
+  "summary_json": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/cnn-trad-fpool3_model/platforms/coral/measurements/offline_measurements/kws_metrics_20260519_151706/summary.json",
+  "out_dir": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/Experiments/PWR Consumption/Coral/cnn-trad-fpool3_model_v0/offline/on_peak_analysis",
+  "peak_times_ms": [14183, 19234, 24286, 29337],
+  "peak_search_half_window_ms": 200.0,
+  "window_mode": "positive_peak",
+  "threshold_fraction": 0.25,
+  "local_baseline_window_ms": 100.0,
+  "local_baseline_guard_ms": 4.0,
+  "zoom_half_window_ms": 8.0,
+  "overlay_half_window_ms": 4.0,
+  "voltage": 5.0
+}

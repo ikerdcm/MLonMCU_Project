@@ -1,0 +1,16 @@
+{
+  "mode": "live",
+  "build_dir": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/cnn-trad-fpool3_model/platforms/coral/build",
+  "target": "kws_live",
+  "elf": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/cnn-trad-fpool3_model/platforms/coral/build/apps/kws_live/kws_live",
+  "port": "/dev/ttyACM0",
+  "baud": 115200,
+  "clock_mhz": 800.0,
+  "mac_ops": 3937717.0,
+  "sample_rate": 16000.0,
+  "sample_count": 16000.0,
+  "voltage": null,
+  "current_ma": null,
+  "timeout": 120.0,
+  "no_build": true
+}

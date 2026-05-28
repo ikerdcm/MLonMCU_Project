@@ -172,6 +172,7 @@ extern "C" void app_main(void* param) {
     coralmicro::run_bench();
     while (true) {
         vTaskDelay(pdMS_TO_TICKS(10000));
+
         printf("\r\n--- re-running benchmark ---\r\n");
         coralmicro::run_bench();
     }

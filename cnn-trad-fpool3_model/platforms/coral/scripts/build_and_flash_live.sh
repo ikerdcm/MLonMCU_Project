@@ -24,12 +24,13 @@ cmake --build "$BUILD_DIR" -j"$(nproc)" --target kws_live
 echo ""
 
 echo "=== Flash kws_live to Coral Dev Board Micro ==="
+DYLD_LIBRARY_PATH=/opt/homebrew/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH} \
 "$VENV_PYTHON" "$CORALMICRO_ROOT/scripts/flashtool.py" \
     --build_dir "$BUILD_DIR" \
-    --app kws_live
+    --elf_path "$BUILD_DIR/kws_apps/kws_live/kws_live"
 echo ""
-echo "Flash complete. Connect serial terminal:"
-echo "  screen /dev/ttyACM0 115200"
+echo "Flash complete. Connect serial terminal (must assert DTR — screen/cat won't show output):"
+echo "  $VENV_PYTHON -m serial.tools.miniterm \$(ls /dev/cu.usbmodem* 2>/dev/null | head -1) 115200"
 echo ""
 echo "Speak a keyword (left, right, yes, no, go, stop, up, down, on, off)."
 echo "Output every 500 ms. Confident detections are marked with >>>."

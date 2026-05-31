@@ -4,7 +4,7 @@ add_executable_m7(kws_live
     kws_mfcc_tables_ocram.cc
     kws_mfcc_tables_sdram.cc
     DATA
-    ${CMAKE_SOURCE_DIR}/models/ds_cnn_l_static_edgetpu.tflite
+    ${CMAKE_CURRENT_LIST_DIR}/../../model/ds_cnn_l_static_edgetpu.tflite>/models/ds_cnn_l_static_edgetpu.tflite
 )
 
 target_link_libraries(kws_live

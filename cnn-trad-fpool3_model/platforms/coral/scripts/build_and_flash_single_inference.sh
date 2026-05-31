@@ -24,9 +24,10 @@ cmake --build "$BUILD_DIR" -j"$(nproc)" --target single_inference
 echo ""
 
 echo "=== Flash single_inference to Coral Dev Board Micro ==="
+DYLD_LIBRARY_PATH=/opt/homebrew/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH} \
 "$VENV_PYTHON" "$CORALMICRO_ROOT/scripts/flashtool.py" \
     --build_dir "$BUILD_DIR" \
-    --app single_inference
+    --elf_path "$BUILD_DIR/kws_apps/single_inference/single_inference"
 echo ""
 echo "Flash complete. Connect serial terminal:"
-echo "  screen /dev/ttyACM0 115200"
+echo "  screen \$(ls /dev/tty.usbmodem* 2>/dev/null | head -1) 115200"

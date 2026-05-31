@@ -1,0 +1,12 @@
+{
+  "project": "/Users/iker/Projects/ETHZ/Q2/ML_on_MCUs/MLonMCU_Project_Test/MLonMCU_Project/cnn-trad-fpool3_model/platforms/max78000/keyword_spotting_max78000_ds_cnn_8-bit_with-acc",
+  "board": "FTHR_RevA",
+  "maxim_path": "/Users/iker/Projects/ETHZ/Q2/ML_on_MCUs/max78000/ai8x-synthesis/sdk",
+  "openocd_root": "/Users/iker/Projects/ETHZ/Q2/ML_on_MCUs/max78000/ai8x-synthesis/openocd",
+  "port": "/dev/ttyACM0",
+  "baud": 115200,
+  "clock_mhz": 100.0,
+  "sample_rate": 16000,
+  "voltage": 3.7,
+  "current_ma": null
+}

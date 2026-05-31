@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="716" viewBox="0 0 1060 716">
+<style>
+text{font-family:Arial,Helvetica,sans-serif;fill:#111827}
+.title{font-size:24px;font-weight:700}
+.subtitle{font-size:13px;fill:#475569}
+.axis{stroke:#94a3b8;stroke-width:1}
+.grid{stroke:#cbd5e1;stroke-width:1;stroke-dasharray:3 4}
+.label{font-size:12px;fill:#334155}
+.small{font-size:10px;fill:#475569}
+.tick{font-size:10px;fill:#64748b}
+</style>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"/>
+<text x="32.00" y="36.00" class="title" text-anchor="start">Relative Improvement Heatmap</text>
+<text x="32.00" y="58.00" class="subtitle" text-anchor="start">Green = better, red = regression; values are direction-aware percentages from the delta table.</text>
+<text x="387.50" y="74.00" class="label" text-anchor="middle">v1 vs v0</text>
+<text x="592.50" y="74.00" class="label" text-anchor="middle">v2 vs v1</text>
+<text x="797.50" y="74.00" class="label" text-anchor="middle">v2 vs v0</text>
+<text x="32.00" y="109.00" class="label" text-anchor="start">CNN latency avg</text>
+<text x="240.00" y="109.00" class="small" text-anchor="end">lower</text>
+<rect x="285.00" y="90.00" width="200.00" height="26.00" rx="3" fill="rgb(158,205,197)" stroke="none" opacity="1.0"/>
+<text x="387.50" y="109.00" class="label" text-anchor="middle">+56.24%</text>
+<rect x="490.00" y="90.00" width="200.00" height="26.00" rx="3" fill="rgb(219,243,235)" stroke="none" opacity="1.0"/>
+<text x="592.50" y="109.00" class="label" text-anchor="middle">+12.03%</text>
+<rect x="695.00" y="90.00" width="200.00" height="26.00" rx="3" fill="rgb(151,201,193)" stroke="none" opacity="1.0"/>
+<text x="797.50" y="109.00" class="label" text-anchor="middle">+61.50%</text>
+<text x="32.00" y="139.00" class="label" text-anchor="start">Cycles avg</text>
+<text x="240.00" y="139.00" class="small" text-anchor="end">lower</text>
+<rect x="285.00" y="120.00" width="200.00" height="26.00" rx="3" fill="rgb(158,205,197)" stroke="none" opacity="1.0"/>
+<text x="387.50" y="139.00" class="label" text-anchor="middle">+56.24%</text>
+<rect x="490.00" y="120.00" width="200.00" height="26.00" rx="3" fill="rgb(219,243,235)" stroke="none" opacity="1.0"/>
+<text x="592.50" y="139.00" class="label" text-anchor="middle">+12.03%</text>
+<rect x="695.00" y="120.00" width="200.00" height="26.00" rx="3" fill="rgb(151,201,193)" stroke="none" opacity="1.0"/>
+<text x="797.50" y="139.00" class="label" text-anchor="middle">+61.50%</text>
+<text x="32.00" y="169.00" class="label" text-anchor="start">Throughput</text>
+<text x="240.00" y="169.00" class="small" text-anchor="end">higher</text>
+<rect x="285.00" y="150.00" width="200.00" height="26.00" rx="3" fill="rgb(58,144,136)" stroke="none" opacity="1.0"/>
+<text x="387.50" y="169.00" class="label" text-anchor="middle">+128.51%</text>
+<rect x="490.00" y="150.00" width="200.00" height="26.00" rx="3" fill="rgb(217,241,233)" stroke="none" opacity="1.0"/>
+<text x="592.50" y="169.00" class="label" text-anchor="middle">+13.68%</text>
+<rect x="695.00" y="150.00" width="200.00" height="26.00" rx="3" fill="rgb(15,118,110)" stroke="none" opacity="1.0"/>
+<text x="797.50" y="169.00" class="label" text-anchor="middle">+159.77%</text>
+<text x="32.00" y="199.00" class="label" text-anchor="start">End-to-end lower bound</text>
+<text x="240.00" y="199.00" class="small" text-anchor="end">lower</text>
+<rect x="285.00" y="180.00" width="200.00" height="26.00" rx="3" fill="rgb(214,240,232)" stroke="none" opacity="1.0"/>
+<text x="387.50" y="199.00" class="label" text-anchor="middle">+15.72%</text>
+<rect x="490.00" y="180.00" width="200.00" height="26.00" rx="3" fill="rgb(234,252,244)" stroke="none" opacity="1.0"/>
+<text x="592.50" y="199.00" class="label" text-anchor="middle">+1.75%</text>
+<rect x="695.00" y="180.00" width="200.00" height="26.00" rx="3" fill="rgb(212,238,230)" stroke="none" opacity="1.0"/>
+<text x="797.50" y="199.00" class="label" text-anchor="middle">+17.19%</text>
+<text x="32.00" y="229.00" class="label" text-anchor="start">Text</text>
+<text x="240.00" y="229.00" class="small" text-anchor="end">lower</text>
+<rect x="285.00" y="210.00" width="200.00" height="26.00" rx="3" fill="rgb(145,198,190)" stroke="none" opacity="1.0"/>
+<text x="387.50" y="229.00" class="label" text-anchor="middle">+65.47%</text>
+<rect x="490.00" y="210.00" width="200.00" height="26.00" rx="3" fill="rgb(223,245,237)" stroke="none" opacity="1.0"/>
+<text x="592.50" y="229.00" class="label" text-anchor="middle">+9.33%</text>
+<rect x="695.00" y="210.00" width="200.00" height="26.00" rx="3" fill="rgb(141,195,187)" stroke="none" opacity="1.0"/>
+<text x="797.50" y="229.00" class="label" text-anchor="middle">+68.69%</text>
+<text x="32.00" y="259.00" class="label" text-anchor="start">Data</text>
+<text x="240.00" y="259.00" class="small" text-anchor="end">lower</text>
+<rect x="285.00" y="240.00" width="200.00" height="26.00" rx="3" fill="rgb(237,189,189)" stroke="none" opacity="1.0"/>
+<text x="387.50" y="259.00" class="label" text-anchor="middle">-39.20%</text>
+<rect x="490.00" y="240.00" width="200.00" height="26.00" rx="3" fill="rgb(236,253,245)" stroke="none" opacity="1.0"/>
+<text x="592.50" y="259.00" class="label" text-anchor="middle">-0.00%</text>
+<rect x="695.00" y="240.00" width="200.00" height="26.00" rx="3" fill="rgb(237,189,189)" stroke="none" opacity="1.0"/>
+<text x="797.50" y="259.00" class="label" text-anchor="middle">-39.20%</text>
+<text x="32.00" y="289.00" class="label" text-anchor="start">BSS</text>
+<text x="240.00" y="289.00" class="small" text-anchor="end">lower</text>
+<rect x="285.00" y="270.00" width="200.00" height="26.00" rx="3" fill="rgb(197,229,221)" stroke="none" opacity="1.0"/>
+<text x="387.50" y="289.00" class="label" text-anchor="middle">+28.17%</text>
+<rect x="490.00" y="270.00" width="200.00" height="26.00" rx="3" fill="rgb(233,251,243)" stroke="none" opacity="1.0"/>
+<text x="592.50" y="289.00" class="label" text-anchor="middle">+2.49%</text>
+<rect x="695.00" y="270.00" width="200.00" height="26.00" rx="3" fill="rgb(195,228,220)" stroke="none" opacity="1.0"/>
+<text x="797.50" y="289.00" class="label" text-anchor="middle">+29.96%</text>
+<text x="32.00" y="319.00" class="label" text-anchor="start">Static SRAM</text>
+<text x="240.00" y="319.00" class="small" text-anchor="end">lower</text>
+<rect x="285.00" y="300.00" width="200.00" height="26.00" rx="3" fill="rgb(203,233,225)" stroke="none" opacity="1.0"/>
+<text x="387.50" y="319.00" class="label" text-anchor="middle">+24.05%</text>
+<rect x="490.00" y="300.00" width="200.00" height="26.00" rx="3" fill="rgb(233,251,243)" stroke="none" opacity="1.0"/>
+<text x="592.50" y="319.00" class="label" text-anchor="middle">+2.21%</text>
+<rect x="695.00" y="300.00" width="200.00" height="26.00" rx="3" fill="rgb(200,231,223)" stroke="none" opacity="1.0"/>
+<text x="797.50" y="319.00" class="label" text-anchor="middle">+25.74%</text>
+<text x="32.00" y="349.00" class="label" text-anchor="start">ELF size</text>
+<text x="240.00" y="349.00" class="small" text-anchor="end">lower</text>
+<rect x="285.00" y="330.00" width="200.00" height="26.00" rx="3" fill="rgb(216,241,233)" stroke="none" opacity="1.0"/>
+<text x="387.50" y="349.00" class="label" text-anchor="middle">+14.28%</text>
+<rect x="490.00" y="330.00" width="200.00" height="26.00" rx="3" fill="rgb(235,252,244)" stroke="none" opacity="1.0"/>
+<text x="592.50" y="349.00" class="label" text-anchor="middle">+0.95%</text>
+<rect x="695.00" y="330.00" width="200.00" height="26.00" rx="3" fill="rgb(215,240,232)" stroke="none" opacity="1.0"/>
+<text x="797.50" y="349.00" class="label" text-anchor="middle">+15.10%</text>
+<text x="32.00" y="379.00" class="label" text-anchor="start">AI weights</text>
+<text x="240.00" y="379.00" class="small" text-anchor="end">lower</text>
+<rect x="285.00" y="360.00" width="200.00" height="26.00" rx="3" fill="rgb(132,190,182)" stroke="none" opacity="1.0"/>
+<text x="387.50" y="379.00" class="label" text-anchor="middle">+74.83%</text>
+<rect x="490.00" y="360.00" width="200.00" height="26.00" rx="3" fill="rgb(217,241,233)" stroke="none" opacity="1.0"/>
+<text x="592.50" y="379.00" class="label" text-anchor="middle">+13.72%</text>
+<rect x="695.00" y="360.00" width="200.00" height="26.00" rx="3" fill="rgb(128,187,179)" stroke="none" opacity="1.0"/>
+<text x="797.50" y="379.00" class="label" text-anchor="middle">+78.29%</text>
+<text x="32.00" y="409.00" class="label" text-anchor="start">AI activations</text>
+<text x="240.00" y="409.00" class="small" text-anchor="end">lower</text>
+<rect x="285.00" y="390.00" width="200.00" height="26.00" rx="3" fill="rgb(204,233,225)" stroke="none" opacity="1.0"/>
+<text x="387.50" y="409.00" class="label" text-anchor="middle">+23.39%</text>
+<rect x="490.00" y="390.00" width="200.00" height="26.00" rx="3" fill="rgb(225,246,238)" stroke="none" opacity="1.0"/>
+<text x="592.50" y="409.00" class="label" text-anchor="middle">+8.00%</text>
+<rect x="695.00" y="390.00" width="200.00" height="26.00" rx="3" fill="rgb(195,228,220)" stroke="none" opacity="1.0"/>
+<text x="797.50" y="409.00" class="label" text-anchor="middle">+29.52%</text>
+<text x="32.00" y="439.00" class="label" text-anchor="start">MAC ops</text>
+<text x="240.00" y="439.00" class="small" text-anchor="end">lower</text>
+<rect x="285.00" y="420.00" width="200.00" height="26.00" rx="3" fill="rgb(253,240,240)" stroke="none" opacity="1.0"/>
+<text x="387.50" y="439.00" class="label" text-anchor="middle">-1.34%</text>
+<rect x="490.00" y="420.00" width="200.00" height="26.00" rx="3" fill="rgb(216,241,233)" stroke="none" opacity="1.0"/>
+<text x="592.50" y="439.00" class="label" text-anchor="middle">+14.49%</text>
+<rect x="695.00" y="420.00" width="200.00" height="26.00" rx="3" fill="rgb(218,242,234)" stroke="none" opacity="1.0"/>
+<text x="797.50" y="439.00" class="label" text-anchor="middle">+13.34%</text>
+<text x="32.00" y="469.00" class="label" text-anchor="start">MOPS/s</text>
+<text x="240.00" y="469.00" class="small" text-anchor="end">higher</text>
+<rect x="285.00" y="450.00" width="200.00" height="26.00" rx="3" fill="rgb(54,142,134)" stroke="none" opacity="1.0"/>
+<text x="387.50" y="469.00" class="label" text-anchor="middle">+131.57%</text>
+<rect x="490.00" y="450.00" width="200.00" height="26.00" rx="3" fill="rgb(253,238,238)" stroke="none" opacity="1.0"/>
+<text x="592.50" y="469.00" class="label" text-anchor="middle">-2.79%</text>
+<rect x="695.00" y="450.00" width="200.00" height="26.00" rx="3" fill="rgb(63,147,139)" stroke="none" opacity="1.0"/>
+<text x="797.50" y="469.00" class="label" text-anchor="middle">+125.11%</text>
+<text x="32.00" y="499.00" class="label" text-anchor="start">MAC/cycle</text>
+<text x="240.00" y="499.00" class="small" text-anchor="end">higher</text>
+<rect x="285.00" y="480.00" width="200.00" height="26.00" rx="3" fill="rgb(54,142,134)" stroke="none" opacity="1.0"/>
+<text x="387.50" y="499.00" class="label" text-anchor="middle">+131.57%</text>
+<rect x="490.00" y="480.00" width="200.00" height="26.00" rx="3" fill="rgb(253,238,238)" stroke="none" opacity="1.0"/>
+<text x="592.50" y="499.00" class="label" text-anchor="middle">-2.79%</text>
+<rect x="695.00" y="480.00" width="200.00" height="26.00" rx="3" fill="rgb(63,147,139)" stroke="none" opacity="1.0"/>
+<text x="797.50" y="499.00" class="label" text-anchor="middle">+125.11%</text>
+<text x="32.00" y="529.00" class="label" text-anchor="start">Current</text>
+<text x="240.00" y="529.00" class="small" text-anchor="end">lower</text>
+<rect x="285.00" y="510.00" width="200.00" height="26.00" rx="3" fill="rgb(226,247,239)" stroke="none" opacity="1.0"/>
+<text x="387.50" y="529.00" class="label" text-anchor="middle">+7.18%</text>
+<rect x="490.00" y="510.00" width="200.00" height="26.00" rx="3" fill="rgb(253,239,239)" stroke="none" opacity="1.0"/>
+<text x="592.50" y="529.00" class="label" text-anchor="middle">-2.30%</text>
+<rect x="695.00" y="510.00" width="200.00" height="26.00" rx="3" fill="rgb(229,249,241)" stroke="none" opacity="1.0"/>
+<text x="797.50" y="529.00" class="label" text-anchor="middle">+5.05%</text>
+<text x="32.00" y="559.00" class="label" text-anchor="start">Power</text>
+<text x="240.00" y="559.00" class="small" text-anchor="end">lower</text>
+<rect x="285.00" y="540.00" width="200.00" height="26.00" rx="3" fill="rgb(226,247,239)" stroke="none" opacity="1.0"/>
+<text x="387.50" y="559.00" class="label" text-anchor="middle">+7.18%</text>
+<rect x="490.00" y="540.00" width="200.00" height="26.00" rx="3" fill="rgb(253,239,239)" stroke="none" opacity="1.0"/>
+<text x="592.50" y="559.00" class="label" text-anchor="middle">-2.30%</text>
+<rect x="695.00" y="540.00" width="200.00" height="26.00" rx="3" fill="rgb(229,249,241)" stroke="none" opacity="1.0"/>
+<text x="797.50" y="559.00" class="label" text-anchor="middle">+5.05%</text>
+<text x="32.00" y="589.00" class="label" text-anchor="start">Energy/inference</text>
+<text x="240.00" y="589.00" class="small" text-anchor="end">lower</text>
+<rect x="285.00" y="570.00" width="200.00" height="26.00" rx="3" fill="rgb(154,203,195)" stroke="none" opacity="1.0"/>
+<text x="387.50" y="589.00" class="label" text-anchor="middle">+59.38%</text>
+<rect x="490.00" y="570.00" width="200.00" height="26.00" rx="3" fill="rgb(222,245,237)" stroke="none" opacity="1.0"/>
+<text x="592.50" y="589.00" class="label" text-anchor="middle">+10.01%</text>
+<rect x="695.00" y="570.00" width="200.00" height="26.00" rx="3" fill="rgb(148,199,191)" stroke="none" opacity="1.0"/>
+<text x="797.50" y="589.00" class="label" text-anchor="middle">+63.45%</text>
+<text x="32.00" y="619.00" class="label" text-anchor="start">MAC/J</text>
+<text x="240.00" y="619.00" class="small" text-anchor="end">higher</text>
+<rect x="285.00" y="600.00" width="200.00" height="26.00" rx="3" fill="rgb(29,127,119)" stroke="none" opacity="1.0"/>
+<text x="387.50" y="619.00" class="label" text-anchor="middle">+149.49%</text>
+<rect x="490.00" y="600.00" width="200.00" height="26.00" rx="3" fill="rgb(252,235,235)" stroke="none" opacity="1.0"/>
+<text x="592.50" y="619.00" class="label" text-anchor="middle">-4.98%</text>
+<rect x="695.00" y="600.00" width="200.00" height="26.00" rx="3" fill="rgb(46,137,129)" stroke="none" opacity="1.0"/>
+<text x="797.50" y="619.00" class="label" text-anchor="middle">+137.07%</text>
+<text x="285.00" y="682.00" class="subtitle" text-anchor="start">positive = deployment got better for that metric</text>
+</svg>

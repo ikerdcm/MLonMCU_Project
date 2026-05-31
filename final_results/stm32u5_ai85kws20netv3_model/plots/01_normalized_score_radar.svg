@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="760" viewBox="0 0 940 760">
+<style>
+text{font-family:Arial,Helvetica,sans-serif;fill:#111827}
+.title{font-size:24px;font-weight:700}
+.subtitle{font-size:13px;fill:#475569}
+.axis{stroke:#94a3b8;stroke-width:1}
+.grid{stroke:#cbd5e1;stroke-width:1;stroke-dasharray:3 4}
+.label{font-size:12px;fill:#334155}
+.small{font-size:10px;fill:#475569}
+.tick{font-size:10px;fill:#64748b}
+</style>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"/>
+<text x="32.00" y="36.00" class="title" text-anchor="start">STM32U5 Online Best-Ratio Radar</text>
+<text x="32.00" y="58.00" class="subtitle" text-anchor="start">Outer ring = best value; inner values are proportional ratios to the best variant, not min-max scores.</text>
+<polygon points="470.00,341.00 498.80,350.36 516.60,374.86 516.60,405.14 498.80,429.64 470.00,439.00 441.20,429.64 423.40,405.14 423.40,374.86 441.20,350.36" fill="#e2e8f0" fill-opacity="0.0" stroke="#e2e8f0" stroke-width="1"/>
+<polygon points="470.00,292.00 527.60,310.72 563.20,359.72 563.20,420.28 527.60,469.28 470.00,488.00 412.40,469.28 376.80,420.28 376.80,359.72 412.40,310.72" fill="#e2e8f0" fill-opacity="0.0" stroke="#e2e8f0" stroke-width="1"/>
+<polygon points="470.00,243.00 556.40,271.07 609.81,344.57 609.81,435.43 556.40,508.93 470.00,537.00 383.60,508.93 330.19,435.43 330.19,344.57 383.60,271.07" fill="#e2e8f0" fill-opacity="0.0" stroke="#e2e8f0" stroke-width="1"/>
+<polygon points="470.00,194.00 585.21,231.43 656.41,329.43 656.41,450.57 585.21,548.57 470.00,586.00 354.79,548.57 283.59,450.57 283.59,329.43 354.79,231.43" fill="#e2e8f0" fill-opacity="0.0" stroke="#e2e8f0" stroke-width="1"/>
+<polygon points="470.00,145.00 614.01,191.79 703.01,314.29 703.01,465.71 614.01,588.21 470.00,635.00 325.99,588.21 236.99,465.71 236.99,314.29 325.99,191.79" fill="#e2e8f0" fill-opacity="0.0" stroke="#e2e8f0" stroke-width="1"/>
+<line x1="470.00" y1="390.00" x2="470.00" y2="145.00" stroke="#cbd5e1" stroke-width="1"/>
+<text x="470.00" y="99.00" class="label" text-anchor="middle">Latency</text>
+<line x1="470.00" y1="390.00" x2="614.01" y2="191.79" stroke="#cbd5e1" stroke-width="1"/>
+<text x="641.05" y="154.58" class="label" text-anchor="start">Cycles</text>
+<line x1="470.00" y1="390.00" x2="703.01" y2="314.29" stroke="#cbd5e1" stroke-width="1"/>
+<text x="746.76" y="300.08" class="label" text-anchor="start">End-to-end</text>
+<line x1="470.00" y1="390.00" x2="703.01" y2="465.71" stroke="#cbd5e1" stroke-width="1"/>
+<text x="746.76" y="479.92" class="label" text-anchor="start">SRAM</text>
+<line x1="470.00" y1="390.00" x2="614.01" y2="588.21" stroke="#cbd5e1" stroke-width="1"/>
+<text x="641.05" y="625.42" class="label" text-anchor="start">Text</text>
+<line x1="470.00" y1="390.00" x2="470.00" y2="635.00" stroke="#cbd5e1" stroke-width="1"/>
+<text x="470.00" y="681.00" class="label" text-anchor="middle">BSS</text>
+<line x1="470.00" y1="390.00" x2="325.99" y2="588.21" stroke="#cbd5e1" stroke-width="1"/>
+<text x="298.95" y="625.42" class="label" text-anchor="end">ELF</text>
+<line x1="470.00" y1="390.00" x2="236.99" y2="465.71" stroke="#cbd5e1" stroke-width="1"/>
+<text x="193.24" y="479.92" class="label" text-anchor="end">Energy</text>
+<line x1="470.00" y1="390.00" x2="236.99" y2="314.29" stroke="#cbd5e1" stroke-width="1"/>
+<text x="193.24" y="300.08" class="label" text-anchor="end">Throughput</text>
+<line x1="470.00" y1="390.00" x2="325.99" y2="191.79" stroke="#cbd5e1" stroke-width="1"/>
+<text x="298.95" y="154.58" class="label" text-anchor="end">MAC/J</text>
+<polygon points="470.00,295.69 525.44,313.70 662.95,327.31 643.04,446.23 515.09,452.06 470.00,561.61 347.73,558.28 384.83,417.67 380.30,360.86 412.28,310.56" fill="#475569" fill-opacity="0.08" stroke="#475569" stroke-width="0"/>
+<polygon points="470.00,174.48 596.68,215.64 698.94,315.61 697.85,464.03 600.57,569.71 470.00,628.90 327.36,586.32 260.31,458.13 265.03,323.40 325.99,191.79" fill="#0f766e" fill-opacity="0.08" stroke="#0f766e" stroke-width="0"/>
+<polygon points="470.00,145.00 614.01,191.79 703.01,314.29 703.01,465.71 614.01,588.21 470.00,635.00 325.99,588.21 236.99,465.71 236.99,314.29 333.16,201.66" fill="#c2410c" fill-opacity="0.08" stroke="#c2410c" stroke-width="0"/>
+<polyline points="470.00,295.69 525.44,313.70 662.95,327.31 643.04,446.23 515.09,452.06 470.00,561.61 347.73,558.28 384.83,417.67 380.30,360.86 412.28,310.56 470.00,295.69" fill="none" stroke="#475569" stroke-width="3.5" opacity="0.95"/>
+<polyline points="470.00,174.48 596.68,215.64 698.94,315.61 697.85,464.03 600.57,569.71 470.00,628.90 327.36,586.32 260.31,458.13 265.03,323.40 325.99,191.79 470.00,174.48" fill="none" stroke="#0f766e" stroke-width="3.5" opacity="0.95"/>
+<polyline points="470.00,145.00 614.01,191.79 703.01,314.29 703.01,465.71 614.01,588.21 470.00,635.00 325.99,588.21 236.99,465.71 236.99,314.29 333.16,201.66 470.00,145.00" fill="none" stroke="#c2410c" stroke-width="3.5" opacity="0.95"/>
+<circle cx="470.00" cy="295.69" r="4.8" fill="#475569" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="525.44" cy="313.70" r="4.8" fill="#475569" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="662.95" cy="327.31" r="4.8" fill="#475569" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="643.04" cy="446.23" r="4.8" fill="#475569" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="515.09" cy="452.06" r="4.8" fill="#475569" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="470.00" cy="561.61" r="4.8" fill="#475569" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="347.73" cy="558.28" r="4.8" fill="#475569" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="384.83" cy="417.67" r="4.8" fill="#475569" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="380.30" cy="360.86" r="4.8" fill="#475569" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="412.28" cy="310.56" r="4.8" fill="#475569" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="470.00" cy="174.48" r="4.8" fill="#0f766e" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="596.68" cy="215.64" r="4.8" fill="#0f766e" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="698.94" cy="315.61" r="4.8" fill="#0f766e" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="697.85" cy="464.03" r="4.8" fill="#0f766e" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="600.57" cy="569.71" r="4.8" fill="#0f766e" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="470.00" cy="628.90" r="4.8" fill="#0f766e" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="327.36" cy="586.32" r="4.8" fill="#0f766e" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="260.31" cy="458.13" r="4.8" fill="#0f766e" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="265.03" cy="323.40" r="4.8" fill="#0f766e" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="325.99" cy="191.79" r="4.8" fill="#0f766e" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="470.00" cy="145.00" r="4.8" fill="#c2410c" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="614.01" cy="191.79" r="4.8" fill="#c2410c" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="703.01" cy="314.29" r="4.8" fill="#c2410c" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="703.01" cy="465.71" r="4.8" fill="#c2410c" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="614.01" cy="588.21" r="4.8" fill="#c2410c" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="470.00" cy="635.00" r="4.8" fill="#c2410c" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="325.99" cy="588.21" r="4.8" fill="#c2410c" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="236.99" cy="465.71" r="4.8" fill="#c2410c" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="236.99" cy="314.29" r="4.8" fill="#c2410c" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="333.16" cy="201.66" r="4.8" fill="#c2410c" stroke="#ffffff" stroke-width="1.2"/>
+<text x="478.00" y="382.00" class="tick" text-anchor="start">0</text>
+<rect x="36.00" y="638.00" width="14.00" height="14.00" rx="2" fill="#475569" stroke="none" opacity="1.0"/>
+<text x="58.00" y="650.00" class="label" text-anchor="start">v0 unquantized</text>
+<rect x="36.00" y="662.00" width="14.00" height="14.00" rx="2" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="58.00" y="674.00" class="label" text-anchor="start">v1 quantized</text>
+<rect x="36.00" y="686.00" width="14.00" height="14.00" rx="2" fill="#c2410c" stroke="none" opacity="1.0"/>
+<text x="58.00" y="698.00" class="label" text-anchor="start">v2 pruned quantized</text>
+</svg>

@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>STM32U5 ai85kws20netv3 Online Results</title>
+<style>
+body{font-family:Arial,Helvetica,sans-serif;margin:0;background:#f8fafc;color:#111827}
+main{max-width:1240px;margin:0 auto;padding:32px}
+h1{font-size:30px;margin:0 0 6px}
+p{color:#475569;margin:0 0 24px}
+section{margin:28px 0}
+.plot{background:#fff;border:1px solid #e2e8f0;border-radius:8px;margin:18px 0;padding:14px}
+.plot img{width:100%;height:auto;display:block}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #e2e8f0;font-size:13px}
+th,td{padding:8px 10px;border-bottom:1px solid #e2e8f0;text-align:right}
+th:first-child,td:first-child{text-align:left}
+th{background:#e2e8f0}
+code{background:#e2e8f0;padding:1px 4px;border-radius:4px}
+</style>
+</head>
+<body><main>
+<h1>STM32U5 ai85kws20netv3 Online Results</h1>
+<p>Online-only comparison of v0, v1, and v2 result summaries.</p>
+<section><h2>Key Metrics</h2>
+<table>
+<thead><tr>
+<th>Metric</th>
+<th>Unit</th>
+<th>Direction</th>
+<th>v0 unquantized</th>
+<th>v1 quantized</th>
+<th>v2 pruned quantized</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>CNN latency avg</td>
+<td>ms</td>
+<td>lower</td>
+<td>397.24</td>
+<td>173.84</td>
+<td>152.92</td>
+</tr>
+<tr>
+<td>Cycles avg</td>
+<td>cycles</td>
+<td>lower</td>
+<td>63,558,802</td>
+<td>27,814,386</td>
+<td>24,467,522</td>
+</tr>
+<tr>
+<td>Throughput</td>
+<td>inf/s</td>
+<td>higher</td>
+<td>2.5174</td>
+<td>5.7524</td>
+<td>6.5393</td>
+</tr>
+<tr>
+<td>End-to-end lower bound</td>
+<td>ms</td>
+<td>lower</td>
+<td>1,421.24</td>
+<td>1,197.84</td>
+<td>1,176.92</td>
+</tr>
+<tr>
+<td>Text</td>
+<td>B</td>
+<td>lower</td>
+<td>741,493</td>
+<td>256,056</td>
+<td>232,160</td>
+</tr>
+<tr>
+<td>Data</td>
+<td>B</td>
+<td>lower</td>
+<td>14,876</td>
+<td>20,708</td>
+<td>20,708</td>
+</tr>
+<tr>
+<td>BSS</td>
+<td>B</td>
+<td>lower</td>
+<td>228,916</td>
+<td>164,440</td>
+<td>160,344</td>
+</tr>
+<tr>
+<td>Static SRAM</td>
+<td>B</td>
+<td>lower</td>
+<td>243,792</td>
+<td>185,148</td>
+<td>181,052</td>
+</tr>
+<tr>
+<td>ELF size</td>
+<td>B</td>
+<td>lower</td>
+<td>2,750,224</td>
+<td>2,357,424</td>
+<td>2,335,012</td>
+</tr>
+<tr>
+<td>AI weights</td>
+<td>B</td>
+<td>lower</td>
+<td>684,404</td>
+<td>172,232</td>
+<td>148,600</td>
+</tr>
+<tr>
+<td>AI activations</td>
+<td>B</td>
+<td>lower</td>
+<td>66,832</td>
+<td>51,200</td>
+<td>47,104</td>
+</tr>
+<tr>
+<td>MAC ops</td>
+<td>MAC</td>
+<td>lower</td>
+<td>8,797,410</td>
+<td>8,915,270</td>
+<td>7,623,538</td>
+</tr>
+<tr>
+<td>MOPS/s</td>
+<td>MOPS/s</td>
+<td>higher</td>
+<td>22.146</td>
+<td>51.285</td>
+<td>49.853</td>
+</tr>
+<tr>
+<td>MAC/cycle</td>
+<td>MAC/cycle</td>
+<td>higher</td>
+<td>0.138414</td>
+<td>0.320528</td>
+<td>0.311579</td>
+</tr>
+<tr>
+<td>Current</td>
+<td>mA</td>
+<td>lower</td>
+<td>24.095</td>
+<td>22.364</td>
+<td>22.879</td>
+</tr>
+<tr>
+<td>Power</td>
+<td>W</td>
+<td>lower</td>
+<td>0.0790317</td>
+<td>0.0733549</td>
+<td>0.0750432</td>
+</tr>
+<tr>
+<td>Energy/inference</td>
+<td>uJ</td>
+<td>lower</td>
+<td>31,394.71</td>
+<td>12,751.97</td>
+<td>11,475.73</td>
+</tr>
+<tr>
+<td>MAC/J</td>
+<td>MAC/J</td>
+<td>higher</td>
+<td>280,219,485</td>
+<td>699,128,964</td>
+<td>664,318,290</td>
+</tr>
+</tbody></table>
+</section>
+<section><h2>Relative Improvements</h2>
+<table>
+<thead><tr>
+<th>Metric</th>
+<th>Direction</th>
+<th>v1 vs v0 improvement</th>
+<th>v2 vs v1 improvement</th>
+<th>v2 vs v0 improvement</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>CNN latency avg</td>
+<td>lower</td>
+<td>+56.24%</td>
+<td>+12.03%</td>
+<td>+61.50%</td>
+</tr>
+<tr>
+<td>Cycles avg</td>
+<td>lower</td>
+<td>+56.24%</td>
+<td>+12.03%</td>
+<td>+61.50%</td>
+</tr>
+<tr>
+<td>Throughput</td>
+<td>higher</td>
+<td>+128.51%</td>
+<td>+13.68%</td>
+<td>+159.77%</td>
+</tr>
+<tr>
+<td>End-to-end lower bound</td>
+<td>lower</td>
+<td>+15.72%</td>
+<td>+1.75%</td>
+<td>+17.19%</td>
+</tr>
+<tr>
+<td>Text</td>
+<td>lower</td>
+<td>+65.47%</td>
+<td>+9.33%</td>
+<td>+68.69%</td>
+</tr>
+<tr>
+<td>Data</td>
+<td>lower</td>
+<td>-39.20%</td>
+<td>-0.00%</td>
+<td>-39.20%</td>
+</tr>
+<tr>
+<td>BSS</td>
+<td>lower</td>
+<td>+28.17%</td>
+<td>+2.49%</td>
+<td>+29.96%</td>
+</tr>
+<tr>
+<td>Static SRAM</td>
+<td>lower</td>
+<td>+24.05%</td>
+<td>+2.21%</td>
+<td>+25.74%</td>
+</tr>
+<tr>
+<td>ELF size</td>
+<td>lower</td>
+<td>+14.28%</td>
+<td>+0.95%</td>
+<td>+15.10%</td>
+</tr>
+<tr>
+<td>AI weights</td>
+<td>lower</td>
+<td>+74.83%</td>
+<td>+13.72%</td>
+<td>+78.29%</td>
+</tr>
+<tr>
+<td>AI activations</td>
+<td>lower</td>
+<td>+23.39%</td>
+<td>+8.00%</td>
+<td>+29.52%</td>
+</tr>
+<tr>
+<td>MAC ops</td>
+<td>lower</td>
+<td>-1.34%</td>
+<td>+14.49%</td>
+<td>+13.34%</td>
+</tr>
+<tr>
+<td>MOPS/s</td>
+<td>higher</td>
+<td>+131.57%</td>
+<td>-2.79%</td>
+<td>+125.11%</td>
+</tr>
+<tr>
+<td>MAC/cycle</td>
+<td>higher</td>
+<td>+131.57%</td>
+<td>-2.79%</td>
+<td>+125.11%</td>
+</tr>
+<tr>
+<td>Current</td>
+<td>lower</td>
+<td>+7.18%</td>
+<td>-2.30%</td>
+<td>+5.05%</td>
+</tr>
+<tr>
+<td>Power</td>
+<td>lower</td>
+<td>+7.18%</td>
+<td>-2.30%</td>
+<td>+5.05%</td>
+</tr>
+<tr>
+<td>Energy/inference</td>
+<td>lower</td>
+<td>+59.38%</td>
+<td>+10.01%</td>
+<td>+63.45%</td>
+</tr>
+<tr>
+<td>MAC/J</td>
+<td>higher</td>
+<td>+149.49%</td>
+<td>-4.98%</td>
+<td>+137.07%</td>
+</tr>
+</tbody></table>
+</section>
+<section><h2>Power Peak Summary</h2>
+<table>
+<thead><tr>
+<th>Variant</th>
+<th>Peaks</th>
+<th>Selected window</th>
+<th>Avg duration</th>
+<th>Avg mean current</th>
+<th>Avg total energy</th>
+<th>Avg excess energy</th>
+<th>Duration/summary</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>v0 unquantized</td>
+<td>6</td>
+<td>1</td>
+<td>397.24 ms</td>
+<td>24.095 mA</td>
+<td>31.39 mJ</td>
+<td>3801.75 uJ</td>
+<td>1.000</td>
+</tr>
+<tr>
+<td>v1 quantized</td>
+<td>6</td>
+<td>5</td>
+<td>171.92 ms</td>
+<td>22.364 mA</td>
+<td>12.61 mJ</td>
+<td>447.39 uJ</td>
+<td>0.989</td>
+</tr>
+<tr>
+<td>v2 pruned quantized</td>
+<td>6</td>
+<td>5</td>
+<td>153.10 ms</td>
+<td>22.879 mA</td>
+<td>11.49 mJ</td>
+<td>814.25 uJ</td>
+<td>1.001</td>
+</tr>
+</tbody></table>
+</section>
+<section><h2>Plots</h2>
+<div class="plot"><h3>01_normalized_score_radar</h3><img src="plots/01_normalized_score_radar.svg" alt="01_normalized_score_radar"></div>
+<div class="plot"><h3>02_firmware_memory_breakdown</h3><img src="plots/02_firmware_memory_breakdown.svg" alt="02_firmware_memory_breakdown"></div>
+<div class="plot"><h3>03_latency_cycles_throughput</h3><img src="plots/03_latency_cycles_throughput.svg" alt="03_latency_cycles_throughput"></div>
+<div class="plot"><h3>04_energy_power_efficiency</h3><img src="plots/04_energy_power_efficiency.svg" alt="04_energy_power_efficiency"></div>
+<div class="plot"><h3>05_model_core_metrics</h3><img src="plots/05_model_core_metrics.svg" alt="05_model_core_metrics"></div>
+<div class="plot"><h3>06_compact_tradeoff_bars</h3><img src="plots/06_compact_tradeoff_bars.svg" alt="06_compact_tradeoff_bars"></div>
+<div class="plot"><h3>07_all_numeric_metrics_heatmap</h3><img src="plots/07_all_numeric_metrics_heatmap.svg" alt="07_all_numeric_metrics_heatmap"></div>
+<div class="plot"><h3>09_log_metric_overview</h3><img src="plots/09_log_metric_overview.svg" alt="09_log_metric_overview"></div>
+<div class="plot"><h3>10_latency_sram_energy_frontier</h3><img src="plots/10_latency_sram_energy_frontier.svg" alt="10_latency_sram_energy_frontier"></div>
+<div class="plot"><h3>11_latency_energy_sram_frontier</h3><img src="plots/11_latency_energy_sram_frontier.svg" alt="11_latency_energy_sram_frontier"></div>
+<div class="plot"><h3>12_text_sram_latency_frontier</h3><img src="plots/12_text_sram_latency_frontier.svg" alt="12_text_sram_latency_frontier"></div>
+<div class="plot"><h3>13_weights_activations_latency_frontier</h3><img src="plots/13_weights_activations_latency_frontier.svg" alt="13_weights_activations_latency_frontier"></div>
+<div class="plot"><h3>14_throughput_energy_sram_frontier</h3><img src="plots/14_throughput_energy_sram_frontier.svg" alt="14_throughput_energy_sram_frontier"></div>
+<div class="plot"><h3>15_macs_latency_energy_frontier</h3><img src="plots/15_macs_latency_energy_frontier.svg" alt="15_macs_latency_energy_frontier"></div>
+<div class="plot"><h3>16_relative_improvement_heatmap</h3><img src="plots/16_relative_improvement_heatmap.svg" alt="16_relative_improvement_heatmap"></div>
+<div class="plot"><h3>17_v2_vs_v0_relative_improvement_bars</h3><img src="plots/17_v2_vs_v0_relative_improvement_bars.svg" alt="17_v2_vs_v0_relative_improvement_bars"></div>
+<div class="plot"><h3>18_v2_vs_v1_relative_improvement_bars</h3><img src="plots/18_v2_vs_v1_relative_improvement_bars.svg" alt="18_v2_vs_v1_relative_improvement_bars"></div>
+<div class="plot"><h3>19_v1_vs_v0_relative_improvement_bars</h3><img src="plots/19_v1_vs_v0_relative_improvement_bars.svg" alt="19_v1_vs_v0_relative_improvement_bars"></div>
+<div class="plot"><h3>20_stepwise_relative_improvements</h3><img src="plots/20_stepwise_relative_improvements.svg" alt="20_stepwise_relative_improvements"></div>
+<div class="plot"><h3>21_compute_efficiency_improvement_profile</h3><img src="plots/21_compute_efficiency_improvement_profile.svg" alt="21_compute_efficiency_improvement_profile"></div>
+<div class="plot"><h3>22_memory_model_improvement_profile</h3><img src="plots/22_memory_model_improvement_profile.svg" alt="22_memory_model_improvement_profile"></div>
+<div class="plot"><h3>23_power_representative_inference_window_overlay</h3><img src="plots/23_power_representative_inference_window_overlay.svg" alt="23_power_representative_inference_window_overlay"></div>
+<div class="plot"><h3>24_power_peak03_inference_window_overlay</h3><img src="plots/24_power_peak03_inference_window_overlay.svg" alt="24_power_peak03_inference_window_overlay"></div>
+<div class="plot"><h3>25_power_six_peak_window_grid</h3><img src="plots/25_power_six_peak_window_grid.svg" alt="25_power_six_peak_window_grid"></div>
+<div class="plot"><h3>26_power_peak_average_bars</h3><img src="plots/26_power_peak_average_bars.svg" alt="26_power_peak_average_bars"></div>
+<div class="plot"><h3>27_power_energy_duration_scatter</h3><img src="plots/27_power_energy_duration_scatter.svg" alt="27_power_energy_duration_scatter"></div>
+<div class="plot"><h3>28_power_representative_edge_zoom_overlay</h3><img src="plots/28_power_representative_edge_zoom_overlay.svg" alt="28_power_representative_edge_zoom_overlay"></div>
+<div class="plot"><h3>29_power_peak03_edge_zoom_overlay</h3><img src="plots/29_power_peak03_edge_zoom_overlay.svg" alt="29_power_peak03_edge_zoom_overlay"></div>
+</section>
+</main></body></html>

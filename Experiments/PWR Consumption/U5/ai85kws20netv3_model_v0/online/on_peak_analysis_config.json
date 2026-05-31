@@ -1,0 +1,18 @@
+{
+  "csv": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/Experiments/PWR Consumption/U5/ai85kws20netv3_model_v0/online/on.csv",
+  "summary_json": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/Experiments/General Profiling/U5/ai85kws20netv3_model_v0/online/on.json",
+  "out_dir": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/Experiments/PWR Consumption/U5/ai85kws20netv3_model_v0/online/on_peak_analysis",
+  "expected_peaks": 6,
+  "period_ms": 5000.0,
+  "window_mode": "fixed_duration_to_end",
+  "threshold_fraction": 0.25,
+  "zoom_half_window_ms": 240.0,
+  "overlay_half_window_ms": 240.0,
+  "voltage": 3.28,
+  "local_baseline_window_ms": 400.0,
+  "local_baseline_guard_ms": 20.0,
+  "transition_start_fraction": 0.3,
+  "transition_end_fraction": 0.2,
+  "transition_settle_ms": 20.0,
+  "transition_smooth_ms": 5.0
+}

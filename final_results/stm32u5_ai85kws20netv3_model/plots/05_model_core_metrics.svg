@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1156" height="588" viewBox="0 0 1156 588">
+<style>
+text{font-family:Arial,Helvetica,sans-serif;fill:#111827}
+.title{font-size:24px;font-weight:700}
+.subtitle{font-size:13px;fill:#475569}
+.axis{stroke:#94a3b8;stroke-width:1}
+.grid{stroke:#cbd5e1;stroke-width:1;stroke-dasharray:3 4}
+.label{font-size:12px;fill:#334155}
+.small{font-size:10px;fill:#475569}
+.tick{font-size:10px;fill:#64748b}
+</style>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"/>
+<text x="32.00" y="36.00" class="title" text-anchor="start">AI Model Core Metrics</text>
+<text x="32.00" y="58.00" class="subtitle" text-anchor="start">Firmware model_info values, with v0 backfilled from the matching X-CUBE-AI report.</text>
+<text x="38.00" y="94.00" class="label" text-anchor="start">AI weights</text>
+<text x="38.00" y="111.00" class="small" text-anchor="start">B</text>
+<line x1="92.00" y1="116.00" x2="92.00" y2="269.00" class="axis"/>
+<line x1="92.00" y1="269.00" x2="358.00" y2="269.00" class="axis"/>
+<line x1="92.00" y1="230.75" x2="358.00" y2="230.75" class="grid"/>
+<line x1="92.00" y1="192.50" x2="358.00" y2="192.50" class="grid"/>
+<line x1="92.00" y1="154.25" x2="358.00" y2="154.25" class="grid"/>
+<rect x="110.00" y="135.96" width="64.67" height="133.04" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
+<text x="142.33" y="130.96" class="tick" text-anchor="middle">684,404</text>
+<text x="142.33" y="286.00" class="tick" text-anchor="middle">v0</text>
+<rect x="192.67" y="235.52" width="64.67" height="33.48" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="225.00" y="230.52" class="tick" text-anchor="middle">172,232</text>
+<text x="225.00" y="286.00" class="tick" text-anchor="middle">v1</text>
+<rect x="275.33" y="240.11" width="64.67" height="28.89" rx="3" fill="#c2410c" stroke="none" opacity="1.0"/>
+<text x="307.67" y="235.11" class="tick" text-anchor="middle">148,600</text>
+<text x="307.67" y="286.00" class="tick" text-anchor="middle">v2</text>
+<text x="398.00" y="94.00" class="label" text-anchor="start">AI activations</text>
+<text x="398.00" y="111.00" class="small" text-anchor="start">B</text>
+<line x1="452.00" y1="116.00" x2="452.00" y2="269.00" class="axis"/>
+<line x1="452.00" y1="269.00" x2="718.00" y2="269.00" class="axis"/>
+<line x1="452.00" y1="230.75" x2="718.00" y2="230.75" class="grid"/>
+<line x1="452.00" y1="192.50" x2="718.00" y2="192.50" class="grid"/>
+<line x1="452.00" y1="154.25" x2="718.00" y2="154.25" class="grid"/>
+<rect x="470.00" y="135.96" width="64.67" height="133.04" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
+<text x="502.33" y="130.96" class="tick" text-anchor="middle">66,832</text>
+<text x="502.33" y="286.00" class="tick" text-anchor="middle">v0</text>
+<rect x="552.67" y="167.08" width="64.67" height="101.92" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="585.00" y="162.08" class="tick" text-anchor="middle">51,200</text>
+<text x="585.00" y="286.00" class="tick" text-anchor="middle">v1</text>
+<rect x="635.33" y="175.23" width="64.67" height="93.77" rx="3" fill="#c2410c" stroke="none" opacity="1.0"/>
+<text x="667.67" y="170.23" class="tick" text-anchor="middle">47,104</text>
+<text x="667.67" y="286.00" class="tick" text-anchor="middle">v2</text>
+<text x="758.00" y="94.00" class="label" text-anchor="start">Input buffer</text>
+<text x="758.00" y="111.00" class="small" text-anchor="start">B</text>
+<line x1="812.00" y1="116.00" x2="812.00" y2="269.00" class="axis"/>
+<line x1="812.00" y1="269.00" x2="1078.00" y2="269.00" class="axis"/>
+<line x1="812.00" y1="230.75" x2="1078.00" y2="230.75" class="grid"/>
+<line x1="812.00" y1="192.50" x2="1078.00" y2="192.50" class="grid"/>
+<line x1="812.00" y1="154.25" x2="1078.00" y2="154.25" class="grid"/>
+<rect x="830.00" y="135.96" width="64.67" height="133.04" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
+<text x="862.33" y="130.96" class="tick" text-anchor="middle">65,536</text>
+<text x="862.33" y="286.00" class="tick" text-anchor="middle">v0</text>
+<rect x="912.67" y="235.74" width="64.67" height="33.26" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="945.00" y="230.74" class="tick" text-anchor="middle">16,384</text>
+<text x="945.00" y="286.00" class="tick" text-anchor="middle">v1</text>
+<rect x="995.33" y="235.74" width="64.67" height="33.26" rx="3" fill="#c2410c" stroke="none" opacity="1.0"/>
+<text x="1027.67" y="230.74" class="tick" text-anchor="middle">16,384</text>
+<text x="1027.67" y="286.00" class="tick" text-anchor="middle">v2</text>
+<text x="38.00" y="329.00" class="label" text-anchor="start">Output buffer</text>
+<text x="38.00" y="346.00" class="small" text-anchor="start">B</text>
+<line x1="92.00" y1="351.00" x2="92.00" y2="504.00" class="axis"/>
+<line x1="92.00" y1="504.00" x2="358.00" y2="504.00" class="axis"/>
+<line x1="92.00" y1="465.75" x2="358.00" y2="465.75" class="grid"/>
+<line x1="92.00" y1="427.50" x2="358.00" y2="427.50" class="grid"/>
+<line x1="92.00" y1="389.25" x2="358.00" y2="389.25" class="grid"/>
+<rect x="110.00" y="370.96" width="64.67" height="133.04" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
+<text x="142.33" y="365.96" class="tick" text-anchor="middle">84</text>
+<text x="142.33" y="521.00" class="tick" text-anchor="middle">v0</text>
+<rect x="192.67" y="470.74" width="64.67" height="33.26" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="225.00" y="465.74" class="tick" text-anchor="middle">21</text>
+<text x="225.00" y="521.00" class="tick" text-anchor="middle">v1</text>
+<rect x="275.33" y="470.74" width="64.67" height="33.26" rx="3" fill="#c2410c" stroke="none" opacity="1.0"/>
+<text x="307.67" y="465.74" class="tick" text-anchor="middle">21</text>
+<text x="307.67" y="521.00" class="tick" text-anchor="middle">v2</text>
+<text x="398.00" y="329.00" class="label" text-anchor="start">MAC ops</text>
+<text x="398.00" y="346.00" class="small" text-anchor="start">MAC</text>
+<line x1="452.00" y1="351.00" x2="452.00" y2="504.00" class="axis"/>
+<line x1="452.00" y1="504.00" x2="718.00" y2="504.00" class="axis"/>
+<line x1="452.00" y1="465.75" x2="718.00" y2="465.75" class="grid"/>
+<line x1="452.00" y1="427.50" x2="718.00" y2="427.50" class="grid"/>
+<line x1="452.00" y1="389.25" x2="718.00" y2="389.25" class="grid"/>
+<rect x="470.00" y="372.72" width="64.67" height="131.28" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
+<text x="502.33" y="367.72" class="tick" text-anchor="middle">8,797,410</text>
+<text x="502.33" y="521.00" class="tick" text-anchor="middle">v0</text>
+<rect x="552.67" y="370.96" width="64.67" height="133.04" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="585.00" y="365.96" class="tick" text-anchor="middle">8,915,270</text>
+<text x="585.00" y="521.00" class="tick" text-anchor="middle">v1</text>
+<rect x="635.33" y="390.23" width="64.67" height="113.77" rx="3" fill="#c2410c" stroke="none" opacity="1.0"/>
+<text x="667.67" y="385.23" class="tick" text-anchor="middle">7,623,538</text>
+<text x="667.67" y="521.00" class="tick" text-anchor="middle">v2</text>
+<text x="758.00" y="329.00" class="label" text-anchor="start">MOPS/s</text>
+<text x="758.00" y="346.00" class="small" text-anchor="start">MOPS/s</text>
+<line x1="812.00" y1="351.00" x2="812.00" y2="504.00" class="axis"/>
+<line x1="812.00" y1="504.00" x2="1078.00" y2="504.00" class="axis"/>
+<line x1="812.00" y1="465.75" x2="1078.00" y2="465.75" class="grid"/>
+<line x1="812.00" y1="427.50" x2="1078.00" y2="427.50" class="grid"/>
+<line x1="812.00" y1="389.25" x2="1078.00" y2="389.25" class="grid"/>
+<rect x="830.00" y="446.55" width="64.67" height="57.45" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
+<text x="862.33" y="441.55" class="tick" text-anchor="middle">22.146</text>
+<text x="862.33" y="521.00" class="tick" text-anchor="middle">v0</text>
+<rect x="912.67" y="370.96" width="64.67" height="133.04" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="945.00" y="365.96" class="tick" text-anchor="middle">51.285</text>
+<text x="945.00" y="521.00" class="tick" text-anchor="middle">v1</text>
+<rect x="995.33" y="374.67" width="64.67" height="129.33" rx="3" fill="#c2410c" stroke="none" opacity="1.0"/>
+<text x="1027.67" y="369.67" class="tick" text-anchor="middle">49.853</text>
+<text x="1027.67" y="521.00" class="tick" text-anchor="middle">v2</text>
+</svg>

@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="560" viewBox="0 0 860 560">
+<style>
+text{font-family:Arial,Helvetica,sans-serif;fill:#111827}
+.title{font-size:24px;font-weight:700}
+.subtitle{font-size:13px;fill:#475569}
+.axis{stroke:#94a3b8;stroke-width:1}
+.grid{stroke:#cbd5e1;stroke-width:1;stroke-dasharray:3 4}
+.label{font-size:12px;fill:#334155}
+.small{font-size:10px;fill:#475569}
+.tick{font-size:10px;fill:#64748b}
+</style>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"/>
+<text x="32.00" y="36.00" class="title" text-anchor="start">Latency vs Energy Frontier</text>
+<text x="32.00" y="58.00" class="subtitle" text-anchor="start">Lower-left is better; marker radius follows static SRAM.</text>
+<line x1="92.00" y1="82.00" x2="92.00" y2="450.00" class="axis"/>
+<line x1="92.00" y1="450.00" x2="760.00" y2="450.00" class="axis"/>
+<line x1="92.00" y1="450.00" x2="92.00" y2="455.00" class="axis"/>
+<text x="92.00" y="472.00" class="tick" text-anchor="middle">9.1 mJ</text>
+<line x1="92.00" y1="82.00" x2="92.00" y2="450.00" class="grid"/>
+<line x1="259.00" y1="450.00" x2="259.00" y2="455.00" class="axis"/>
+<text x="259.00" y="472.00" class="tick" text-anchor="middle">15.3 mJ</text>
+<line x1="259.00" y1="82.00" x2="259.00" y2="450.00" class="grid"/>
+<line x1="426.00" y1="450.00" x2="426.00" y2="455.00" class="axis"/>
+<text x="426.00" y="472.00" class="tick" text-anchor="middle">21.4 mJ</text>
+<line x1="426.00" y1="82.00" x2="426.00" y2="450.00" class="grid"/>
+<line x1="593.00" y1="450.00" x2="593.00" y2="455.00" class="axis"/>
+<text x="593.00" y="472.00" class="tick" text-anchor="middle">27.6 mJ</text>
+<line x1="593.00" y1="82.00" x2="593.00" y2="450.00" class="grid"/>
+<line x1="760.00" y1="450.00" x2="760.00" y2="455.00" class="axis"/>
+<text x="760.00" y="472.00" class="tick" text-anchor="middle">33.8 mJ</text>
+<line x1="760.00" y1="82.00" x2="760.00" y2="450.00" class="grid"/>
+<line x1="87.00" y1="450.00" x2="92.00" y2="450.00" class="axis"/>
+<text x="82.00" y="454.00" class="tick" text-anchor="end">119 ms</text>
+<line x1="92.00" y1="450.00" x2="760.00" y2="450.00" class="grid"/>
+<line x1="87.00" y1="358.00" x2="92.00" y2="358.00" class="axis"/>
+<text x="82.00" y="362.00" class="tick" text-anchor="end">197 ms</text>
+<line x1="92.00" y1="358.00" x2="760.00" y2="358.00" class="grid"/>
+<line x1="87.00" y1="266.00" x2="92.00" y2="266.00" class="axis"/>
+<text x="82.00" y="270.00" class="tick" text-anchor="end">275 ms</text>
+<line x1="92.00" y1="266.00" x2="760.00" y2="266.00" class="grid"/>
+<line x1="87.00" y1="174.00" x2="92.00" y2="174.00" class="axis"/>
+<text x="82.00" y="178.00" class="tick" text-anchor="end">353 ms</text>
+<line x1="92.00" y1="174.00" x2="760.00" y2="174.00" class="grid"/>
+<line x1="87.00" y1="82.00" x2="92.00" y2="82.00" class="axis"/>
+<text x="82.00" y="86.00" class="tick" text-anchor="end">431 ms</text>
+<line x1="92.00" y1="82.00" x2="760.00" y2="82.00" class="grid"/>
+<text x="426.00" y="512.00" class="label" text-anchor="middle">Energy per inference</text>
+<text x="24.00" y="266.00" class="label" text-anchor="middle" transform="rotate(-90 24.00 266.00)">CNN latency</text>
+<text x="756.00" y="62.00" class="small" text-anchor="end">Bubble size: Static SRAM</text>
+<circle cx="695.35" cy="122.25" r="31.00" fill="#475569" fill-opacity="0.80" stroke="#111827" stroke-width="1"/>
+<circle cx="191.16" cy="385.14" r="11.37" fill="#0f766e" fill-opacity="0.80" stroke="#111827" stroke-width="1"/>
+<circle cx="156.65" cy="409.75" r="10.00" fill="#c2410c" fill-opacity="0.80" stroke="#111827" stroke-width="1"/>
+<line x1="673.03" y1="122.25" x2="659.35" y2="118.11" stroke="#475569" stroke-width="1.1"/>
+<text x="654.35" y="123.11" class="label" text-anchor="end">v0 unquantized</text>
+<text x="654.35" y="138.11" class="tick" text-anchor="end">238 KiB</text>
+<line x1="199.35" y1="385.14" x2="207.53" y2="381.00" stroke="#0f766e" stroke-width="1.1"/>
+<text x="212.53" y="386.00" class="label" text-anchor="start">v1 quantized</text>
+<text x="212.53" y="401.00" class="tick" text-anchor="start">181 KiB</text>
+<line x1="163.85" y1="409.75" x2="171.65" y2="419.00" stroke="#c2410c" stroke-width="1.1"/>
+<text x="176.65" y="424.00" class="label" text-anchor="start">v2 pruned quantized</text>
+<text x="176.65" y="439.00" class="tick" text-anchor="start">177 KiB</text>
+</svg>

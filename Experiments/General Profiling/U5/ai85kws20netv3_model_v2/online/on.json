@@ -93,5 +93,14 @@
     "mac_ops_per_inference": 7623538.0,
     "mac_ops_per_second": 49852586.1162657,
     "mops_per_second": 49.8525861162657
+  },
+  "energy_estimate": {
+    "voltage_v": 3.28,
+    "current_ma": 22.8790316619099,
+    "power_w": 0.07504322385106446,
+    "energy_per_inference_j": 0.011475731014974075,
+    "energy_per_inference_uj": 11475.731014974075,
+    "mac_ops_per_joule": 664318289.6194105,
+    "mac_ops_per_second_per_watt": 664318289.6194105
   }
 }

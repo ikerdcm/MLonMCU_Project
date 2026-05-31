@@ -65,14 +65,25 @@ if [[ $DO_BUILD -eq 1 ]]; then
 fi
 
 if [[ $DO_FLASH -eq 1 ]]; then
-  OPENOCD_BIN="${OPENOCD_ROOT}/bin/Linux_x86_64/openocd"
+  OPENOCD_BIN=""
+  if [[ -n "${OPENOCD_ROOT}" ]]; then
+    OPENOCD_BIN="${OPENOCD_ROOT}/bin/Darwin_arm64/openocd"
+  fi
+  if [[ -z "$OPENOCD_BIN" || ! -x "$OPENOCD_BIN" ]]; then
+    OPENOCD_BIN="$(command -v openocd || true)"
+  fi
 
-  [[ ! -x "$OPENOCD_BIN" ]] && { echo "openocd not found: $OPENOCD_BIN" >&2; exit 1; }
+  [[ -z "$OPENOCD_BIN" || ! -x "$OPENOCD_BIN" ]] && { echo "openocd not found (set openocd_root or add openocd to PATH)" >&2; exit 1; }
   [[ ! -f "$ELF" ]]         && { echo "ELF not found: $ELF" >&2; exit 1; }
+
+  OPENOCD_ARGS=()
+  if [[ -n "${OPENOCD_ROOT}" ]]; then
+    OPENOCD_ARGS+=("-s" "${OPENOCD_ROOT}")
+  fi
 
   echo "[FLASH] elf=${ELF}"
   "$OPENOCD_BIN" \
-    -s "$OPENOCD_ROOT" \
+    "${OPENOCD_ARGS[@]}" \
     -f interface/cmsis-dap.cfg \
     -f max78000.cfg \
     -c "transport select swd; program ${ELF} verify reset exit"

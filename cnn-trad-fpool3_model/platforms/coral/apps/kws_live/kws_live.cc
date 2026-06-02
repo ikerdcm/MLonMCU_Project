@@ -121,13 +121,23 @@ extern "C" void app_main(void* param) {
     reader.Drop(MsToSamples(AudioSampleRate::k16000_Hz, 150));
     printf("Microphone ready. Listening...\r\n\r\n");
 
-    // --- Inference loop ---
-    // Run inference every 500 ms (= 8000 new samples).
-    constexpr int kInferenceStrideMs = 500;
-    constexpr int kInferenceSrideSamples =
-        kInferenceStrideMs * 16;  // 8000 samples
+    // --- Adaptive voice-activity trigger (shared design across all 3 boards) ---
+    // Threshold is relative to a tracked noise floor, so it self-normalizes to
+    // this board's mic scale and follows ambient noise. EMA tracker = a few
+    // flops per chunk (negligible power). thr_high/thr_low use shared unitless K.
+    constexpr float kVadKHigh           = 4.0f;  // trigger when L >= nf*K_HIGH
+    constexpr float kVadKLow            = 2.0f;  // end when L <  nf*K_LOW
+    constexpr int   kVadTrigConsec      = 2;     // consecutive high chunks to fire
+    constexpr int   kVadWarmupChunks    = 25;    // ~0.5 s @ 20 ms chunks to seed nf
+    constexpr int   kVadSilenceChunks   = 15;    // ~0.3 s below low ends an utterance
+    constexpr int   kVadPostTrigMaxChunks = 50;  // ~1 s safety cap (= ring length)
 
-    int samples_since_last_inference = kInferenceSrideSamples;  // run immediately
+    float nf = 0.0f, nf_seed = 0.0f; // adaptive noise floor + startup-ambient floor
+    int   warmup_n = 0;
+    int   vad_state = 0;             // 0 = idle, 1 = collecting an utterance
+    int   high_run = 0, sil_run = 0, post_chunks = 0;
+    int   level_div = 0;
+
     static int8_t  mfcc_buf[MFCC_OUTPUT_ELEMS];
     static int16_t audio_snap[kAudioSamples];
 
@@ -135,22 +145,53 @@ extern "C" void app_main(void* param) {
         size_t got = reader.FillBuffer();
         const auto& buf32 = reader.Buffer();
         AppendSamples(buf32.data(), got);
-        samples_since_last_inference += (int)got;
+        if (!got) continue;
 
-        // Mic level (RMS) for the dashboard plot — throttled to ~25 Hz.
-        static int level_div = 0;
-        if (got && (++level_div & 1)) {
-            uint64_t acc = 0;
-            for (size_t i = 0; i < got; ++i) {
-                int32_t s = (int16_t)(buf32[i] >> 16);
-                acc += (uint32_t)(s * s);
-            }
-            uint32_t rms = (uint32_t)sqrtf((float)acc / (float)got);
-            printf("BENCH,event=level,rms=%lu\r\n", (unsigned long)rms);
+        // Per-chunk level L (RMS) — drives both the plot and the VAD.
+        uint64_t acc = 0;
+        for (size_t i = 0; i < got; ++i) {
+            int32_t s = (int16_t)(buf32[i] >> 16);
+            acc += (uint32_t)(s * s);
+        }
+        float L = sqrtf((float)acc / (float)got);
+
+        // Noise floor: running mean during warmup, then asymmetric EMA while
+        // idle (rise slow, fall fast) so speech bursts don't inflate it.
+        if (warmup_n < kVadWarmupChunks) {
+            nf += (L - nf) / (float)(warmup_n + 1);
+            if (++warmup_n == kVadWarmupChunks) nf_seed = (nf < 1.0f) ? 1.0f : nf;
+        } else if (vad_state == 0) {
+            nf += (L > nf ? (1.0f / 64.0f) : (1.0f / 8.0f)) * (L - nf);
+        }
+        if (nf < 1.0f) nf = 1.0f;
+        if (nf < nf_seed) nf = nf_seed;   // floor at startup ambient: never collapse
+        float thr_high = nf * kVadKHigh;
+        float thr_low  = nf * kVadKLow;
+
+        // Normalized level (x100 of noise floor) + unified threshold for the plot.
+        if (++level_div & 1) {
+            printf("BENCH,event=level,rms=%lu,thr=%lu\r\n",
+                   (unsigned long)(100.0f * L / nf),
+                   (unsigned long)(100.0f * kVadKHigh));
         }
 
-        if (samples_since_last_inference < kInferenceSrideSamples) continue;
-        samples_since_last_inference = 0;
+        if (warmup_n < kVadWarmupChunks) continue;  // no detection until seeded
+
+        // VAD state machine.
+        if (vad_state == 0) {
+            high_run = (L >= thr_high) ? (high_run + 1) : 0;
+            if (high_run >= kVadTrigConsec) {
+                vad_state = 1; sil_run = 0; post_chunks = 0; high_run = 0;
+            }
+            continue;
+        }
+        // Collecting: wait for end-of-utterance (sustained quiet) or safety cap.
+        post_chunks++;
+        sil_run = (L < thr_low) ? (sil_run + 1) : 0;
+        if (sil_run < kVadSilenceChunks && post_chunks < kVadPostTrigMaxChunks) {
+            continue;
+        }
+        vad_state = 0;  // utterance done → run one inference on the 1 s window
 
         // Snapshot ring buffer and compute MFCC
         SnapshotRing(audio_snap);

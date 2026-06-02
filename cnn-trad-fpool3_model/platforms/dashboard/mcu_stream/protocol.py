@@ -81,6 +81,7 @@ class InferenceRecord:
     infer_us: Optional[int] = None       # unified cnn_us / infer_us
     cycles: Optional[int] = None
     level: Optional[int] = None          # mic audio level/RMS (event=level)
+    thr: Optional[int] = None            # adaptive voice-trigger threshold (event=level)
     extra: dict = field(default_factory=dict)
 
     @property
@@ -161,9 +162,10 @@ def build_record(mcu: str, mode: str, line: str,
             infer_us=_to_int(fields, "cnn_us", "infer_us"),
             cycles=_to_int(fields, "cycles"),
             level=_to_int(fields, "rms", "level"),
+            thr=_to_int(fields, "thr"),
             extra={k: v for k, v in fields.items()
                    if k not in ("event", "run", "pred_idx", "cnn_us",
-                                "infer_us", "cycles", "rms", "level")},
+                                "infer_us", "cycles", "rms", "level", "thr")},
         )
         return rec
 

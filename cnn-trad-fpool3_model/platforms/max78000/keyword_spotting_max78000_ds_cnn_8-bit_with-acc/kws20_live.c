@@ -20,8 +20,14 @@
 #define LIVE_CHUNK              128u
 #define LIVE_PREAMBLE_SAMPLES   (30u * LIVE_CHUNK)
 #define LIVE_POST_MAX_SAMPLES   (LIVE_WINDOW_SAMPLES - LIVE_PREAMBLE_SAMPLES)
-#define LIVE_THRESHOLD_HIGH     700u
-#define LIVE_THRESHOLD_LOW      200u
+/* UNIFIED across all 3 boards: level is reported normalized to the noise floor
+   (×100, baseline ~100 everywhere) and the threshold is the same line at
+   K_HIGH×100. nf is floored at the startup-ambient seed so it never collapses
+   (this mic's silence avg drops near 0, which made a pure nf*K threshold
+   hypersensitive before). */
+#define LIVE_VAD_K_HIGH         4.0f   /* trigger when avg >= nf * K_HIGH */
+#define LIVE_VAD_K_LOW          2.0f   /* end when avg <  nf * K_LOW */
+#define LIVE_VAD_WARMUP_CHUNKS  60u    /* ~0.5 s @ 125 Hz chunk rate to seed nf */
 #define LIVE_SILENCE_THRESH     20u
 #define LIVE_WARMUP_SAMPLES     10000u
 #define LIVE_I2S_BUF_SIZE       64u
@@ -192,6 +198,8 @@ void kws20_live_run_once(void)
 {
     uint32_t run_idx = 0, ai_counter = 0, silence_run = 0;
     uint8_t  collecting = 0;
+    float    nf = 0.0f, nf_seed = 0.0f;   /* noise floor + startup-ambient floor */
+    uint32_t vad_warmup = 0;
 
     if (Microphone_Power(POWER_ON) != E_NO_ERROR) {
         printf("Microphone_Power failed\r\n");
@@ -219,24 +227,42 @@ void kws20_live_run_once(void)
         uint16_t avg = 0;
         if (!mic_read_chunk(&avg)) continue;
 
-        /* Mic level for the dashboard plot — chunk rate is 125 Hz, emit ~25 Hz. */
+        /* Adaptive noise floor (shared design): running mean during warmup, then
+           asymmetric EMA while idle (rise slow, fall fast) so speech doesn't
+           inflate it. threshold = nf * K (self-normalizes to this board's scale). */
+        float L = (float)avg;
+        if (vad_warmup < LIVE_VAD_WARMUP_CHUNKS) {
+            nf += (L - nf) / (float)(vad_warmup + 1u);
+            if (++vad_warmup == LIVE_VAD_WARMUP_CHUNKS) nf_seed = (nf < 1.0f) ? 1.0f : nf;
+        } else if (!collecting) {
+            nf += (L > nf ? (1.0f / 64.0f) : (1.0f / 8.0f)) * (L - nf);
+        }
+        if (nf < 1.0f) nf = 1.0f;
+        if (nf < nf_seed) nf = nf_seed;   /* floor at startup ambient: never collapse */
+        uint32_t thr_high = (uint32_t)(nf * LIVE_VAD_K_HIGH);
+        uint32_t thr_low  = (uint32_t)(nf * LIVE_VAD_K_LOW);
+
+        /* Normalized level (×100 of noise floor) + unified threshold for the plot. */
         static uint32_t level_div = 0;
         if ((++level_div % 5u) == 0u) {
-            printf("BENCH,event=level,rms=%u\r\n", avg);
+            uint32_t norm = (uint32_t)(100.0f * L / nf);
+            printf("BENCH,event=level,rms=%lu,thr=%lu\r\n",
+                   (unsigned long)norm, (unsigned long)(uint32_t)(100.0f * LIVE_VAD_K_HIGH));
         }
 
         if (ring_filled < LIVE_PREAMBLE_SAMPLES) continue;
+        if (vad_warmup < LIVE_VAD_WARMUP_CHUNKS) continue;  /* wait for nf seed */
 
         if (!collecting) {
-            if (avg >= LIVE_THRESHOLD_HIGH) {
+            if (avg >= thr_high) {
                 collecting  = 1;
                 ai_counter  = LIVE_PREAMBLE_SAMPLES;
                 silence_run = 0;
-                printf("Trigger (avg=%u)\r\n", avg);
+                printf("Trigger (avg=%u thr=%lu)\r\n", avg, (unsigned long)thr_high);
             }
         } else {
             ai_counter += LIVE_CHUNK;
-            if (avg < LIVE_THRESHOLD_LOW && ai_counter >= LIVE_WINDOW_SAMPLES / 3u)
+            if (avg < thr_low && ai_counter >= LIVE_WINDOW_SAMPLES / 3u)
                 silence_run++;
             else
                 silence_run = 0;

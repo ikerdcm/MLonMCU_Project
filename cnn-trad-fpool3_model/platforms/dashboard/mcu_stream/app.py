@@ -42,27 +42,37 @@ class RollingPlot(pg.PlotWidget):
         self.showGrid(x=True, y=True, alpha=0.2)
         self.setLabel("bottom", "t (s)")
         self.curve = self.plot(pen=pg.mkPen("#2ecc40", width=1))
+        # Adaptive voice-trigger threshold (dotted), overlaid on the Mic level plot.
+        self.curve_thr = self.plot(
+            pen=pg.mkPen("#e67e22", width=1, style=Qt.PenStyle.DashLine))
         self.t: deque[float] = deque()
         self.v: deque[float] = deque()
+        self.vt: deque[float] = deque()   # threshold aligned with self.t (NaN = none)
         self.t0: float | None = None
 
-    def add(self, t_host: float, value: float) -> None:
+    def add(self, t_host: float, value: float, thr: float | None = None) -> None:
         if self.t0 is None:
             self.t0 = t_host
         t = t_host - self.t0
         self.t.append(t)
         self.v.append(value)
+        self.vt.append(float(thr) if thr is not None else float("nan"))
         cutoff = t - self.window_s
         while self.t and self.t[0] < cutoff:
             self.t.popleft()
             self.v.popleft()
+            self.vt.popleft()
         self.curve.setData(list(self.t), list(self.v))
+        # connect="finite" leaves gaps where thr is NaN (e.g. non-level sources).
+        self.curve_thr.setData(list(self.t), list(self.vt), connect="finite")
 
     def clear_data(self) -> None:
         self.t.clear()
         self.v.clear()
+        self.vt.clear()
         self.t0 = None
         self.curve.setData([], [])
+        self.curve_thr.setData([], [])
 
 MAX_ROWS = 300              # cap table rows per panel
 RATE_WINDOW_S = 5.0         # window for lines/s and inf/s
@@ -233,7 +243,9 @@ class McuPanel(QGroupBox):
         if (not inf_only) or rec.is_inference:
             val = getattr(rec, attr, None)
             if val is not None:
-                self.plot.add(rec.t_host, float(val))
+                # On the Mic level plot, overlay the adaptive trigger threshold.
+                thr = rec.thr if attr == "level" else None
+                self.plot.add(rec.t_host, float(val), thr)
 
         if not rec.is_inference:
             return

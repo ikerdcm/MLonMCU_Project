@@ -30,8 +30,13 @@
 #define DEMO_CHUNK                  128u
 #define DEMO_PREAMBLE_SIZE          (30u * DEMO_CHUNK)
 #define DEMO_TRIGGER_CONSEC_HIGH    3u
-#define DEMO_THRESHOLD_HIGH         40u
-#define DEMO_QUIET_THRESHOLD        20u
+/* Adaptive voice trigger (shared design): threshold = noise_floor * K. */
+/* UNIFIED across all 3 boards: level is reported normalized to the noise floor
+   (×100, baseline ~100 everywhere) and the threshold is the same line at
+   K_HIGH×100. nf is floored at the startup-ambient seed so it never collapses. */
+#define LIVE_VAD_K_HIGH             4.0f   /* trigger when avg >= nf * K_HIGH */
+#define LIVE_VAD_K_LOW              2.0f   /* end when avg <  nf * K_LOW */
+#define LIVE_VAD_WARMUP_CHUNKS      60u    /* ~0.5 s @ 125 Hz chunk rate to seed nf */
 #define DEMO_ARM_QUIET_CHUNKS       0u
 #define DEMO_INITIAL_WARMUP_SAMPLES 32000u
 #define DEMO_POST_TRIGGER_SAMPLES   (DS_CNN_AUDIO_WINDOW_SAMPLES - DEMO_PREAMBLE_SIZE)
@@ -80,6 +85,10 @@ static uint32_t live_stream_primed = 0;
 static uint32_t live_last_post_trigger_samples = 0;
 
 static int live_capture_ok = 0;
+/* Adaptive VAD state — static so noise floor persists across utterances. */
+static float    live_nf = 0.0f, live_nf_seed = 0.0f;  /* noise floor + startup-ambient floor */
+static uint32_t live_vad_warmup = 0;   /* chunks seen toward seeding live_nf */
+static uint32_t live_norm = 100u;      /* latest level normalized to nf (×100) for the plot */
 
 static const char *labels[DS_CNN_OUTPUT_SIZE] = {
     "down", "go", "left", "no", "off", "on",
@@ -254,12 +263,32 @@ static int process_capture_sample(live_capture_ctx_t *ctx, int16_t raw)
         {
             uint32_t avg = chunk_sum_abs / DEMO_CHUNK;
 
+            /* Adaptive noise floor (shared design): running mean during warmup,
+               asymmetric EMA while idle (rise slow, fall fast) so speech doesn't
+               inflate it. threshold = nf * K self-normalizes to this mic's scale. */
+            float L = (float)avg;
+            if (live_vad_warmup < LIVE_VAD_WARMUP_CHUNKS) {
+                live_nf += (L - live_nf) / (float)(live_vad_warmup + 1u);
+                if (++live_vad_warmup == LIVE_VAD_WARMUP_CHUNKS)
+                    live_nf_seed = (live_nf < 1.0f) ? 1.0f : live_nf;
+            } else if (ctx->state == 0u) {
+                live_nf += (L > live_nf ? (1.0f / 64.0f) : (1.0f / 8.0f)) * (L - live_nf);
+            }
+            if (live_nf < 1.0f) live_nf = 1.0f;
+            if (live_nf < live_nf_seed) live_nf = live_nf_seed;  /* never collapse */
+            uint32_t thr_high = (uint32_t)(live_nf * LIVE_VAD_K_HIGH);
+            uint32_t thr_low  = (uint32_t)(live_nf * LIVE_VAD_K_LOW);
+            live_norm = (uint32_t)(100.0f * L / live_nf);
+
             if (ctx->ring_filled < DEMO_PREAMBLE_SIZE) {
                 return 0;
             }
+            if (live_vad_warmup < LIVE_VAD_WARMUP_CHUNKS) {
+                return 0;  /* wait for nf seed before detecting */
+            }
 
             if (ctx->state == 0u) {
-                if (avg <= DEMO_QUIET_THRESHOLD) {
+                if (avg <= thr_low) {
                     if (ctx->quiet_run < DEMO_ARM_QUIET_CHUNKS) {
                         ctx->quiet_run++;
                     }
@@ -272,7 +301,7 @@ static int process_capture_sample(live_capture_ctx_t *ctx, int16_t raw)
                     return 0;
                 }
 
-                if (avg >= DEMO_THRESHOLD_HIGH) {
+                if (avg >= thr_high) {
                     ctx->high_run++;
                 } else {
                     ctx->high_run = 0;
@@ -286,7 +315,7 @@ static int process_capture_sample(live_capture_ctx_t *ctx, int16_t raw)
                     ctx->high_run = 0;
                 }
             } else {
-                if ((avg < DEMO_QUIET_THRESHOLD) &&
+                if ((avg < thr_low) &&
                     (ctx->post_trigger_samples >= DEMO_MIN_KEYWORD_SAMPLES)) {
                     ctx->silence_run++;
                 } else {
@@ -321,18 +350,14 @@ static int process_capture_block(live_capture_ctx_t *ctx, const int16_t *samples
         }
     }
 
-    /* Mic level (RMS) for the dashboard plot — throttled to ~25 Hz. */
+    /* Normalized mic level (×100 of noise floor) + unified threshold — ~25 Hz. */
     static uint32_t last_level_ms = 0u;
     uint32_t now = HAL_GetTick();
     if (sample_count && (now - last_level_ms) >= 40u) {
         last_level_ms = now;
-        uint64_t acc = 0;
-        for (uint32_t i = 0; i < sample_count; i++) {
-            int32_t s = samples[i];
-            acc += (uint32_t)(s * s);
-        }
-        uint32_t rms = (uint32_t)sqrtf((float)acc / (float)sample_count);
-        printf("BENCH,event=level,rms=%lu\r\n", (unsigned long)rms);
+        printf("BENCH,event=level,rms=%lu,thr=%lu\r\n",
+               (unsigned long)live_norm,
+               (unsigned long)(uint32_t)(100.0f * LIVE_VAD_K_HIGH));
     }
 
     return 0;

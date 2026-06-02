@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="680" viewBox="0 0 1120 680">
+<style>
+text{font-family:Arial,Helvetica,sans-serif;fill:#111827}
+.title{font-size:24px;font-weight:700}
+.subtitle{font-size:13px;fill:#475569}
+.axis{stroke:#94a3b8;stroke-width:1}
+.grid{stroke:#cbd5e1;stroke-width:1;stroke-dasharray:3 4}
+.label{font-size:12px;fill:#334155}
+.small{font-size:10px;fill:#475569}
+.tick{font-size:10px;fill:#64748b}
+</style>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"/>
+<text x="32.00" y="36.00" class="title" text-anchor="start">Online Metric Overview on Log Scale</text>
+<text x="32.00" y="58.00" class="subtitle" text-anchor="start">Raw values with mixed units; useful for spotting broad magnitude changes.</text>
+<line x1="95.00" y1="580.00" x2="850.00" y2="580.00" class="grid"/>
+<text x="83.00" y="584.00" class="tick" text-anchor="end">1e2</text>
+<line x1="95.00" y1="525.78" x2="850.00" y2="525.78" class="grid"/>
+<text x="83.00" y="529.78" class="tick" text-anchor="end">1e3</text>
+<line x1="95.00" y1="471.56" x2="850.00" y2="471.56" class="grid"/>
+<text x="83.00" y="475.56" class="tick" text-anchor="end">1e4</text>
+<line x1="95.00" y1="417.33" x2="850.00" y2="417.33" class="grid"/>
+<text x="83.00" y="421.33" class="tick" text-anchor="end">1e5</text>
+<line x1="95.00" y1="363.11" x2="850.00" y2="363.11" class="grid"/>
+<text x="83.00" y="367.11" class="tick" text-anchor="end">1e6</text>
+<line x1="95.00" y1="308.89" x2="850.00" y2="308.89" class="grid"/>
+<text x="83.00" y="312.89" class="tick" text-anchor="end">1e7</text>
+<line x1="95.00" y1="254.67" x2="850.00" y2="254.67" class="grid"/>
+<text x="83.00" y="258.67" class="tick" text-anchor="end">1e8</text>
+<line x1="95.00" y1="200.44" x2="850.00" y2="200.44" class="grid"/>
+<text x="83.00" y="204.44" class="tick" text-anchor="end">1e9</text>
+<line x1="95.00" y1="146.22" x2="850.00" y2="146.22" class="grid"/>
+<text x="83.00" y="150.22" class="tick" text-anchor="end">1e10</text>
+<line x1="95.00" y1="92.00" x2="850.00" y2="92.00" class="grid"/>
+<text x="83.00" y="96.00" class="tick" text-anchor="end">1e11</text>
+<line x1="95.00" y1="92.00" x2="95.00" y2="580.00" class="axis"/>
+<line x1="95.00" y1="580.00" x2="850.00" y2="580.00" class="axis"/>
+<text x="95.00" y="604.00" class="label" text-anchor="middle">v0</text>
+<text x="850.00" y="604.00" class="label" text-anchor="middle">v1</text>
+<polyline points="95.00,385.27 850.00,386.78" fill="none" stroke="#2563eb" stroke-width="2.5" opacity="0.9"/>
+<circle cx="95.00" cy="385.27" r="4" fill="#2563eb"/>
+<circle cx="850.00" cy="386.78" r="4" fill="#2563eb"/>
+<polyline points="95.00,441.42 850.00,441.30" fill="none" stroke="#0891b2" stroke-width="2.5" opacity="0.9"/>
+<circle cx="95.00" cy="441.42" r="4" fill="#0891b2"/>
+<circle cx="850.00" cy="441.30" r="4" fill="#0891b2"/>
+<polyline points="95.00,439.77 850.00,439.66" fill="none" stroke="#16a34a" stroke-width="2.5" opacity="0.9"/>
+<circle cx="95.00" cy="439.77" r="4" fill="#16a34a"/>
+<circle cx="850.00" cy="439.66" r="4" fill="#16a34a"/>
+<polyline points="95.00,343.22 850.00,343.96" fill="none" stroke="#64748b" stroke-width="2.5" opacity="0.9"/>
+<circle cx="95.00" cy="343.22" r="4" fill="#64748b"/>
+<circle cx="850.00" cy="343.96" r="4" fill="#64748b"/>
+<polyline points="95.00,511.30 850.00,513.13" fill="none" stroke="#dc2626" stroke-width="2.5" opacity="0.9"/>
+<circle cx="95.00" cy="511.30" r="4" fill="#dc2626"/>
+<circle cx="850.00" cy="513.13" r="4" fill="#dc2626"/>
+<polyline points="95.00,424.98 850.00,426.81" fill="none" stroke="#9333ea" stroke-width="2.5" opacity="0.9"/>
+<circle cx="95.00" cy="424.98" r="4" fill="#9333ea"/>
+<circle cx="850.00" cy="426.81" r="4" fill="#9333ea"/>
+<polyline points="95.00,313.15 850.00,316.60" fill="none" stroke="#ea580c" stroke-width="2.5" opacity="0.9"/>
+<circle cx="95.00" cy="313.15" r="4" fill="#ea580c"/>
+<circle cx="850.00" cy="316.60" r="4" fill="#ea580c"/>
+<polyline points="95.00,555.47 850.00,558.33" fill="none" stroke="#be123c" stroke-width="2.5" opacity="0.9"/>
+<circle cx="95.00" cy="555.47" r="4" fill="#be123c"/>
+<circle cx="850.00" cy="558.33" r="4" fill="#be123c"/>
+<polyline points="95.00,120.79 850.00,121.38" fill="none" stroke="#0f766e" stroke-width="2.5" opacity="0.9"/>
+<circle cx="95.00" cy="120.79" r="4" fill="#0f766e"/>
+<circle cx="850.00" cy="121.38" r="4" fill="#0f766e"/>
+<line x1="850.00" y1="386.78" x2="864.00" y2="386.78" stroke="#2563eb" stroke-width="1.2"/>
+<text x="868.00" y="390.78" class="label" text-anchor="start">Text bytes</text>
+<line x1="850.00" y1="441.30" x2="864.00" y2="462.81" stroke="#0891b2" stroke-width="1.2"/>
+<text x="868.00" y="466.81" class="label" text-anchor="start">BSS bytes</text>
+<line x1="850.00" y1="439.66" x2="864.00" y2="444.81" stroke="#16a34a" stroke-width="1.2"/>
+<text x="868.00" y="448.81" class="label" text-anchor="start">Static SRAM bytes</text>
+<line x1="850.00" y1="343.96" x2="864.00" y2="343.96" stroke="#64748b" stroke-width="1.2"/>
+<text x="868.00" y="347.96" class="label" text-anchor="start">ELF bytes</text>
+<line x1="850.00" y1="513.13" x2="864.00" y2="513.13" stroke="#dc2626" stroke-width="1.2"/>
+<text x="868.00" y="517.13" class="label" text-anchor="start">CNN latency us</text>
+<line x1="850.00" y1="426.81" x2="864.00" y2="426.81" stroke="#9333ea" stroke-width="1.2"/>
+<text x="868.00" y="430.81" class="label" text-anchor="start">Cycles</text>
+<line x1="850.00" y1="316.60" x2="864.00" y2="316.60" stroke="#ea580c" stroke-width="1.2"/>
+<text x="868.00" y="320.60" class="label" text-anchor="start">MAC ops</text>
+<line x1="850.00" y1="558.33" x2="864.00" y2="558.33" stroke="#be123c" stroke-width="1.2"/>
+<text x="868.00" y="562.33" class="label" text-anchor="start">Energy uJ</text>
+<line x1="850.00" y1="121.38" x2="864.00" y2="121.38" stroke="#0f766e" stroke-width="1.2"/>
+<text x="868.00" y="125.38" class="label" text-anchor="start">MAC/J</text>
+</svg>

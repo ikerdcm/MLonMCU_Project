@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1156" height="588" viewBox="0 0 1156 588">
+<style>
+text{font-family:Arial,Helvetica,sans-serif;fill:#111827}
+.title{font-size:24px;font-weight:700}
+.subtitle{font-size:13px;fill:#475569}
+.axis{stroke:#94a3b8;stroke-width:1}
+.grid{stroke:#cbd5e1;stroke-width:1;stroke-dasharray:3 4}
+.label{font-size:12px;fill:#334155}
+.small{font-size:10px;fill:#475569}
+.tick{font-size:10px;fill:#64748b}
+</style>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"/>
+<text x="32.00" y="36.00" class="title" text-anchor="start">Online Energy and Efficiency Estimates</text>
+<text x="32.00" y="58.00" class="subtitle" text-anchor="start">Energy uses current values stored in the online summary files.</text>
+<text x="38.00" y="94.00" class="label" text-anchor="start">Current</text>
+<text x="38.00" y="111.00" class="small" text-anchor="start">mA</text>
+<line x1="92.00" y1="116.00" x2="92.00" y2="269.00" class="axis"/>
+<line x1="92.00" y1="269.00" x2="358.00" y2="269.00" class="axis"/>
+<line x1="92.00" y1="230.75" x2="358.00" y2="230.75" class="grid"/>
+<line x1="92.00" y1="192.50" x2="358.00" y2="192.50" class="grid"/>
+<line x1="92.00" y1="154.25" x2="358.00" y2="154.25" class="grid"/>
+<rect x="110.00" y="135.96" width="106.00" height="133.04" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
+<text x="163.00" y="130.96" class="tick" text-anchor="middle">41.415</text>
+<text x="163.00" y="286.00" class="tick" text-anchor="middle">v0</text>
+<rect x="234.00" y="141.66" width="106.00" height="127.34" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="287.00" y="136.66" class="tick" text-anchor="middle">39.638</text>
+<text x="287.00" y="286.00" class="tick" text-anchor="middle">v1</text>
+<text x="398.00" y="94.00" class="label" text-anchor="start">Power</text>
+<text x="398.00" y="111.00" class="small" text-anchor="start">W</text>
+<line x1="452.00" y1="116.00" x2="452.00" y2="269.00" class="axis"/>
+<line x1="452.00" y1="269.00" x2="718.00" y2="269.00" class="axis"/>
+<line x1="452.00" y1="230.75" x2="718.00" y2="230.75" class="grid"/>
+<line x1="452.00" y1="192.50" x2="718.00" y2="192.50" class="grid"/>
+<line x1="452.00" y1="154.25" x2="718.00" y2="154.25" class="grid"/>
+<rect x="470.00" y="135.96" width="106.00" height="133.04" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
+<text x="523.00" y="130.96" class="tick" text-anchor="middle">0.153236</text>
+<text x="523.00" y="286.00" class="tick" text-anchor="middle">v0</text>
+<rect x="594.00" y="141.66" width="106.00" height="127.34" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="647.00" y="136.66" class="tick" text-anchor="middle">0.146662</text>
+<text x="647.00" y="286.00" class="tick" text-anchor="middle">v1</text>
+<text x="758.00" y="94.00" class="label" text-anchor="start">Energy/inference</text>
+<text x="758.00" y="111.00" class="small" text-anchor="start">uJ</text>
+<line x1="812.00" y1="116.00" x2="812.00" y2="269.00" class="axis"/>
+<line x1="812.00" y1="269.00" x2="1078.00" y2="269.00" class="axis"/>
+<line x1="812.00" y1="230.75" x2="1078.00" y2="230.75" class="grid"/>
+<line x1="812.00" y1="192.50" x2="1078.00" y2="192.50" class="grid"/>
+<line x1="812.00" y1="154.25" x2="1078.00" y2="154.25" class="grid"/>
+<rect x="830.00" y="135.96" width="106.00" height="133.04" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
+<text x="883.00" y="130.96" class="tick" text-anchor="middle">283.39</text>
+<text x="883.00" y="286.00" class="tick" text-anchor="middle">v0</text>
+<rect x="954.00" y="151.19" width="106.00" height="117.81" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="1007.00" y="146.19" class="tick" text-anchor="middle">250.94</text>
+<text x="1007.00" y="286.00" class="tick" text-anchor="middle">v1</text>
+<text x="38.00" y="329.00" class="label" text-anchor="start">MAC/J</text>
+<text x="38.00" y="346.00" class="small" text-anchor="start">MAC/J</text>
+<line x1="92.00" y1="351.00" x2="92.00" y2="504.00" class="axis"/>
+<line x1="92.00" y1="504.00" x2="358.00" y2="504.00" class="axis"/>
+<line x1="92.00" y1="465.75" x2="358.00" y2="465.75" class="grid"/>
+<line x1="92.00" y1="427.50" x2="358.00" y2="427.50" class="grid"/>
+<line x1="92.00" y1="389.25" x2="358.00" y2="389.25" class="grid"/>
+<rect x="110.00" y="370.96" width="106.00" height="133.04" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
+<text x="163.00" y="365.96" class="tick" text-anchor="middle">29,448,369,916</text>
+<text x="163.00" y="521.00" class="tick" text-anchor="middle">v0</text>
+<rect x="234.00" y="374.24" width="106.00" height="129.76" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="287.00" y="369.24" class="tick" text-anchor="middle">28,721,395,187</text>
+<text x="287.00" y="521.00" class="tick" text-anchor="middle">v1</text>
+<text x="398.00" y="329.00" class="label" text-anchor="start">MAC/s/W</text>
+<text x="398.00" y="346.00" class="small" text-anchor="start">MAC/s/W</text>
+<line x1="452.00" y1="351.00" x2="452.00" y2="504.00" class="axis"/>
+<line x1="452.00" y1="504.00" x2="718.00" y2="504.00" class="axis"/>
+<line x1="452.00" y1="465.75" x2="718.00" y2="465.75" class="grid"/>
+<line x1="452.00" y1="427.50" x2="718.00" y2="427.50" class="grid"/>
+<line x1="452.00" y1="389.25" x2="718.00" y2="389.25" class="grid"/>
+<rect x="470.00" y="370.96" width="106.00" height="133.04" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
+<text x="523.00" y="365.96" class="tick" text-anchor="middle">29,448,369,916</text>
+<text x="523.00" y="521.00" class="tick" text-anchor="middle">v0</text>
+<rect x="594.00" y="374.24" width="106.00" height="129.76" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="647.00" y="369.24" class="tick" text-anchor="middle">28,721,395,187</text>
+<text x="647.00" y="521.00" class="tick" text-anchor="middle">v1</text>
+<text x="758.00" y="329.00" class="label" text-anchor="start">MAC/s</text>
+<text x="758.00" y="346.00" class="small" text-anchor="start">MAC/s</text>
+<line x1="812.00" y1="351.00" x2="812.00" y2="504.00" class="axis"/>
+<line x1="812.00" y1="504.00" x2="1078.00" y2="504.00" class="axis"/>
+<line x1="812.00" y1="465.75" x2="1078.00" y2="465.75" class="grid"/>
+<line x1="812.00" y1="427.50" x2="1078.00" y2="427.50" class="grid"/>
+<line x1="812.00" y1="389.25" x2="1078.00" y2="389.25" class="grid"/>
+<rect x="830.00" y="370.96" width="106.00" height="133.04" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
+<text x="883.00" y="365.96" class="tick" text-anchor="middle">4,512,548,985</text>
+<text x="883.00" y="521.00" class="tick" text-anchor="middle">v0</text>
+<rect x="954.00" y="379.81" width="106.00" height="124.19" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="1007.00" y="374.81" class="tick" text-anchor="middle">4,212,348,334</text>
+<text x="1007.00" y="521.00" class="tick" text-anchor="middle">v1</text>
+</svg>

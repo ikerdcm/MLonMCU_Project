@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="560" viewBox="0 0 980 560">
+<style>
+text{font-family:Arial,Helvetica,sans-serif;fill:#111827}
+.title{font-size:24px;font-weight:700}
+.subtitle{font-size:13px;fill:#475569}
+.axis{stroke:#94a3b8;stroke-width:1}
+.grid{stroke:#cbd5e1;stroke-width:1;stroke-dasharray:3 4}
+.label{font-size:12px;fill:#334155}
+.small{font-size:10px;fill:#475569}
+.tick{font-size:10px;fill:#64748b}
+</style>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"/>
+<text x="32.00" y="36.00" class="title" text-anchor="start">Memory and Model Improvement Profile</text>
+<text x="32.00" y="58.00" class="subtitle" text-anchor="start">Line plot of relative improvements for firmware memory and model-size metrics.</text>
+<line x1="95.00" y1="363.25" x2="850.00" y2="363.25" stroke="#334155" stroke-width="1.2"/>
+<line x1="95.00" y1="88.00" x2="95.00" y2="455.00" class="axis"/>
+<line x1="95.00" y1="477.02" x2="850.00" y2="477.02" class="grid"/>
+<text x="83.00" y="481.02" class="tick" text-anchor="end">-7%</text>
+<line x1="95.00" y1="363.25" x2="850.00" y2="363.25" class="grid"/>
+<text x="83.00" y="367.25" class="tick" text-anchor="end">+0%</text>
+<line x1="95.00" y1="249.48" x2="850.00" y2="249.48" class="grid"/>
+<text x="83.00" y="253.48" class="tick" text-anchor="end">+7%</text>
+<line x1="95.00" y1="135.71" x2="850.00" y2="135.71" class="grid"/>
+<text x="83.00" y="139.71" class="tick" text-anchor="end">+14%</text>
+<text x="95.00" y="479.00" class="tick" text-anchor="middle" transform="rotate(-25 95.00 479.00)">Text</text>
+<text x="246.00" y="479.00" class="tick" text-anchor="middle" transform="rotate(-25 246.00 479.00)">Data</text>
+<text x="397.00" y="479.00" class="tick" text-anchor="middle" transform="rotate(-25 397.00 479.00)">BSS</text>
+<text x="548.00" y="479.00" class="tick" text-anchor="middle" transform="rotate(-25 548.00 479.00)">Static SRAM</text>
+<text x="699.00" y="479.00" class="tick" text-anchor="middle" transform="rotate(-25 699.00 479.00)">ELF size</text>
+<text x="850.00" y="479.00" class="tick" text-anchor="middle" transform="rotate(-25 850.00 479.00)">MAC ops</text>
+<polyline points="95.00,259.58 246.00,363.25 397.00,371.79 548.00,371.21 699.00,311.43 850.00,135.71" fill="none" stroke="#0f766e" stroke-width="3.0" opacity="0.95"/>
+<circle cx="95.00" cy="259.58" r="5.2" fill="#0f766e" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="246.00" cy="363.25" r="5.2" fill="#0f766e" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="397.00" cy="371.79" r="5.2" fill="#0f766e" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="548.00" cy="371.21" r="5.2" fill="#0f766e" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="699.00" cy="311.43" r="5.2" fill="#0f766e" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="850.00" cy="135.71" r="5.2" fill="#0f766e" stroke="#ffffff" stroke-width="1.2"/>
+<line x1="850.00" y1="135.71" x2="864.00" y2="135.71" stroke="#0f766e" stroke-width="1.2"/>
+<text x="868.00" y="139.71" class="label" text-anchor="start">v1 vs v0</text>
+</svg>

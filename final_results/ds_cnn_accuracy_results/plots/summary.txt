@@ -1,0 +1,16 @@
+DS-CNN-L Evaluation Results
+==================================================
+Dataset: Speech Commands v2 (test set, 4890 samples)
+
+Model                                 Accuracy   Correct/Total
+-----------------------------------------------------------------
+  ds_cnn_l_h5                           93.01%   4548/4890
+  ds_cnn_l_float32_tflite               93.03%   4549/4890
+  ds_cnn_l_int8_tflite                  92.72%   4534/4890
+
+Quantization loss (Float32 → INT8): 0.31%
+
+Files:
+  confusion_ds_cnn_l_keras.png   — Float32 Keras confusion matrix
+  confusion_ds_cnn_l_float32.png — TFLite Float32 confusion matrix
+  confusion_ds_cnn_l.png         — TFLite INT8 quantized confusion matrix

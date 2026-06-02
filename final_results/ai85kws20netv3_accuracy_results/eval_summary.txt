@@ -1,0 +1,23 @@
+ai85kws20netv3 — Evaluation Results
+========================================================
+Dataset:   KWS_20 (21 classes: 20 keywords + unknown)
+           Test set: 11,005 samples
+Device:    MAX78000 (simulate=True, no GPU)
+Framework: ai8x-training
+
+Model                         Accuracy   Correct/Total   Weights
+--------------------------------------------------------------
+Baseline — INT8 QAT           90.80%    9993 / 11005    ~668 KB (unpruned)
+w90 + QAT — INT8 pruned       85.10%    9364 / 11005    ~145 KB (-78%)
+
+Pruning loss: -5.70 percentage points (90% structured pruning)
+Weight reduction: 668 KB → 145 KB  (-78.3%)
+
+Note: Paper reports 96.3% for 12-class variant (different task).
+      These results use 21-class KWS_20 (harder problem).
+
+Files:
+  eval_confusion_baseline_int8.png  — Baseline INT8 QAT confusion matrix
+  eval_confusion_w90_int8.png       — w90 pruned INT8 QAT confusion matrix
+  eval_baseline_qat_result.log      — Full baseline eval log
+  eval_w90_qat_result.log           — Full w90 eval log

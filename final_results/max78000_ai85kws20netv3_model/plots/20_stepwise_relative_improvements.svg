@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="720" viewBox="0 0 1240 720">
+<style>
+text{font-family:Arial,Helvetica,sans-serif;fill:#111827}
+.title{font-size:24px;font-weight:700}
+.subtitle{font-size:13px;fill:#475569}
+.axis{stroke:#94a3b8;stroke-width:1}
+.grid{stroke:#cbd5e1;stroke-width:1;stroke-dasharray:3 4}
+.label{font-size:12px;fill:#334155}
+.small{font-size:10px;fill:#475569}
+.tick{font-size:10px;fill:#64748b}
+</style>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"/>
+<text x="32.00" y="36.00" class="title" text-anchor="start">Stepwise Relative Improvements</text>
+<text x="32.00" y="58.00" class="subtitle" text-anchor="start">Selected deployment metrics; positive bars are better after direction normalization.</text>
+<line x1="92.00" y1="520.00" x2="1130.00" y2="520.00" class="axis"/>
+<line x1="92.00" y1="108.00" x2="92.00" y2="520.00" class="axis"/>
+<line x1="92.00" y1="417.00" x2="1130.00" y2="417.00" class="grid"/>
+<text x="82.00" y="421.00" class="tick" text-anchor="end">3%</text>
+<line x1="92.00" y1="314.00" x2="1130.00" y2="314.00" class="grid"/>
+<text x="82.00" y="318.00" class="tick" text-anchor="end">7%</text>
+<line x1="92.00" y1="211.00" x2="1130.00" y2="211.00" class="grid"/>
+<text x="82.00" y="215.00" class="tick" text-anchor="end">10%</text>
+<line x1="92.00" y1="108.00" x2="1130.00" y2="108.00" class="grid"/>
+<text x="82.00" y="112.00" class="tick" text-anchor="end">14%</text>
+<text x="166.14" y="578.00" class="tick" text-anchor="middle" transform="rotate(-32 166.14 578.00)">CNN latency avg</text>
+<rect x="135.54" y="293.96" width="18.00" height="226.04" rx="2" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="144.54" y="287.96" class="tick" text-anchor="middle">+7.48%</text>
+<text x="314.43" y="578.00" class="tick" text-anchor="middle" transform="rotate(-32 314.43 578.00)">Throughput</text>
+<rect x="283.83" y="275.68" width="18.00" height="244.32" rx="2" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="292.83" y="269.68" class="tick" text-anchor="middle">+8.09%</text>
+<text x="462.71" y="578.00" class="tick" text-anchor="middle" transform="rotate(-32 462.71 578.00)">Text</text>
+<rect x="432.11" y="332.29" width="18.00" height="187.71" rx="2" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="441.11" y="326.29" class="tick" text-anchor="middle">+6.21%</text>
+<text x="611.00" y="578.00" class="tick" text-anchor="middle" transform="rotate(-32 611.00 578.00)">Static SRAM</text>
+<rect x="580.40" y="520.00" width="18.00" height="14.42" rx="2" fill="#b91c1c" stroke="none" opacity="1.0"/>
+<text x="589.40" y="538.00" class="tick" text-anchor="middle">-0.48%</text>
+<text x="759.29" y="578.00" class="tick" text-anchor="middle" transform="rotate(-32 759.29 578.00)">MAC ops</text>
+<rect x="728.69" y="108.00" width="18.00" height="412.00" rx="2" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="737.69" y="120.00" class="tick" text-anchor="middle">+13.64%</text>
+<text x="907.57" y="578.00" class="tick" text-anchor="middle" transform="rotate(-32 907.57 578.00)">Energy/inference</text>
+<rect x="876.97" y="174.04" width="18.00" height="345.96" rx="2" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="885.97" y="168.04" class="tick" text-anchor="middle">+11.45%</text>
+<text x="1055.86" y="578.00" class="tick" text-anchor="middle" transform="rotate(-32 1055.86 578.00)">MAC/J</text>
+<rect x="1025.26" y="520.00" width="18.00" height="74.58" rx="2" fill="#b91c1c" stroke="none" opacity="1.0"/>
+<text x="1034.26" y="538.00" class="tick" text-anchor="middle">-2.47%</text>
+<rect x="910.00" y="70.00" width="14.00" height="14.00" rx="2" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="930.00" y="82.00" class="label" text-anchor="start">v1-v0</text>
+</svg>

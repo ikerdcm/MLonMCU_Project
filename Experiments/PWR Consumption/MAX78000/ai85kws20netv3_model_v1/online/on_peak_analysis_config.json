@@ -14,5 +14,5 @@
   "transition_smooth_ms": 1.0,
   "zoom_half_window_ms": 1.0,
   "overlay_half_window_ms": 1.0,
-  "voltage": 3.28
+  "voltage": 3.7
 }

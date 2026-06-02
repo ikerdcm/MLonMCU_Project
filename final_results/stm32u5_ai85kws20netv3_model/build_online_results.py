@@ -1075,17 +1075,18 @@ def scale(value, lo, hi, a, b):
 def power_window_overlay(reports, windows_by_variant, selection_by_variant, file_name, title, subtitle):
     width, height = 1120, 660
     left, right, top, bottom = 92, 920, 92, 520
+    idle_preroll_ms = 25.0
     selected = []
     for variant in VARIANTS:
         peak_number = selection_by_variant.get(variant["id"])
         window = windows_by_variant.get(variant["id"], {}).get(peak_number)
         if window and window["points"]:
             selected.append((variant, peak_number, window))
-    x_values = [point[0] for _, _, window in selected for point in window["points"] if point[0] >= 0.0]
+    x_values = [point[0] for _, _, window in selected for point in window["points"] if point[0] >= -idle_preroll_ms]
     y_values = [point[1] for _, _, window in selected for point in window["points"]]
     if not x_values or not y_values:
         return
-    xmin, xmax = 0.0, max(x_values)
+    xmin, xmax = -idle_preroll_ms, max(x_values)
     ymin, ymax = min(y_values), max(y_values)
     ypad = (ymax - ymin) * 0.12
     ymin, ymax = ymin - ypad, ymax + ypad
@@ -1096,6 +1097,9 @@ def power_window_overlay(reports, windows_by_variant, selection_by_variant, file
         x = left + idx * (right - left) / 5
         body.append(line(x, top, x, bottom, "grid"))
         body.append(text(x, bottom + 22, f"{value:.0f} ms", "tick", "middle"))
+    zero_x = scale(0.0, xmin, xmax, left, right)
+    body.append(line(zero_x, top, zero_x, bottom, color="#111827", width=1.2, dash="5 4"))
+    body.append(text(zero_x, top - 9, "0 ms", "tick", "middle"))
     for idx, value in enumerate(axis_ticks(ymin, ymax, 6)):
         y = bottom - idx * (bottom - top) / 5
         body.append(line(left, y, right, y, "grid"))
@@ -1111,7 +1115,7 @@ def power_window_overlay(reports, windows_by_variant, selection_by_variant, file
                 scale(current, ymin, ymax, bottom, top),
             )
             for t, current in raw_points
-            if t >= 0.0
+            if t >= xmin
         ]
         if not points:
             continue

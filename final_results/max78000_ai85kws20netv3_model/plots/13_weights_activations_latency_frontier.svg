@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="560" viewBox="0 0 860 560">
+<style>
+text{font-family:Arial,Helvetica,sans-serif;fill:#111827}
+.title{font-size:24px;font-weight:700}
+.subtitle{font-size:13px;fill:#475569}
+.axis{stroke:#94a3b8;stroke-width:1}
+.grid{stroke:#cbd5e1;stroke-width:1;stroke-dasharray:3 4}
+.label{font-size:12px;fill:#334155}
+.small{font-size:10px;fill:#475569}
+.tick{font-size:10px;fill:#64748b}
+</style>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"/>
+<text x="32.00" y="36.00" class="title" text-anchor="start">AI Weights vs Activations Frontier</text>
+<text x="32.00" y="58.00" class="subtitle" text-anchor="start">Lower-left is better; marker radius follows CNN latency.</text>
+<text x="430.00" y="280.00" class="subtitle" text-anchor="middle">not available in the MAX78000 online summaries</text>
+<text x="430.00" y="304.00" class="small" text-anchor="middle">missing: model_info.weights_bytes, model_info.activations_bytes, or cnn_latency_ms_avg</text>
+</svg>

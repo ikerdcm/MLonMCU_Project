@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="560" viewBox="0 0 980 560">
+<style>
+text{font-family:Arial,Helvetica,sans-serif;fill:#111827}
+.title{font-size:24px;font-weight:700}
+.subtitle{font-size:13px;fill:#475569}
+.axis{stroke:#94a3b8;stroke-width:1}
+.grid{stroke:#cbd5e1;stroke-width:1;stroke-dasharray:3 4}
+.label{font-size:12px;fill:#334155}
+.small{font-size:10px;fill:#475569}
+.tick{font-size:10px;fill:#64748b}
+</style>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"/>
+<text x="32.00" y="36.00" class="title" text-anchor="start">Compute and Energy Improvement Profile</text>
+<text x="32.00" y="58.00" class="subtitle" text-anchor="start">Line plot of relative improvements for latency, throughput, efficiency, and energy metrics.</text>
+<line x1="95.00" y1="363.25" x2="850.00" y2="363.25" stroke="#334155" stroke-width="1.2"/>
+<line x1="95.00" y1="88.00" x2="95.00" y2="455.00" class="axis"/>
+<line x1="95.00" y1="477.02" x2="850.00" y2="477.02" class="grid"/>
+<text x="83.00" y="481.02" class="tick" text-anchor="end">-6%</text>
+<line x1="95.00" y1="363.25" x2="850.00" y2="363.25" class="grid"/>
+<text x="83.00" y="367.25" class="tick" text-anchor="end">+0%</text>
+<line x1="95.00" y1="249.48" x2="850.00" y2="249.48" class="grid"/>
+<text x="83.00" y="253.48" class="tick" text-anchor="end">+6%</text>
+<line x1="95.00" y1="135.71" x2="850.00" y2="135.71" class="grid"/>
+<text x="83.00" y="139.71" class="tick" text-anchor="end">+11%</text>
+<text x="95.00" y="479.00" class="tick" text-anchor="middle" transform="rotate(-25 95.00 479.00)">CNN latency avg</text>
+<text x="220.83" y="479.00" class="tick" text-anchor="middle" transform="rotate(-25 220.83 479.00)">Cycles avg</text>
+<text x="346.67" y="479.00" class="tick" text-anchor="middle" transform="rotate(-25 346.67 479.00)">Throughput</text>
+<text x="472.50" y="479.00" class="tick" text-anchor="middle" transform="rotate(-25 472.50 479.00)">MOPS/s</text>
+<text x="598.33" y="479.00" class="tick" text-anchor="middle" transform="rotate(-25 598.33 479.00)">MAC/cycle</text>
+<text x="724.17" y="479.00" class="tick" text-anchor="middle" transform="rotate(-25 724.17 479.00)">Energy/inference</text>
+<text x="850.00" y="479.00" class="tick" text-anchor="middle" transform="rotate(-25 850.00 479.00)">MAC/J</text>
+<polyline points="95.00,214.58 220.83,214.85 346.67,202.55 472.50,495.45 598.33,495.73 724.17,135.71 850.00,412.31" fill="none" stroke="#0f766e" stroke-width="3.0" opacity="0.95"/>
+<circle cx="95.00" cy="214.58" r="5.2" fill="#0f766e" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="220.83" cy="214.85" r="5.2" fill="#0f766e" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="346.67" cy="202.55" r="5.2" fill="#0f766e" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="472.50" cy="495.45" r="5.2" fill="#0f766e" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="598.33" cy="495.73" r="5.2" fill="#0f766e" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="724.17" cy="135.71" r="5.2" fill="#0f766e" stroke="#ffffff" stroke-width="1.2"/>
+<circle cx="850.00" cy="412.31" r="5.2" fill="#0f766e" stroke="#ffffff" stroke-width="1.2"/>
+<line x1="850.00" y1="412.31" x2="864.00" y2="412.31" stroke="#0f766e" stroke-width="1.2"/>
+<text x="868.00" y="416.31" class="label" text-anchor="start">v1 vs v0</text>
+</svg>

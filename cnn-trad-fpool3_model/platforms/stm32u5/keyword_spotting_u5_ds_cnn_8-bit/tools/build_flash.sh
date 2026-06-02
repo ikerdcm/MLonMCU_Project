@@ -51,6 +51,13 @@ rm -f "$CFG.bak"
 if [[ $DO_BUILD -eq 1 ]]; then
   echo "=== Build (cmake --preset Debug) ==="
   cd "$PROJECT_DIR"   # CMakePresets.json is resolved from the working directory
+  # A CMakeCache.txt generated in another checkout (e.g. a sibling worktree)
+  # aborts the configure; drop a stale Debug cache so the preset reconfigures.
+  if [[ -f build/Debug/CMakeCache.txt ]] && \
+     ! grep -qF "CMAKE_HOME_DIRECTORY:INTERNAL=$PROJECT_DIR" build/Debug/CMakeCache.txt; then
+    echo "  (clearing stale build/Debug cache from another worktree)"
+    rm -rf build/Debug
+  fi
   cmake --preset Debug >/dev/null
   cmake --build --preset Debug
 fi

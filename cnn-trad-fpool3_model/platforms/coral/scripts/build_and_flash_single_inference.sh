@@ -19,8 +19,27 @@ if [[ ! -f "$VENV_PYTHON" ]]; then
     exit 1
 fi
 
+# --- Ensure build/ is configured for THIS worktree ---
+# A CMakeCache.txt created in another checkout (e.g. a sibling git worktree)
+# cannot be reused and makes cmake abort; detect that and (re)configure.
+if [[ -d "$CORALMICRO_ROOT" ]]; then
+    CORALMICRO_ROOT="$(cd "$CORALMICRO_ROOT" && pwd)"
+fi
+if [[ ! -f "$BUILD_DIR/CMakeCache.txt" ]] || \
+   ! grep -qF "CMAKE_HOME_DIRECTORY:INTERNAL=$CORALMICRO_ROOT" "$BUILD_DIR/CMakeCache.txt"; then
+    echo "=== Configure (build/ missing or from another worktree) ==="
+    rm -rf "$BUILD_DIR"
+    cmake -S "$CORALMICRO_ROOT" -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release
+    echo ""
+fi
+
+JOBS="$( (command -v nproc >/dev/null && nproc) || sysctl -n hw.ncpu 2>/dev/null || echo 4)"
+
 echo "=== Build single_inference ==="
-cmake --build "$BUILD_DIR" -j"$(nproc)" --target single_inference
+# flashtool.py needs two infra artifacts besides the app: elf_loader
+# (apps/elf_loader/image.srec) and flashloader (libs/nxp/flashloader/image.srec).
+# Build them alongside the app so a fresh build/ has everything the flasher needs.
+cmake --build "$BUILD_DIR" -j"$JOBS" --target elf_loader flashloader single_inference
 echo ""
 
 echo "=== Flash single_inference to Coral Dev Board Micro ==="

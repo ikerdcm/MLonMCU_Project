@@ -43,7 +43,10 @@ PY
 
 [[ ! -f "$CONFIG_PATH" ]] && { echo "Config not found: $CONFIG_PATH" >&2; exit 1; }
 
-PROJECT="$(cfg_get project)"
+# Project dir = parent of this tools/ directory, derived from the script's own
+# location so it works in any worktree regardless of an absolute "project" path
+# baked into the config from another checkout.
+PROJECT="$(cd "$SCRIPT_DIR/.." && pwd)"
 BOARD="$(cfg_get board)"
 MAXIM_PATH="$(cfg_get maxim_path)"
 OPENOCD_ROOT="$(cfg_get openocd_root)"

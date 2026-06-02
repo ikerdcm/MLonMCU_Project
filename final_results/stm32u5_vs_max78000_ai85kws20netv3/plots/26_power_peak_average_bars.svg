@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1156" height="588" viewBox="0 0 1156 588">
+<style>
+text{font-family:Arial,Helvetica,sans-serif;fill:#111827}
+.title{font-size:24px;font-weight:700}
+.subtitle{font-size:13px;fill:#475569}
+.axis{stroke:#94a3b8;stroke-width:1}
+.grid{stroke:#cbd5e1;stroke-width:1;stroke-dasharray:3 4}
+.label{font-size:12px;fill:#334155}
+.small{font-size:10px;fill:#475569}
+.tick{font-size:10px;fill:#64748b}
+.platform_u5{font-size:11px;fill:#1d4ed8;font-style:italic}
+.platform_mx{font-size:11px;fill:#b45309;font-style:italic}
+</style>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"/>
+<text x="32.00" y="36.00" class="title" text-anchor="start">Power Peak Averages — Cross-Platform</text>
+<text x="32.00" y="58.00" class="subtitle" text-anchor="start">Averaged inference window metrics from power peak analysis.</text>
+<text x="38.00" y="94.00" class="label" text-anchor="start">Peak duration</text>
+<text x="38.00" y="111.00" class="small" text-anchor="start">ms</text>
+<line x1="92.00" y1="116.00" x2="92.00" y2="269.00" class="axis"/>
+<line x1="92.00" y1="269.00" x2="358.00" y2="269.00" class="axis"/>
+<line x1="92.00" y1="269.00" x2="358.00" y2="269.00" class="grid"/>
+<text x="88.00" y="273.00" class="tick" text-anchor="end">1e0</text>
+<line x1="92.00" y1="218.00" x2="358.00" y2="218.00" class="grid"/>
+<text x="88.00" y="222.00" class="tick" text-anchor="end">1e1</text>
+<line x1="92.00" y1="167.00" x2="358.00" y2="167.00" class="grid"/>
+<text x="88.00" y="171.00" class="tick" text-anchor="end">1e2</text>
+<line x1="92.00" y1="116.00" x2="358.00" y2="116.00" class="grid"/>
+<text x="88.00" y="120.00" class="tick" text-anchor="end">1e3</text>
+<rect x="110.00" y="136.45" width="31.60" height="132.55" rx="3" fill="#1d4ed8" stroke="none" opacity="1.0"/>
+<text x="125.80" y="131.45" class="tick" text-anchor="middle">397.24</text>
+<text x="125.80" y="286.00" class="tick" text-anchor="middle">U5-v0</text>
+<rect x="159.60" y="155.00" width="31.60" height="114.00" rx="3" fill="#0891b2" stroke="none" opacity="1.0"/>
+<text x="175.40" y="150.00" class="tick" text-anchor="middle">171.92</text>
+<text x="175.40" y="286.00" class="tick" text-anchor="middle">U5-v1</text>
+<rect x="209.20" y="157.57" width="31.60" height="111.43" rx="3" fill="#0e7490" stroke="none" opacity="1.0"/>
+<text x="225.00" y="152.57" class="tick" text-anchor="middle">153.10</text>
+<text x="225.00" y="286.00" class="tick" text-anchor="middle">U5-v2</text>
+<line x1="249.80" y1="116.00" x2="249.80" y2="273.00" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4 3"/>
+<rect x="258.80" y="256.44" width="31.60" height="12.56" rx="3" fill="#b45309" stroke="none" opacity="1.0"/>
+<text x="274.60" y="251.44" class="tick" text-anchor="middle">1.7633</text>
+<text x="274.60" y="286.00" class="tick" text-anchor="middle">MX-v0</text>
+<rect x="308.40" y="257.64" width="31.60" height="11.36" rx="3" fill="#d97706" stroke="none" opacity="1.0"/>
+<text x="324.20" y="252.64" class="tick" text-anchor="middle">1.6700</text>
+<text x="324.20" y="286.00" class="tick" text-anchor="middle">MX-v1</text>
+<text x="398.00" y="94.00" class="label" text-anchor="start">Mean current</text>
+<text x="398.00" y="111.00" class="small" text-anchor="start">mA</text>
+<line x1="452.00" y1="116.00" x2="452.00" y2="269.00" class="axis"/>
+<line x1="452.00" y1="269.00" x2="718.00" y2="269.00" class="axis"/>
+<line x1="452.00" y1="230.75" x2="718.00" y2="230.75" class="grid"/>
+<line x1="452.00" y1="192.50" x2="718.00" y2="192.50" class="grid"/>
+<line x1="452.00" y1="154.25" x2="718.00" y2="154.25" class="grid"/>
+<rect x="470.00" y="191.60" width="31.60" height="77.40" rx="3" fill="#1d4ed8" stroke="none" opacity="1.0"/>
+<text x="485.80" y="186.60" class="tick" text-anchor="middle">24.095</text>
+<text x="485.80" y="286.00" class="tick" text-anchor="middle">U5-v0</text>
+<rect x="519.60" y="197.16" width="31.60" height="71.84" rx="3" fill="#0891b2" stroke="none" opacity="1.0"/>
+<text x="535.40" y="192.16" class="tick" text-anchor="middle">22.364</text>
+<text x="535.40" y="286.00" class="tick" text-anchor="middle">U5-v1</text>
+<rect x="569.20" y="195.50" width="31.60" height="73.50" rx="3" fill="#0e7490" stroke="none" opacity="1.0"/>
+<text x="585.00" y="190.50" class="tick" text-anchor="middle">22.879</text>
+<text x="585.00" y="286.00" class="tick" text-anchor="middle">U5-v2</text>
+<line x1="609.80" y1="116.00" x2="609.80" y2="273.00" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4 3"/>
+<rect x="618.80" y="135.96" width="31.60" height="133.04" rx="3" fill="#b45309" stroke="none" opacity="1.0"/>
+<text x="634.60" y="130.96" class="tick" text-anchor="middle">41.415</text>
+<text x="634.60" y="286.00" class="tick" text-anchor="middle">MX-v0</text>
+<rect x="668.40" y="141.66" width="31.60" height="127.34" rx="3" fill="#d97706" stroke="none" opacity="1.0"/>
+<text x="684.20" y="136.66" class="tick" text-anchor="middle">39.638</text>
+<text x="684.20" y="286.00" class="tick" text-anchor="middle">MX-v1</text>
+<text x="758.00" y="94.00" class="label" text-anchor="start">Mean excess current</text>
+<text x="758.00" y="111.00" class="small" text-anchor="start">mA</text>
+<line x1="812.00" y1="116.00" x2="812.00" y2="269.00" class="axis"/>
+<line x1="812.00" y1="269.00" x2="1078.00" y2="269.00" class="axis"/>
+<line x1="812.00" y1="269.00" x2="1078.00" y2="269.00" class="grid"/>
+<text x="808.00" y="273.00" class="tick" text-anchor="end">1e-1</text>
+<line x1="812.00" y1="218.00" x2="1078.00" y2="218.00" class="grid"/>
+<text x="808.00" y="222.00" class="tick" text-anchor="end">1e0</text>
+<line x1="812.00" y1="167.00" x2="1078.00" y2="167.00" class="grid"/>
+<text x="808.00" y="171.00" class="tick" text-anchor="end">1e1</text>
+<line x1="812.00" y1="116.00" x2="1078.00" y2="116.00" class="grid"/>
+<text x="808.00" y="120.00" class="tick" text-anchor="end">1e2</text>
+<rect x="830.00" y="194.28" width="31.60" height="74.72" rx="3" fill="#1d4ed8" stroke="none" opacity="1.0"/>
+<text x="845.80" y="189.28" class="tick" text-anchor="middle">2.9178</text>
+<text x="845.80" y="286.00" class="tick" text-anchor="middle">U5-v0</text>
+<rect x="879.60" y="223.12" width="31.60" height="45.88" rx="3" fill="#0891b2" stroke="none" opacity="1.0"/>
+<text x="895.40" y="218.12" class="tick" text-anchor="middle">0.793722</text>
+<text x="895.40" y="286.00" class="tick" text-anchor="middle">U5-v1</text>
+<rect x="929.20" y="207.29" width="31.60" height="61.71" rx="3" fill="#0e7490" stroke="none" opacity="1.0"/>
+<text x="945.00" y="202.29" class="tick" text-anchor="middle">1.6215</text>
+<text x="945.00" y="286.00" class="tick" text-anchor="middle">U5-v2</text>
+<line x1="969.80" y1="116.00" x2="969.80" y2="273.00" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4 3"/>
+<rect x="978.80" y="146.03" width="31.60" height="122.97" rx="3" fill="#b45309" stroke="none" opacity="1.0"/>
+<text x="994.60" y="141.03" class="tick" text-anchor="middle">25.774</text>
+<text x="994.60" y="286.00" class="tick" text-anchor="middle">MX-v0</text>
+<rect x="1028.40" y="146.72" width="31.60" height="122.28" rx="3" fill="#d97706" stroke="none" opacity="1.0"/>
+<text x="1044.20" y="141.72" class="tick" text-anchor="middle">24.987</text>
+<text x="1044.20" y="286.00" class="tick" text-anchor="middle">MX-v1</text>
+<text x="38.00" y="329.00" class="label" text-anchor="start">Total peak energy</text>
+<text x="38.00" y="346.00" class="small" text-anchor="start">uJ</text>
+<line x1="92.00" y1="351.00" x2="92.00" y2="504.00" class="axis"/>
+<line x1="92.00" y1="504.00" x2="358.00" y2="504.00" class="axis"/>
+<line x1="92.00" y1="504.00" x2="358.00" y2="504.00" class="grid"/>
+<text x="88.00" y="508.00" class="tick" text-anchor="end">1e2</text>
+<line x1="92.00" y1="453.00" x2="358.00" y2="453.00" class="grid"/>
+<text x="88.00" y="457.00" class="tick" text-anchor="end">1e3</text>
+<line x1="92.00" y1="402.00" x2="358.00" y2="402.00" class="grid"/>
+<text x="88.00" y="406.00" class="tick" text-anchor="end">1e4</text>
+<line x1="92.00" y1="351.00" x2="358.00" y2="351.00" class="grid"/>
+<text x="88.00" y="355.00" class="tick" text-anchor="end">1e5</text>
+<rect x="110.00" y="376.66" width="31.60" height="127.34" rx="3" fill="#1d4ed8" stroke="none" opacity="1.0"/>
+<text x="125.80" y="371.66" class="tick" text-anchor="middle">31,394.57</text>
+<text x="125.80" y="521.00" class="tick" text-anchor="middle">U5-v0</text>
+<rect x="159.60" y="396.86" width="31.60" height="107.14" rx="3" fill="#0891b2" stroke="none" opacity="1.0"/>
+<text x="175.40" y="391.86" class="tick" text-anchor="middle">12,611.28</text>
+<text x="175.40" y="521.00" class="tick" text-anchor="middle">U5-v1</text>
+<rect x="209.20" y="398.93" width="31.60" height="105.07" rx="3" fill="#0e7490" stroke="none" opacity="1.0"/>
+<text x="225.00" y="393.93" class="tick" text-anchor="middle">11,488.99</text>
+<text x="225.00" y="521.00" class="tick" text-anchor="middle">U5-v2</text>
+<line x1="249.80" y1="351.00" x2="249.80" y2="508.00" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4 3"/>
+<rect x="258.80" y="482.00" width="31.60" height="22.00" rx="3" fill="#b45309" stroke="none" opacity="1.0"/>
+<text x="274.60" y="477.00" class="tick" text-anchor="middle">270.01</text>
+<text x="274.60" y="521.00" class="tick" text-anchor="middle">MX-v0</text>
+<rect x="308.40" y="484.16" width="31.60" height="19.84" rx="3" fill="#d97706" stroke="none" opacity="1.0"/>
+<text x="324.20" y="479.16" class="tick" text-anchor="middle">244.94</text>
+<text x="324.20" y="521.00" class="tick" text-anchor="middle">MX-v1</text>
+<text x="398.00" y="329.00" class="label" text-anchor="start">Excess peak energy</text>
+<text x="398.00" y="346.00" class="small" text-anchor="start">uJ</text>
+<line x1="452.00" y1="351.00" x2="452.00" y2="504.00" class="axis"/>
+<line x1="452.00" y1="504.00" x2="718.00" y2="504.00" class="axis"/>
+<line x1="452.00" y1="504.00" x2="718.00" y2="504.00" class="grid"/>
+<text x="448.00" y="508.00" class="tick" text-anchor="end">1e2</text>
+<line x1="452.00" y1="427.50" x2="718.00" y2="427.50" class="grid"/>
+<text x="448.00" y="431.50" class="tick" text-anchor="end">1e3</text>
+<line x1="452.00" y1="351.00" x2="718.00" y2="351.00" class="grid"/>
+<text x="448.00" y="355.00" class="tick" text-anchor="end">1e4</text>
+<rect x="470.00" y="383.13" width="31.60" height="120.87" rx="3" fill="#1d4ed8" stroke="none" opacity="1.0"/>
+<text x="485.80" y="378.13" class="tick" text-anchor="middle">3,801.75</text>
+<text x="485.80" y="521.00" class="tick" text-anchor="middle">U5-v0</text>
+<rect x="519.60" y="454.22" width="31.60" height="49.78" rx="3" fill="#0891b2" stroke="none" opacity="1.0"/>
+<text x="535.40" y="449.22" class="tick" text-anchor="middle">447.39</text>
+<text x="535.40" y="521.00" class="tick" text-anchor="middle">U5-v1</text>
+<rect x="569.20" y="434.33" width="31.60" height="69.67" rx="3" fill="#0e7490" stroke="none" opacity="1.0"/>
+<text x="585.00" y="429.33" class="tick" text-anchor="middle">814.25</text>
+<text x="585.00" y="521.00" class="tick" text-anchor="middle">U5-v2</text>
+<line x1="609.80" y1="351.00" x2="609.80" y2="508.00" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4 3"/>
+<rect x="618.80" y="486.79" width="31.60" height="17.21" rx="3" fill="#b45309" stroke="none" opacity="1.0"/>
+<text x="634.60" y="481.79" class="tick" text-anchor="middle">167.89</text>
+<text x="634.60" y="521.00" class="tick" text-anchor="middle">MX-v0</text>
+<rect x="668.40" y="489.57" width="31.60" height="14.43" rx="3" fill="#d97706" stroke="none" opacity="1.0"/>
+<text x="684.20" y="484.57" class="tick" text-anchor="middle">154.41</text>
+<text x="684.20" y="521.00" class="tick" text-anchor="middle">MX-v1</text>
+<rect x="46.00" y="558.00" width="12.00" height="12.00" rx="2" fill="#1d4ed8" stroke="none" opacity="1.0"/>
+<text x="64.00" y="570.00" class="small" text-anchor="start">STM32U5 (U5-v0/v1/v2)</text>
+<rect x="266.00" y="558.00" width="12.00" height="12.00" rx="2" fill="#b45309" stroke="none" opacity="1.0"/>
+<text x="284.00" y="570.00" class="small" text-anchor="start">MAX78000 (MX-v0/v1)</text>
+</svg>

@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="580" viewBox="0 0 900 580">
+<style>
+text{font-family:Arial,Helvetica,sans-serif;fill:#111827}
+.title{font-size:24px;font-weight:700}
+.subtitle{font-size:13px;fill:#475569}
+.axis{stroke:#94a3b8;stroke-width:1}
+.grid{stroke:#cbd5e1;stroke-width:1;stroke-dasharray:3 4}
+.label{font-size:12px;fill:#334155}
+.small{font-size:10px;fill:#475569}
+.tick{font-size:10px;fill:#64748b}
+.platform_u5{font-size:11px;fill:#1d4ed8;font-style:italic}
+.platform_mx{font-size:11px;fill:#b45309;font-style:italic}
+</style>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"/>
+<text x="32.00" y="36.00" class="title" text-anchor="start">Throughput vs Energy Frontier — Cross-Platform</text>
+<text x="32.00" y="58.00" class="subtitle" text-anchor="start">Upper-left is better; bubble size = static SRAM.</text>
+<line x1="92.00" y1="82.00" x2="92.00" y2="460.00" class="axis"/>
+<line x1="92.00" y1="460.00" x2="780.00" y2="460.00" class="axis"/>
+<line x1="92.00" y1="460.00" x2="92.00" y2="465.00" class="axis"/>
+<text x="92.00" y="482.00" class="tick" text-anchor="middle">-3486 µJ</text>
+<line x1="92.00" y1="82.00" x2="92.00" y2="460.00" class="grid"/>
+<line x1="264.00" y1="460.00" x2="264.00" y2="465.00" class="axis"/>
+<text x="264.00" y="482.00" class="tick" text-anchor="middle">6168 µJ</text>
+<line x1="264.00" y1="82.00" x2="264.00" y2="460.00" class="grid"/>
+<line x1="436.00" y1="460.00" x2="436.00" y2="465.00" class="axis"/>
+<text x="436.00" y="482.00" class="tick" text-anchor="middle">15823 µJ</text>
+<line x1="436.00" y1="82.00" x2="436.00" y2="460.00" class="grid"/>
+<line x1="608.00" y1="460.00" x2="608.00" y2="465.00" class="axis"/>
+<text x="608.00" y="482.00" class="tick" text-anchor="middle">25477 µJ</text>
+<line x1="608.00" y1="82.00" x2="608.00" y2="460.00" class="grid"/>
+<line x1="780.00" y1="460.00" x2="780.00" y2="465.00" class="axis"/>
+<text x="780.00" y="482.00" class="tick" text-anchor="middle">35132 µJ</text>
+<line x1="780.00" y1="82.00" x2="780.00" y2="460.00" class="grid"/>
+<line x1="87.00" y1="460.00" x2="92.00" y2="460.00" class="axis"/>
+<text x="82.00" y="464.00" class="tick" text-anchor="end">-79.0/s</text>
+<line x1="92.00" y1="460.00" x2="780.00" y2="460.00" class="grid"/>
+<line x1="87.00" y1="365.50" x2="92.00" y2="365.50" class="axis"/>
+<text x="82.00" y="369.50" class="tick" text-anchor="end">107.3/s</text>
+<line x1="92.00" y1="365.50" x2="780.00" y2="365.50" class="grid"/>
+<line x1="87.00" y1="271.00" x2="92.00" y2="271.00" class="axis"/>
+<text x="82.00" y="275.00" class="tick" text-anchor="end">293.5/s</text>
+<line x1="92.00" y1="271.00" x2="780.00" y2="271.00" class="grid"/>
+<line x1="87.00" y1="176.50" x2="92.00" y2="176.50" class="axis"/>
+<text x="82.00" y="180.50" class="tick" text-anchor="end">479.7/s</text>
+<line x1="92.00" y1="176.50" x2="780.00" y2="176.50" class="grid"/>
+<line x1="87.00" y1="82.00" x2="92.00" y2="82.00" class="axis"/>
+<text x="82.00" y="86.00" class="tick" text-anchor="end">665.9/s</text>
+<line x1="92.00" y1="82.00" x2="780.00" y2="82.00" class="grid"/>
+<text x="436.00" y="536.00" class="label" text-anchor="middle">Energy per inference</text>
+<text x="24.00" y="271.00" class="label" text-anchor="middle" transform="rotate(-90 24.00 271.00)">Throughput</text>
+<text x="776.00" y="62.00" class="small" text-anchor="end">Bubble size: Static SRAM</text>
+<circle cx="713.42" cy="418.66" r="31.00" fill="#1d4ed8" fill-opacity="0.80" stroke="#111827" stroke-width="1"/>
+<circle cx="381.29" cy="417.01" r="25.00" fill="#0891b2" fill-opacity="0.80" stroke="#111827" stroke-width="1"/>
+<circle cx="358.55" cy="416.62" r="24.58" fill="#0e7490" fill-opacity="0.80" stroke="#111827" stroke-width="1"/>
+<circle cx="159.16" cy="145.53" r="10.00" fill="#b45309" fill-opacity="0.80" stroke="#111827" stroke-width="1"/>
+<circle cx="158.58" cy="123.34" r="10.02" fill="#d97706" fill-opacity="0.80" stroke="#111827" stroke-width="1"/>
+<line x1="691.10" y1="418.66" x2="677.42" y2="466.27" stroke="#1d4ed8" stroke-width="1.1"/>
+<text x="672.42" y="471.27" class="label" text-anchor="end">U5 v0 float32</text>
+<text x="672.42" y="486.27" class="tick" text-anchor="end">238 KiB</text>
+<line x1="399.29" y1="417.01" x2="411.29" y2="428.27" stroke="#0891b2" stroke-width="1.1"/>
+<text x="416.29" y="433.27" class="label" text-anchor="start">U5 v1 INT8</text>
+<text x="416.29" y="448.27" class="tick" text-anchor="start">181 KiB</text>
+<line x1="376.25" y1="416.62" x2="388.14" y2="390.27" stroke="#0e7490" stroke-width="1.1"/>
+<text x="393.14" y="395.27" class="label" text-anchor="start">U5 v2 pruned</text>
+<text x="393.14" y="410.27" class="tick" text-anchor="start">177 KiB</text>
+<line x1="166.36" y1="145.53" x2="174.16" y2="135.00" stroke="#b45309" stroke-width="1.1"/>
+<text x="179.16" y="140.00" class="label" text-anchor="start">MAX78000 v0</text>
+<text x="179.16" y="155.00" class="tick" text-anchor="start">38 KiB</text>
+<line x1="165.79" y1="123.34" x2="173.60" y2="97.00" stroke="#d97706" stroke-width="1.1"/>
+<text x="178.60" y="102.00" class="label" text-anchor="start">MAX78000 v1</text>
+<text x="178.60" y="117.00" class="tick" text-anchor="start">38 KiB</text>
+</svg>

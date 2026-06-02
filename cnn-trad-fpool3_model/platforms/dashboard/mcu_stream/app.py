@@ -17,9 +17,52 @@ from PySide6.QtWidgets import (
     QHeaderView, QDialogButtonBox, QPlainTextEdit,
 )
 
+import pyqtgraph as pg
+
 from .protocol import PROFILES, InferenceRecord
 from .reader import SerialReader, list_serial_ports, detect_ports
 from .flasher import flash_command, flash_available, FLASH_MODES
+
+# Selectable plot sources: label -> (record attribute, only-on-inference?)
+PLOT_SOURCES = {
+    "Mic level": ("level", False),
+    "Confidence %": ("confidence", True),
+    "Infer µs": ("infer_us", True),
+}
+
+
+class RollingPlot(pg.PlotWidget):
+    """Fixed-height rolling time-series plot (keeps the last `window_s` seconds)."""
+
+    def __init__(self, window_s: float = 12.0):
+        super().__init__()
+        self.window_s = window_s
+        self.setFixedHeight(130)
+        self.setMouseEnabled(x=False, y=False)
+        self.showGrid(x=True, y=True, alpha=0.2)
+        self.setLabel("bottom", "t (s)")
+        self.curve = self.plot(pen=pg.mkPen("#2ecc40", width=1))
+        self.t: deque[float] = deque()
+        self.v: deque[float] = deque()
+        self.t0: float | None = None
+
+    def add(self, t_host: float, value: float) -> None:
+        if self.t0 is None:
+            self.t0 = t_host
+        t = t_host - self.t0
+        self.t.append(t)
+        self.v.append(value)
+        cutoff = t - self.window_s
+        while self.t and self.t[0] < cutoff:
+            self.t.popleft()
+            self.v.popleft()
+        self.curve.setData(list(self.t), list(self.v))
+
+    def clear_data(self) -> None:
+        self.t.clear()
+        self.v.clear()
+        self.t0 = None
+        self.curve.setData([], [])
 
 MAX_ROWS = 300              # cap table rows per panel
 RATE_WINDOW_S = 5.0         # window for lines/s and inf/s
@@ -93,6 +136,18 @@ class McuPanel(QGroupBox):
         hdr = self.table.horizontalHeader()
         hdr.setSectionResizeMode(2, QHeaderView.Stretch)
         root.addWidget(self.table, 1)
+
+        # Live plot + source selector
+        plot_row = QHBoxLayout()
+        plot_row.addWidget(QLabel("Plot:"))
+        self.cb_plot = QComboBox()
+        self.cb_plot.addItems(list(PLOT_SOURCES.keys()))
+        self.cb_plot.currentIndexChanged.connect(lambda: self.plot.clear_data())
+        plot_row.addWidget(self.cb_plot)
+        plot_row.addStretch(1)
+        root.addLayout(plot_row)
+        self.plot = RollingPlot()
+        root.addWidget(self.plot)
 
         self._on_mcu_changed()
         self.refresh_ports()
@@ -173,6 +228,13 @@ class McuPanel(QGroupBox):
         self._line_times.append(time.monotonic())
 
     def _on_record(self, rec: InferenceRecord) -> None:
+        # Feed the live plot according to the selected source.
+        attr, inf_only = PLOT_SOURCES[self.cb_plot.currentText()]
+        if (not inf_only) or rec.is_inference:
+            val = getattr(rec, attr, None)
+            if val is not None:
+                self.plot.add(rec.t_host, float(val))
+
         if not rec.is_inference:
             return
         if self._t0_wall is None:
@@ -214,6 +276,7 @@ class McuPanel(QGroupBox):
         self._inf_times.clear()
         self._inf_count = 0
         self.table.setRowCount(0)
+        self.plot.clear_data()
 
     def tick_stats(self) -> None:
         now = time.monotonic()

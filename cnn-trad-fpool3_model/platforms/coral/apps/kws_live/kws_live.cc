@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <cmath>
 #include <vector>
 
 #include "kws_mfcc.h"
@@ -136,6 +137,18 @@ extern "C" void app_main(void* param) {
         AppendSamples(buf32.data(), got);
         samples_since_last_inference += (int)got;
 
+        // Mic level (RMS) for the dashboard plot — throttled to ~25 Hz.
+        static int level_div = 0;
+        if (got && (++level_div & 1)) {
+            uint64_t acc = 0;
+            for (size_t i = 0; i < got; ++i) {
+                int32_t s = (int16_t)(buf32[i] >> 16);
+                acc += (uint32_t)(s * s);
+            }
+            uint32_t rms = (uint32_t)sqrtf((float)acc / (float)got);
+            printf("BENCH,event=level,rms=%lu\r\n", (unsigned long)rms);
+        }
+
         if (samples_since_last_inference < kInferenceSrideSamples) continue;
         samples_since_last_inference = 0;
 
@@ -162,16 +175,19 @@ extern "C" void app_main(void* param) {
         uint32_t mfcc_us   = (uint32_t)(t1 - t0);
         uint32_t invoke_us = (uint32_t)(t2 - t1);
 
-        bool confident = (best_score >= kConfidenceThreshold);
-        if (confident) {
+        // Only report a real keyword detection: confident AND not the
+        // "silence"/"unknown" catch-all classes. Otherwise stay quiet so the
+        // stream is event-driven like the STM32/MAX boards (no idle spam).
+        const char* lbl = kLabels[best_idx];
+        bool confident  = (best_score >= kConfidenceThreshold);
+        bool is_keyword = (strcmp(lbl, "silence") != 0 &&
+                           strcmp(lbl, "unknown") != 0);
+        if (confident && is_keyword) {
             printf(">>> %-8s (%.0f%%)  mfcc=%lu us  infer=%lu us\r\n",
-                   kLabels[best_idx], best_score * 100.0f,
+                   lbl, best_score * 100.0f,
                    (unsigned long)mfcc_us, (unsigned long)invoke_us);
             LedSet(Led::kUser, true);
         } else {
-            printf("    %-8s (%.0f%%)  mfcc=%lu us  infer=%lu us\r\n",
-                   kLabels[best_idx], best_score * 100.0f,
-                   (unsigned long)mfcc_us, (unsigned long)invoke_us);
             LedSet(Led::kUser, false);
         }
     }

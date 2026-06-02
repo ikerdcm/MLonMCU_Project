@@ -80,6 +80,7 @@ class InferenceRecord:
     confidence: Optional[float] = None   # percent, only Coral live provides it
     infer_us: Optional[int] = None       # unified cnn_us / infer_us
     cycles: Optional[int] = None
+    level: Optional[int] = None          # mic audio level/RMS (event=level)
     extra: dict = field(default_factory=dict)
 
     @property
@@ -159,9 +160,10 @@ def build_record(mcu: str, mode: str, line: str,
             label=label_from_idx(idx),
             infer_us=_to_int(fields, "cnn_us", "infer_us"),
             cycles=_to_int(fields, "cycles"),
+            level=_to_int(fields, "rms", "level"),
             extra={k: v for k, v in fields.items()
                    if k not in ("event", "run", "pred_idx", "cnn_us",
-                                "infer_us", "cycles")},
+                                "infer_us", "cycles", "rms", "level")},
         )
         return rec
 

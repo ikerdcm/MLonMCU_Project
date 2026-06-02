@@ -321,6 +321,20 @@ static int process_capture_block(live_capture_ctx_t *ctx, const int16_t *samples
         }
     }
 
+    /* Mic level (RMS) for the dashboard plot — throttled to ~25 Hz. */
+    static uint32_t last_level_ms = 0u;
+    uint32_t now = HAL_GetTick();
+    if (sample_count && (now - last_level_ms) >= 40u) {
+        last_level_ms = now;
+        uint64_t acc = 0;
+        for (uint32_t i = 0; i < sample_count; i++) {
+            int32_t s = samples[i];
+            acc += (uint32_t)(s * s);
+        }
+        uint32_t rms = (uint32_t)sqrtf((float)acc / (float)sample_count);
+        printf("BENCH,event=level,rms=%lu\r\n", (unsigned long)rms);
+    }
+
     return 0;
 }
 

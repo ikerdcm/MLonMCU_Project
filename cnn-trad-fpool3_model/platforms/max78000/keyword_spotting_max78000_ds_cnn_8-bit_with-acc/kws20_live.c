@@ -219,6 +219,12 @@ void kws20_live_run_once(void)
         uint16_t avg = 0;
         if (!mic_read_chunk(&avg)) continue;
 
+        /* Mic level for the dashboard plot — chunk rate is 125 Hz, emit ~25 Hz. */
+        static uint32_t level_div = 0;
+        if ((++level_div % 5u) == 0u) {
+            printf("BENCH,event=level,rms=%u\r\n", avg);
+        }
+
         if (ring_filled < LIVE_PREAMBLE_SAMPLES) continue;
 
         if (!collecting) {

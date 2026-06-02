@@ -1,4 +1,4 @@
-# DS-CNN-L KWS — Coral Dev Board Micro
+1# DS-CNN-L KWS — Coral Dev Board Micro
 
 Runs DS-CNN-L keyword spotting (INT8) on the [Coral Dev Board Micro](https://coral.ai/products/dev-board-micro/)
 using the on-chip Edge TPU via the [coralmicro SDK](https://github.com/google-coral/coralmicro).

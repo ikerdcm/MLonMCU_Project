@@ -590,6 +590,27 @@ static void run_inference(ai_handle network,
            (unsigned long)best,
            (unsigned long)post_trigger_samples,
            (unsigned long)(((uint64_t)(DEMO_PREAMBLE_SIZE + post_trigger_samples) * 1000ULL) / DS_CNN_SAMPLE_RATE));
+
+    /* Decision view: per-class scores 0..100 (min-max normalized) for the dashboard.
+       Self-contained (the score helpers are compiled out in minimal-output mode);
+       min-max is affine-invariant so raw output values give the same result. */
+    {
+        float mn = (float)ai_output_data[0], mx = mn;
+        for (uint32_t i = 1; i < DS_CNN_OUTPUT_SIZE; i++) {
+            float v = (float)ai_output_data[i];
+            if (v < mn) mn = v;
+            if (v > mx) mx = v;
+        }
+        float rng = (mx > mn) ? (mx - mn) : 1.0f;
+        char sb[256];
+        int n = snprintf(sb, sizeof(sb), "BENCH,event=scores,run=%lu,s=", (unsigned long)run_index);
+        for (uint32_t i = 0; i < DS_CNN_OUTPUT_SIZE; i++) {
+            int v = (int)(((float)ai_output_data[i] - mn) / rng * 100.0f + 0.5f);
+            if (v < 0) v = 0; else if (v > 100) v = 100;
+            n += snprintf(sb + n, sizeof(sb) - n, "%s%d", i ? ";" : "", v);
+        }
+        printf("%s\r\n", sb);
+    }
 #endif
 
 #if !KWS20_LIVE_MINIMAL_OUTPUT_ENABLED

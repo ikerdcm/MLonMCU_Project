@@ -16,21 +16,23 @@ from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QApplication, QComboBox, QDialog, QGridLayout, QGroupBox, QHBoxLayout,
     QLabel, QPushButton, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget,
-    QHeaderView, QDialogButtonBox, QPlainTextEdit,
+    QHeaderView, QDialogButtonBox, QPlainTextEdit, QStackedWidget,
 )
 
 import pyqtgraph as pg
 
-from .protocol import PROFILES, InferenceRecord, label_in_set
+from .protocol import PROFILES, InferenceRecord, label_in_set, LABEL_SETS
 from .reader import SerialReader, list_serial_ports, detect_ports
 from .flasher import (flash_command, flash_available, FLASH_MODES, REPORT_MODES,
                       MODELS, MODEL_LABEL_SET)
 
 # Selectable plot sources: label -> (record attribute, only-on-inference?)
+# "Scores (bars)" / "MFCC" are special-cased (own widgets), not time-series.
 PLOT_SOURCES = {
     "Mic level": ("level", False),
     "Confidence %": ("confidence", True),
     "Infer µs": ("infer_us", True),
+    "Scores (bars)": ("scores", True),
 }
 
 
@@ -76,6 +78,31 @@ class RollingPlot(pg.PlotWidget):
         self.t0 = None
         self.curve.setData([], [])
         self.curve_thr.setData([], [])
+
+
+class ScoreBars(pg.PlotWidget):
+    """Per-class score bar chart; the predicted class is highlighted."""
+
+    def __init__(self):
+        super().__init__()
+        self.setFixedHeight(130)
+        self.setMouseEnabled(x=False, y=False)
+        self.setYRange(0, 100)
+        self.showGrid(y=True, alpha=0.2)
+        self.bar = pg.BarGraphItem(x=[0], height=[0], width=0.8, brush="#2a6fb0")
+        self.addItem(self.bar)
+
+    def set_labels(self, labels: list[str]) -> None:
+        self.getAxis("bottom").setTicks([list(enumerate(labels))])
+
+    def set_scores(self, scores: list[int], best: int) -> None:
+        xs = list(range(len(scores)))
+        brushes = ["#f1c40f" if i == best else "#2a6fb0" for i in xs]
+        self.bar.setOpts(x=xs, height=[float(s) for s in scores], width=0.8, brushes=brushes)
+
+    def clear_data(self) -> None:
+        self.bar.setOpts(x=[0], height=[0])
+
 
 MAX_ROWS = 300              # cap table rows per panel
 RATE_WINDOW_S = 5.0         # window for lines/s and inf/s
@@ -169,12 +196,17 @@ class McuPanel(QGroupBox):
         plot_row.addWidget(QLabel("Plot:"))
         self.cb_plot = QComboBox()
         self.cb_plot.addItems(list(PLOT_SOURCES.keys()))
-        self.cb_plot.currentIndexChanged.connect(lambda: self.plot.clear_data())
+        self.cb_plot.currentIndexChanged.connect(self._on_plot_changed)
         plot_row.addWidget(self.cb_plot)
         plot_row.addStretch(1)
         root.addLayout(plot_row)
+        # Stack a time-series plot and a score-bar chart; the dropdown picks which.
         self.plot = RollingPlot()
-        root.addWidget(self.plot)
+        self.bars = ScoreBars()
+        self.plot_stack = QStackedWidget()
+        self.plot_stack.addWidget(self.plot)
+        self.plot_stack.addWidget(self.bars)
+        root.addWidget(self.plot_stack)
 
         self._on_mcu_changed()
         self.refresh_ports()
@@ -256,15 +288,32 @@ class McuPanel(QGroupBox):
     def _on_raw(self, line: str) -> None:
         self._line_times.append(time.monotonic())
 
+    def _on_plot_changed(self) -> None:
+        """Switch the lower view (time-series vs score bars) and reset it."""
+        if self.cb_plot.currentText() == "Scores (bars)":
+            sset = MODEL_LABEL_SET.get(self.model_token(), "dscnn")
+            self.bars.set_labels(LABEL_SETS.get(sset, LABEL_SETS["dscnn"]))
+            self.bars.clear_data()
+            self.plot_stack.setCurrentWidget(self.bars)
+        else:
+            self.plot.clear_data()
+            self.plot_stack.setCurrentWidget(self.plot)
+
     def _on_record(self, rec: InferenceRecord) -> None:
-        # Feed the live plot according to the selected source.
-        attr, inf_only = PLOT_SOURCES[self.cb_plot.currentText()]
-        if (not inf_only) or rec.is_inference:
-            val = getattr(rec, attr, None)
-            if val is not None:
-                # On the Mic level plot, overlay the adaptive trigger threshold.
-                thr = rec.thr if attr == "level" else None
-                self.plot.add(rec.t_host, float(val), thr)
+        # Feed the live view according to the selected source.
+        src = self.cb_plot.currentText()
+        if src == "Scores (bars)":
+            if rec.scores:
+                best = max(range(len(rec.scores)), key=lambda i: rec.scores[i])
+                self.bars.set_scores(rec.scores, best)
+        else:
+            attr, inf_only = PLOT_SOURCES[src]
+            if (not inf_only) or rec.is_inference:
+                val = getattr(rec, attr, None)
+                if val is not None:
+                    # On the Mic level plot, overlay the adaptive trigger threshold.
+                    thr = rec.thr if attr == "level" else None
+                    self.plot.add(rec.t_host, float(val), thr)
 
         if not rec.is_inference:
             return

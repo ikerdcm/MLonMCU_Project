@@ -101,6 +101,10 @@ class InferenceRecord:
     cycles: Optional[int] = None
     level: Optional[int] = None          # mic audio level/RMS (event=level)
     thr: Optional[int] = None            # adaptive voice-trigger threshold (event=level)
+    scores: Optional[list] = None        # per-class scores 0..100 (event=scores)
+    mfcc: Optional[list] = None          # flattened MFCC int8 values (event=mfcc)
+    mfcc_w: Optional[int] = None         # MFCC width (bins) / height (frames)
+    mfcc_h: Optional[int] = None
     extra: dict = field(default_factory=dict)
 
     @property
@@ -172,6 +176,15 @@ def build_record(mcu: str, mode: str, line: str,
     if fields is not None:
         event = fields.get("event", "other")
         idx = _to_int(fields, "pred_idx")
+
+        def _ilist(key):  # ";"-separated ints (commas are the field separator)
+            if key not in fields:
+                return None
+            try:
+                return [int(x) for x in fields[key].split(";") if x != ""]
+            except (ValueError, TypeError):
+                return None
+
         rec = InferenceRecord(
             mcu=mcu, mode=mode, t_host=t_host, t_wall=t_wall,
             event=event, raw=line,
@@ -182,9 +195,14 @@ def build_record(mcu: str, mode: str, line: str,
             cycles=_to_int(fields, "cycles"),
             level=_to_int(fields, "rms", "level"),
             thr=_to_int(fields, "thr"),
+            scores=_ilist("s"),
+            mfcc=_ilist("d"),
+            mfcc_w=_to_int(fields, "w"),
+            mfcc_h=_to_int(fields, "h"),
             extra={k: v for k, v in fields.items()
                    if k not in ("event", "run", "pred_idx", "cnn_us",
-                                "infer_us", "cycles", "rms", "level", "thr")},
+                                "infer_us", "cycles", "rms", "level", "thr",
+                                "s", "d", "w", "h")},
         )
         return rec
 

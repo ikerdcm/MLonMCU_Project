@@ -229,6 +229,18 @@ extern "C" void app_main(void* param) {
         uint32_t mfcc_us   = (uint32_t)(t1 - t0);
         uint32_t invoke_us = (uint32_t)(t2 - t1);
 
+        // Decision view: per-class scores 0..100 for the dashboard bar chart.
+        {
+            char sb[256];
+            int n = snprintf(sb, sizeof(sb), "BENCH,event=scores,s=");
+            for (int i = 0; i < kNumClasses; ++i) {
+                int s = (int)((output->data.int8[i] - kOutZeroPoint) * kOutScale * 100.0f + 0.5f);
+                if (s < 0) s = 0; else if (s > 100) s = 100;
+                n += snprintf(sb + n, sizeof(sb) - n, "%s%d", i ? ";" : "", s);
+            }
+            printf("%s\r\n", sb);
+        }
+
         // Only report a real keyword detection: confident AND not the
         // "silence"/"unknown" catch-all classes. Otherwise stay quiet so the
         // stream is event-driven like the STM32/MAX boards (no idle spam).

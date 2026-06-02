@@ -194,6 +194,15 @@ static void run_inference(uint32_t run_idx, uint32_t post_samples)
                (unsigned long)cycles,
                pred,
                (unsigned long)(((uint64_t)post_samples * 1000ULL) / LIVE_SAMPLE_RATE));
+        /* Decision view: per-class scores 0..100 for the dashboard bar chart. */
+        char sb[256];
+        int n = snprintf(sb, sizeof(sb), "BENCH,event=scores,run=%lu,s=", (unsigned long)run_idx);
+        for (uint32_t i = 0; i < LIVE_OUT_CLASSES; ++i) {
+            int s = (int)(scores[i] * 100.0f + 0.5f);
+            if (s < 0) s = 0; else if (s > 100) s = 100;
+            n += snprintf(sb + n, sizeof(sb) - n, "%s%d", i ? ";" : "", s);
+        }
+        printf("%s\r\n", sb);
     }
 #endif
 

@@ -37,6 +37,13 @@
 #define LIVE_VAD_K_HIGH             4.0f   /* trigger when avg >= nf * K_HIGH */
 #define LIVE_VAD_K_LOW              2.0f   /* end when avg <  nf * K_LOW */
 #define LIVE_VAD_WARMUP_CHUNKS      60u    /* ~0.5 s @ 125 Hz chunk rate to seed nf */
+
+/* Report gating — flash_all.sh sets these at flash time (dashboard dropdown).
+   idx 10 = silence, 11 = unknown in the 12-class label order. */
+#define KWS_REPORT_UNKNOWN 0
+#define KWS_REPORT_SILENCE 0
+#define KWS_REPORT_OK(idx) (((idx) != 10 || (KWS_REPORT_SILENCE)) && \
+                            ((idx) != 11 || (KWS_REPORT_UNKNOWN)))
 #define DEMO_ARM_QUIET_CHUNKS       0u
 #define DEMO_INITIAL_WARMUP_SAMPLES 32000u
 #define DEMO_POST_TRIGGER_SAMPLES   (DS_CNN_AUDIO_WINDOW_SAMPLES - DEMO_PREAMBLE_SIZE)
@@ -575,6 +582,7 @@ static void run_inference(ai_handle network,
     cycles = end_cycles - start_cycles;
     time_us = (hclk_hz > 0u) ? (uint32_t)(((uint64_t)cycles * 1000000ULL) / hclk_hz) : 0u;
 
+    if (KWS_REPORT_OK((int)best))
     printf("BENCH,event=inference,run=%lu,mode=live,frontend=mfcc_tf_49x10,cnn_us=%lu,cycles=%lu,pred_idx=%lu,post_trigger_samples=%lu,audio_window_ms=%lu\r\n",
            (unsigned long)run_index,
            (unsigned long)time_us,

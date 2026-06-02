@@ -22,11 +22,13 @@ STM_DIR="$PLATFORMS_DIR/stm32u5/keyword_spotting_u5_ds_cnn_8-bit"
 MODE="live"
 ONLY="coral,max,stm32"
 PARALLEL=1
+REPORT="keywords"   # keywords | unknown | silence | both (applies to all 3 boards)
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --mode)       MODE="$2"; shift 2 ;;
     --only)       ONLY="$2"; shift 2 ;;
+    --report)     REPORT="$2"; shift 2 ;;
     --sequential) PARALLEL=0; shift ;;
     -h|--help)    grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "Unknown arg: $1" >&2; exit 1 ;;
@@ -35,6 +37,26 @@ done
 
 [[ "$MODE" == "live" || "$MODE" == "offline" ]] || { echo "Invalid --mode '$MODE'" >&2; exit 1; }
 [[ "$MODE" == "live" ]] && MEASURE_LIVE=1 || MEASURE_LIVE=0
+
+# Report-class gating — which non-keyword classes the firmware reports, applied
+# to ALL three boards' live source before building (idx 10=silence, 11=unknown).
+case "$REPORT" in
+  keywords) RU=0; RS=0 ;;
+  unknown)  RU=1; RS=0 ;;
+  silence)  RU=0; RS=1 ;;
+  both)     RU=1; RS=1 ;;
+  *) echo "Invalid --report '$REPORT' (keywords|unknown|silence|both)" >&2; exit 1 ;;
+esac
+set_report() {  # $1 = source file containing the #define KWS_REPORT_* lines
+  [[ -f "$1" ]] && sed -i.bak \
+    -e "s/^#define KWS_REPORT_UNKNOWN .*/#define KWS_REPORT_UNKNOWN $RU/" \
+    -e "s/^#define KWS_REPORT_SILENCE .*/#define KWS_REPORT_SILENCE $RS/" \
+    "$1" && rm -f "$1.bak"
+}
+set_report "$CORAL_DIR/apps/kws_live/kws_live.cc"
+set_report "$MAX_DIR/kws20_live.c"
+set_report "$STM_DIR/Core/Src/kws20_live.c"
+echo "=== report gating: $REPORT (unknown=$RU silence=$RS) on all 3 boards ==="
 
 set_measure_mode() {  # $1 = path to kws20_mode_config.h
   sed -i.bak \

@@ -21,7 +21,7 @@ import pyqtgraph as pg
 
 from .protocol import PROFILES, InferenceRecord
 from .reader import SerialReader, list_serial_ports, detect_ports
-from .flasher import flash_command, flash_available, FLASH_MODES
+from .flasher import flash_command, flash_available, FLASH_MODES, REPORT_MODES
 
 # Selectable plot sources: label -> (record attribute, only-on-inference?)
 PLOT_SOURCES = {
@@ -325,6 +325,10 @@ class MonitorWindow(QWidget):
         self.flash_mode = QComboBox()
         self.flash_mode.addItems(list(FLASH_MODES))
         flash_bar.addWidget(self.flash_mode)
+        flash_bar.addWidget(QLabel("report:"))
+        self.flash_report = QComboBox()           # applies to all 3 boards at flash time
+        self.flash_report.addItems(list(REPORT_MODES.keys()))
+        flash_bar.addWidget(self.flash_report)
         self.btn_flash_all = QPushButton("Flash All (Coral + MAX + STM32)")
         self.btn_flash_all.clicked.connect(lambda: self.start_flash(None))
         flash_bar.addWidget(self.btn_flash_all)
@@ -369,7 +373,8 @@ class MonitorWindow(QWidget):
         for p in affected:
             if p.reader is not None:
                 p._disconnect()
-        cmd = flash_command(mode, mcu)
+        report = REPORT_MODES[self.flash_report.currentText()]
+        cmd = flash_command(mode, mcu, report)
         self._log(f"\n=== flashing {mcu or 'ALL'} (mode={mode}) ===")
         self._set_flash_enabled(False)
         self.flash_proc = QProcess(self)

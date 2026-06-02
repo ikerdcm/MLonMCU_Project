@@ -43,6 +43,19 @@ const char* kLabels[] = {
 constexpr int kNumClasses = 12;
 constexpr float kConfidenceThreshold = 0.5f;
 
+}  // namespace
+}  // namespace coralmicro
+
+// Report gating — flash_all.sh sets these at flash time (dashboard dropdown).
+// idx 10 = silence, 11 = unknown in the 12-class label order.
+#define KWS_REPORT_UNKNOWN 0
+#define KWS_REPORT_SILENCE 0
+#define KWS_REPORT_OK(idx) (((idx) != 10 || (KWS_REPORT_SILENCE)) && \
+                            ((idx) != 11 || (KWS_REPORT_UNKNOWN)))
+
+namespace coralmicro {
+namespace {
+
 constexpr float kOutScale     = 0.00390625f;
 constexpr int   kOutZeroPoint = -128;
 
@@ -221,9 +234,7 @@ extern "C" void app_main(void* param) {
         // stream is event-driven like the STM32/MAX boards (no idle spam).
         const char* lbl = kLabels[best_idx];
         bool confident  = (best_score >= kConfidenceThreshold);
-        bool is_keyword = (strcmp(lbl, "silence") != 0 &&
-                           strcmp(lbl, "unknown") != 0);
-        if (confident && is_keyword) {
+        if (confident && KWS_REPORT_OK(best_idx)) {
             printf(">>> %-8s (%.0f%%)  mfcc=%lu us  infer=%lu us\r\n",
                    lbl, best_score * 100.0f,
                    (unsigned long)mfcc_us, (unsigned long)invoke_us);

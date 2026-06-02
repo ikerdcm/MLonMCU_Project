@@ -18,10 +18,19 @@ ONLY_TOKEN = {"coral": "coral", "stm32u5": "stm32", "max78000": "max"}
 # Modes flash_all.sh understands. Coral "bench" maps to offline there.
 FLASH_MODES = ("live", "offline")
 
+# Report-class gating — applies to all 3 boards. label -> flash_all.sh --report token.
+REPORT_MODES = {
+    "Keywords only": "keywords",
+    "+ unknown": "unknown",
+    "+ silence": "silence",
+    "+ unknown & silence": "both",
+}
 
-def flash_command(mode: str, mcu: str | None = None) -> list[str]:
+
+def flash_command(mode: str, mcu: str | None = None,
+                  report: str = "keywords") -> list[str]:
     """Build the flash_all.sh command. mcu=None flashes all three."""
-    cmd = ["bash", str(FLASH_ALL), "--mode", mode]
+    cmd = ["bash", str(FLASH_ALL), "--mode", mode, "--report", report]
     if mcu is not None:
         cmd += ["--only", ONLY_TOKEN[mcu]]
     return cmd

@@ -27,10 +27,27 @@ REPORT_MODES = {
 }
 
 
+# Per-MCU flashable models: label -> flash_all.sh --max-model token.
+# Only MAX has alternates today; the others ship a single model.
+MODELS = {
+    "max78000": {"DS-CNN (INT8+accel)": "dscnn",
+                 "kws20_demo": "kws20_demo",
+                 "kws20_demo_w90": "kws20_demo_w90"},
+    "stm32u5":  {"DS-CNN (INT8)": "dscnn"},
+    "coral":    {"DS-CNN": "dscnn"},
+}
+
+# Which label set each model's pred_idx uses (see protocol.LABEL_SETS).
+MODEL_LABEL_SET = {
+    "dscnn": "dscnn", "kws20_demo": "kws20", "kws20_demo_w90": "kws20",
+}
+
+
 def flash_command(mode: str, mcu: str | None = None,
-                  report: str = "keywords") -> list[str]:
+                  report: str = "keywords", max_model: str = "dscnn") -> list[str]:
     """Build the flash_all.sh command. mcu=None flashes all three."""
-    cmd = ["bash", str(FLASH_ALL), "--mode", mode, "--report", report]
+    cmd = ["bash", str(FLASH_ALL), "--mode", mode, "--report", report,
+           "--max-model", max_model]
     if mcu is not None:
         cmd += ["--only", ONLY_TOKEN[mcu]]
     return cmd

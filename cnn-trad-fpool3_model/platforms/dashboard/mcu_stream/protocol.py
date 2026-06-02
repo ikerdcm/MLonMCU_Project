@@ -37,6 +37,25 @@ def label_from_idx(idx: Optional[int]) -> Optional[str]:
     return f"idx{idx}"
 
 
+# MAX78000 kws20_demo is a 21-class model with a different label order/size than
+# the 12-class DS-CNN. The dashboard must decode pred_idx with the matching set.
+KWS20_LABELS = [
+    "up", "down", "left", "right", "stop", "go", "yes", "no", "on", "off",
+    "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+    "zero", "unknown",
+]
+
+LABEL_SETS = {"dscnn": LABELS, "kws20": KWS20_LABELS}
+
+
+def label_in_set(idx: Optional[int], set_name: str) -> Optional[str]:
+    """Decode pred_idx using the named label set (falls back to DS-CNN)."""
+    if idx is None:
+        return None
+    labels = LABEL_SETS.get(set_name, LABELS)
+    return labels[idx] if 0 <= idx < len(labels) else f"idx{idx}"
+
+
 # ── MCU profiles ────────────────────────────────────────────────────────────
 @dataclass(frozen=True)
 class McuProfile:

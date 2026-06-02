@@ -19,9 +19,10 @@ from PySide6.QtWidgets import (
 
 import pyqtgraph as pg
 
-from .protocol import PROFILES, InferenceRecord
+from .protocol import PROFILES, InferenceRecord, label_in_set
 from .reader import SerialReader, list_serial_ports, detect_ports
-from .flasher import flash_command, flash_available, FLASH_MODES, REPORT_MODES
+from .flasher import (flash_command, flash_available, FLASH_MODES, REPORT_MODES,
+                      MODELS, MODEL_LABEL_SET)
 
 # Selectable plot sources: label -> (record attribute, only-on-inference?)
 PLOT_SOURCES = {
@@ -94,6 +95,9 @@ class McuPanel(QGroupBox):
     def mcu_key(self) -> str:
         return self.cb_mcu.currentData()
 
+    def model_token(self) -> str:
+        return MODELS.get(self.mcu_key(), {}).get(self.cb_model.currentText(), "dscnn")
+
     # ── UI ──────────────────────────────────────────────────────────────
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
@@ -105,6 +109,8 @@ class McuPanel(QGroupBox):
         self.cb_mcu.currentIndexChanged.connect(self._on_mcu_changed)
 
         self.cb_mode = QComboBox()
+        self.cb_model = QComboBox()   # which model/firmware to flash for this MCU
+        self.cb_model.setToolTip("Model/firmware to build & flash for this MCU")
         self.cb_port = QComboBox()
         self.cb_port.setMinimumWidth(180)
         self.btn_refresh = QPushButton("⟳")
@@ -118,17 +124,25 @@ class McuPanel(QGroupBox):
         self.btn_flash.clicked.connect(
             lambda: self.on_flash and self.on_flash(self.mcu_key()))
 
+        # Row 1: MCU + Mode
         controls.addWidget(QLabel("MCU:"))
         controls.addWidget(self.cb_mcu)
         controls.addWidget(QLabel("Mode:"))
         controls.addWidget(self.cb_mode)
-        controls.addWidget(QLabel("Port:"))
-        controls.addWidget(self.cb_port)
-        controls.addWidget(self.btn_refresh)
-        controls.addWidget(self.btn_connect)
-        controls.addWidget(self.btn_flash)
         controls.addStretch(1)
         root.addLayout(controls)
+
+        # Row 2: Model + Port (kept narrow so the panel doesn't grow too wide)
+        controls2 = QHBoxLayout()
+        controls2.addWidget(QLabel("Model:"))
+        controls2.addWidget(self.cb_model)
+        controls2.addWidget(QLabel("Port:"))
+        controls2.addWidget(self.cb_port)
+        controls2.addWidget(self.btn_refresh)
+        controls2.addWidget(self.btn_connect)
+        controls2.addWidget(self.btn_flash)
+        controls2.addStretch(1)
+        root.addLayout(controls2)
 
         self.lbl_status = QLabel("idle")
         self.lbl_status.setStyleSheet("color: gray;")
@@ -166,6 +180,8 @@ class McuPanel(QGroupBox):
         prof = PROFILES[self.cb_mcu.currentData()]
         self.cb_mode.clear()
         self.cb_mode.addItems(prof.modes)
+        self.cb_model.clear()
+        self.cb_model.addItems(list(MODELS.get(self.cb_mcu.currentData(), {}).keys()))
         self._autoselect_port()
 
     def refresh_ports(self) -> None:
@@ -260,10 +276,12 @@ class McuPanel(QGroupBox):
             self.table.removeRow(0)
             row = self.table.rowCount()
         self.table.insertRow(row)
+        lbl = (label_in_set(rec.pred_idx, MODEL_LABEL_SET.get(self.model_token(), "dscnn"))
+               if rec.pred_idx is not None else rec.label)
         vals = [
             f"{t_rel:8.3f}",
             "" if rec.run is None else str(rec.run),
-            rec.label or "?",
+            lbl or "?",
             "" if rec.confidence is None else f"{rec.confidence:.0f}",
             "" if rec.infer_us is None else str(rec.infer_us),
             "" if rec.cycles is None else str(rec.cycles),
@@ -274,7 +292,7 @@ class McuPanel(QGroupBox):
                 item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
             self.table.setItem(row, col, item)
         # highlight confident detections (Coral live) / non-unknown
-        if rec.extra.get("confident") or (rec.label not in (None, "unknown", "silence")):
+        if rec.extra.get("confident") or (lbl not in (None, "unknown", "silence")):
             for col in range(self.table.columnCount()):
                 it = self.table.item(row, col)
                 if it:
@@ -374,7 +392,9 @@ class MonitorWindow(QWidget):
             if p.reader is not None:
                 p._disconnect()
         report = REPORT_MODES[self.flash_report.currentText()]
-        cmd = flash_command(mode, mcu, report)
+        max_model = next((p.model_token() for p in self.panels
+                          if p.mcu_key() == "max78000"), "dscnn")
+        cmd = flash_command(mode, mcu, report, max_model)
         self._log(f"\n=== flashing {mcu or 'ALL'} (mode={mode}) ===")
         self._set_flash_enabled(False)
         self.flash_proc = QProcess(self)

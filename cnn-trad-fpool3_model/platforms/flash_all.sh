@@ -18,17 +18,20 @@ PLATFORMS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CORAL_DIR="$PLATFORMS_DIR/coral"
 MAX_DIR="$PLATFORMS_DIR/max78000/keyword_spotting_max78000_ds_cnn_8-bit_with-acc"
 STM_DIR="$PLATFORMS_DIR/stm32u5/keyword_spotting_u5_ds_cnn_8-bit"
+AI85_MAX_DIR="$PLATFORMS_DIR/../../ai85kws20netv3_model/platforms/max78000"  # kws20_demo models
 
 MODE="live"
 ONLY="coral,max,stm32"
 PARALLEL=1
 REPORT="keywords"   # keywords | unknown | silence | both (applies to all 3 boards)
+MAX_MODEL="dscnn"   # dscnn | kws20_demo | kws20_demo_w90 (which model to flash on MAX)
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --mode)       MODE="$2"; shift 2 ;;
     --only)       ONLY="$2"; shift 2 ;;
     --report)     REPORT="$2"; shift 2 ;;
+    --max-model)  MAX_MODEL="$2"; shift 2 ;;
     --sequential) PARALLEL=0; shift ;;
     -h|--help)    grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "Unknown arg: $1" >&2; exit 1 ;;
@@ -72,9 +75,22 @@ flash_coral() {
 }
 
 flash_max() {
-  set_measure_mode "$MAX_DIR/kws20_mode_config.h" || return 1
-  cd "$MAX_DIR" || return 1
-  ./tools/build_flash_max78000_ds_cnn_v1.sh
+  case "$MAX_MODEL" in
+    dscnn)
+      set_measure_mode "$MAX_DIR/kws20_mode_config.h" || return 1
+      cd "$MAX_DIR" || return 1
+      ./tools/build_flash_max78000_ds_cnn_v1.sh
+      ;;
+    kws20_demo)
+      set_measure_mode "$AI85_MAX_DIR/kws20_demo/kws20_mode_config.h" || return 1
+      bash "$AI85_MAX_DIR/tools/build_flash_max78000.sh"
+      ;;
+    kws20_demo_w90)
+      set_measure_mode "$AI85_MAX_DIR/kws20_demo_w90/kws20_mode_config.h" || return 1
+      bash "$AI85_MAX_DIR/tools/build_flash_max78000_w90.sh"
+      ;;
+    *) echo "Unknown --max-model '$MAX_MODEL'" >&2; return 1 ;;
+  esac
 }
 
 flash_stm32() {

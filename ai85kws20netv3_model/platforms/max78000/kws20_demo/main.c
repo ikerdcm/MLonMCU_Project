@@ -590,6 +590,13 @@ int main(void)
 
         sampleCounter += CHUNK;
 
+#if KWS20_CFG_ENABLE_MEASURE
+        /* Mic level + threshold for the dashboard plot (throttled ~30 Hz). */
+        if ((sampleCounter % (CHUNK * 4)) == 0) {
+            PR_INFO("BENCH,event=level,rms=%u,thr=%u\r\n", avg, thresholdHigh);
+        }
+#endif
+
 #ifdef ENABLE_MIC_DEBUG_STATUS
         if ((sampleCounter % (CHUNK * 64)) == 0) {
             const char *state_name = "stop";

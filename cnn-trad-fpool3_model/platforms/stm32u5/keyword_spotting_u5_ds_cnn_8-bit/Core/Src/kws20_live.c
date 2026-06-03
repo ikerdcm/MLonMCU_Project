@@ -610,6 +610,16 @@ static void run_inference(ai_handle network,
             n += snprintf(sb + n, sizeof(sb) - n, "%s%d", i ? ";" : "", v);
         }
         printf("%s\r\n", sb);
+
+        /* MFCC the model saw (49 frames × 10 bins) for the dashboard spectrogram. */
+        {
+            static char mb[2600];
+            int m = snprintf(mb, sizeof(mb), "BENCH,event=mfcc,run=%lu,w=10,h=49,d=",
+                             (unsigned long)run_index);
+            for (uint32_t i = 0; i < (uint32_t)AI_NETWORK_IN_1_SIZE; i++)
+                m += snprintf(mb + m, sizeof(mb) - m, "%s%d", i ? ";" : "", (int)ai_input_data[i]);
+            printf("%s\r\n", mb);
+        }
     }
 #endif
 

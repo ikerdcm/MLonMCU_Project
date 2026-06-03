@@ -14,7 +14,7 @@ from pathlib import Path
 from PySide6.QtCore import Qt, QTimer, QProcess
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
-    QApplication, QComboBox, QDialog, QGridLayout, QGroupBox, QHBoxLayout,
+    QApplication, QCheckBox, QComboBox, QDialog, QGridLayout, QGroupBox, QHBoxLayout,
     QLabel, QPushButton, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget,
     QHeaderView, QDialogButtonBox, QPlainTextEdit, QStackedWidget,
 )
@@ -26,13 +26,11 @@ from .reader import SerialReader, list_serial_ports, detect_ports
 from .flasher import (flash_command, flash_available, FLASH_MODES, REPORT_MODES,
                       MODELS, MODEL_LABEL_SET)
 
-# Selectable plot sources: label -> (record attribute, only-on-inference?)
-# "Scores (bars)" / "MFCC" are special-cased (own widgets), not time-series.
+# Time-series plot sources (the dropdown). Scores/MFCC are separate stackable views.
 PLOT_SOURCES = {
     "Mic level": ("level", False),
     "Confidence %": ("confidence", True),
     "Infer µs": ("infer_us", True),
-    "Scores (bars)": ("scores", True),
 }
 
 
@@ -104,6 +102,33 @@ class ScoreBars(pg.PlotWidget):
         self.bar.setOpts(x=[0], height=[0])
 
 
+class MfccView(pg.PlotWidget):
+    """MFCC 'what it hears' heatmap (frames × bins). DS-CNN models only."""
+
+    def __init__(self):
+        super().__init__()
+        self.setFixedHeight(150)
+        self.setMouseEnabled(x=False, y=False)
+        self.setLabel("left", "MFCC bin")
+        self.setLabel("bottom", "frame")
+        self.img = pg.ImageItem()
+        self.addItem(self.img)
+        try:
+            self.img.setColorMap(pg.colormap.get("inferno"))
+        except Exception:
+            pass
+
+    def set_mfcc(self, data: list, w: int, h: int) -> None:
+        import numpy as np
+        if not data or not w or not h or len(data) < w * h:
+            return
+        a = np.array(data[: w * h], dtype=float).reshape(h, w)   # h=frames, w=bins
+        self.img.setImage(a, autoLevels=True)   # x=frames (rows), y=bins (cols)
+
+    def clear_data(self) -> None:
+        self.img.clear()
+
+
 MAX_ROWS = 300              # cap table rows per panel
 RATE_WINDOW_S = 5.0         # window for lines/s and inf/s
 
@@ -141,6 +166,7 @@ class McuPanel(QGroupBox):
         self.cb_mode = QComboBox()
         self.cb_model = QComboBox()   # which model/firmware to flash for this MCU
         self.cb_model.setToolTip("Model/firmware to build & flash for this MCU")
+        self.cb_model.currentIndexChanged.connect(self._update_bar_labels)
         self.cb_port = QComboBox()
         self.cb_port.setMinimumWidth(180)
         self.btn_refresh = QPushButton("⟳")
@@ -196,17 +222,25 @@ class McuPanel(QGroupBox):
         plot_row.addWidget(QLabel("Plot:"))
         self.cb_plot = QComboBox()
         self.cb_plot.addItems(list(PLOT_SOURCES.keys()))
-        self.cb_plot.currentIndexChanged.connect(self._on_plot_changed)
+        self.cb_plot.currentIndexChanged.connect(lambda: self.plot.clear_data())
         plot_row.addWidget(self.cb_plot)
+        self.chk_scores = QCheckBox("Scores"); self.chk_scores.setChecked(True)
+        self.chk_mfcc = QCheckBox("MFCC")
+        plot_row.addWidget(self.chk_scores)
+        plot_row.addWidget(self.chk_mfcc)
         plot_row.addStretch(1)
         root.addLayout(plot_row)
-        # Stack a time-series plot and a score-bar chart; the dropdown picks which.
+
+        # Stacked lower views — show any combination at once (default: mic + scores).
         self.plot = RollingPlot()
         self.bars = ScoreBars()
-        self.plot_stack = QStackedWidget()
-        self.plot_stack.addWidget(self.plot)
-        self.plot_stack.addWidget(self.bars)
-        root.addWidget(self.plot_stack)
+        self.mfcc_view = MfccView()
+        self.mfcc_view.setVisible(False)
+        self.chk_scores.toggled.connect(self.bars.setVisible)
+        self.chk_mfcc.toggled.connect(self.mfcc_view.setVisible)
+        root.addWidget(self.plot)
+        root.addWidget(self.bars)
+        root.addWidget(self.mfcc_view)
 
         self._on_mcu_changed()
         self.refresh_ports()
@@ -217,6 +251,7 @@ class McuPanel(QGroupBox):
         self.cb_mode.addItems(prof.modes)
         self.cb_model.clear()
         self.cb_model.addItems(list(MODELS.get(self.cb_mcu.currentData(), {}).keys()))
+        self._update_bar_labels()
         self._autoselect_port()
 
     def refresh_ports(self) -> None:
@@ -288,32 +323,27 @@ class McuPanel(QGroupBox):
     def _on_raw(self, line: str) -> None:
         self._line_times.append(time.monotonic())
 
-    def _on_plot_changed(self) -> None:
-        """Switch the lower view (time-series vs score bars) and reset it."""
-        if self.cb_plot.currentText() == "Scores (bars)":
-            sset = MODEL_LABEL_SET.get(self.model_token(), "dscnn")
-            self.bars.set_labels(LABEL_SETS.get(sset, LABEL_SETS["dscnn"]))
-            self.bars.clear_data()
-            self.plot_stack.setCurrentWidget(self.bars)
-        else:
-            self.plot.clear_data()
-            self.plot_stack.setCurrentWidget(self.plot)
+    def _update_bar_labels(self) -> None:
+        if not hasattr(self, "bars"):
+            return
+        sset = MODEL_LABEL_SET.get(self.model_token(), "dscnn")
+        self.bars.set_labels(LABEL_SETS.get(sset, LABEL_SETS["dscnn"]))
 
     def _on_record(self, rec: InferenceRecord) -> None:
-        # Feed the live view according to the selected source.
-        src = self.cb_plot.currentText()
-        if src == "Scores (bars)":
-            if rec.scores:
-                best = max(range(len(rec.scores)), key=lambda i: rec.scores[i])
-                self.bars.set_scores(rec.scores, best)
-        else:
-            attr, inf_only = PLOT_SOURCES[src]
-            if (not inf_only) or rec.is_inference:
-                val = getattr(rec, attr, None)
-                if val is not None:
-                    # On the Mic level plot, overlay the adaptive trigger threshold.
-                    thr = rec.thr if attr == "level" else None
-                    self.plot.add(rec.t_host, float(val), thr)
+        # Time-series plot (dropdown source).
+        attr, inf_only = PLOT_SOURCES[self.cb_plot.currentText()]
+        if (not inf_only) or rec.is_inference:
+            val = getattr(rec, attr, None)
+            if val is not None:
+                # On the Mic level plot, overlay the adaptive trigger threshold.
+                thr = rec.thr if attr == "level" else None
+                self.plot.add(rec.t_host, float(val), thr)
+        # Score bars + MFCC views (only when shown).
+        if rec.scores and self.bars.isVisible():
+            best = max(range(len(rec.scores)), key=lambda i: rec.scores[i])
+            self.bars.set_scores(rec.scores, best)
+        if rec.mfcc and self.mfcc_view.isVisible():
+            self.mfcc_view.set_mfcc(rec.mfcc, rec.mfcc_w or 10, rec.mfcc_h or 49)
 
         if not rec.is_inference:
             return
@@ -544,15 +574,25 @@ class AutoEvalWindow(QWidget):
         self._running = False
         self._buf: dict[int, list[str]] = {}
         self.conf: list[dict] = [{} for _ in self.panels]
-        self.cols = AUTO_WORDS + ["unknown", "other", "(none)"]
+        self.words = list(AUTO_WORDS)
+        self.cols = self.words + ["unknown", "other", "(none)"]
 
         root = QVBoxLayout(self)
+        # Word selectors — pick the 5 words to sweep (from the shared keyword pool).
+        wrow = QHBoxLayout()
+        wrow.addWidget(QLabel("Words:"))
+        self.word_cbs: list[QComboBox] = []
+        for d in AUTO_WORDS:
+            cb = QComboBox(); cb.addItems(PROMPT_WORDS); cb.setCurrentText(d)
+            self.word_cbs.append(cb); wrow.addWidget(cb)
+        wrow.addStretch(1)
+        root.addLayout(wrow)
+
         bar = QHBoxLayout()
         self.btn_start = QPushButton("Start automated analysis")
         self.btn_start.clicked.connect(self.start)
         bar.addWidget(self.btn_start)
-        self.lbl = QLabel(f"Press Start. Words: {', '.join(AUTO_WORDS)} "
-                          f"({AUTO_REPS}× {AUTO_WIN_S}s each).")
+        self.lbl = QLabel(f"Press Start ({AUTO_REPS}× {AUTO_WIN_S}s per word).")
         self.lbl.setStyleSheet("font-size: 15px;")
         bar.addWidget(self.lbl, 1)
         b_csv = QPushButton("Export CSV"); b_csv.clicked.connect(self.export_csv)
@@ -569,9 +609,9 @@ class AutoEvalWindow(QWidget):
         for p in self.panels:
             box = QVBoxLayout()
             box.addWidget(QLabel(f"<b>{p.cb_mcu.currentText()}</b> · {p.cb_model.currentText()}"))
-            t = QTableWidget(len(AUTO_WORDS), len(self.cols))
+            t = QTableWidget(len(self.words), len(self.cols))
             t.setHorizontalHeaderLabels(self.cols)
-            t.setVerticalHeaderLabels(AUTO_WORDS)
+            t.setVerticalHeaderLabels(self.words)
             t.setEditTriggers(QTableWidget.NoEditTriggers)
             t.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
             self.tables.append(t); box.addWidget(t)
@@ -593,7 +633,15 @@ class AutoEvalWindow(QWidget):
     def start(self) -> None:
         if self._running or not self.panels:
             return
-        self._seq = [(w, r) for w in AUTO_WORDS for r in range(1, AUTO_REPS + 1)]
+        # Apply the selected words: relabel matrices and reset counts.
+        self.words = [cb.currentText() for cb in self.word_cbs]
+        self.cols = self.words + ["unknown", "other", "(none)"]
+        self.conf = [{} for _ in self.panels]
+        for t in self.tables:
+            t.setHorizontalHeaderLabels(self.cols)
+            t.setVerticalHeaderLabels(self.words)
+        self._refresh()
+        self._seq = [(w, r) for w in self.words for r in range(1, AUTO_REPS + 1)]
         self._step = 0
         self._running = True
         self.btn_start.setEnabled(False)
@@ -613,7 +661,7 @@ class AutoEvalWindow(QWidget):
         else:
             word_n = 1 + self._step // AUTO_REPS
             self.lbl.setText(f"SAY '{w.upper()}' — {self._rem}s   "
-                             f"(rep {r}/{AUTO_REPS}, word {word_n}/{len(AUTO_WORDS)})")
+                             f"(rep {r}/{AUTO_REPS}, word {word_n}/{len(self.words)})")
             self.lbl.setStyleSheet("font-size: 18px; color: #40c040; font-weight: bold;")
 
     def _tick(self) -> None:
@@ -635,7 +683,7 @@ class AutoEvalWindow(QWidget):
         for i in range(len(self.panels)):
             preds = self._buf.get(i, [])
             maj = Counter(preds).most_common(1)[0][0] if preds else "(none)"
-            if maj in AUTO_WORDS:
+            if maj in self.words:
                 col = maj
             elif maj in ("unknown", "silence"):
                 col = "unknown"
@@ -658,7 +706,7 @@ class AutoEvalWindow(QWidget):
     def _refresh(self) -> None:
         for i, t in enumerate(self.tables):
             correct = total = 0
-            for ri, w in enumerate(AUTO_WORDS):
+            for ri, w in enumerate(self.words):
                 rowd = self.conf[i].get(w, {})
                 for ci, cl in enumerate(self.cols):
                     n = rowd.get(cl, 0)
@@ -686,7 +734,7 @@ class AutoEvalWindow(QWidget):
             with open(out, "w", newline="") as f:
                 wri = csv.writer(f)
                 wri.writerow(["true\\pred"] + self.cols)
-                for w in AUTO_WORDS:
+                for w in self.words:
                     rowd = self.conf[i].get(w, {})
                     wri.writerow([w] + [rowd.get(cl, 0) for cl in self.cols])
         self.lbl.setText(f"Exported CSV(s) to {Path.cwd()}")

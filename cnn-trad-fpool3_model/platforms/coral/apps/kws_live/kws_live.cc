@@ -241,6 +241,14 @@ extern "C" void app_main(void* param) {
             printf("%s\r\n", sb);
         }
 
+        // MFCC the model saw (49 frames × 10 bins) for the dashboard spectrogram.
+        // Emitted as many tiny writes (one big USB-CDC write of ~2.5 KB gets
+        // truncated); the host reassembles the line at the trailing newline.
+        printf("BENCH,event=mfcc,w=10,h=49,d=");
+        for (int i = 0; i < MFCC_OUTPUT_ELEMS; ++i)
+            printf("%s%d", i ? ";" : "", (int)mfcc_buf[i]);
+        printf("\r\n");
+
         // Only report a real keyword detection: confident AND not the
         // "silence"/"unknown" catch-all classes. Otherwise stay quiet so the
         // stream is event-driven like the STM32/MAX boards (no idle spam).

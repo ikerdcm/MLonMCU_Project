@@ -203,6 +203,16 @@ static void run_inference(uint32_t run_idx, uint32_t post_samples)
             n += snprintf(sb + n, sizeof(sb) - n, "%s%d", i ? ";" : "", s);
         }
         printf("%s\r\n", sb);
+
+        /* MFCC the model saw (49 frames × 10 bins) for the dashboard spectrogram.
+           Many tiny writes (no large buffer); clamp to int8 so each value is narrow. */
+        printf("BENCH,event=mfcc,run=%lu,w=10,h=49,d=", (unsigned long)run_idx);
+        for (uint32_t i = 0; i < LIVE_INPUT_ELEMS; ++i) {
+            int v = (int)mfcc_in[i];
+            if (v < -128) v = -128; else if (v > 127) v = 127;
+            printf("%s%d", i ? ";" : "", v);
+        }
+        printf("\r\n");
     }
 #endif
 

@@ -428,6 +428,9 @@ class EvalWindow(QWidget):
         self._collecting = False
         self._buf: dict[int, list[str]] = {}
         self.conf: list[dict] = [{} for _ in self.panels]   # conf[i][true][col] = count
+        self.tables: list[QTableWidget] = []
+        self.cols: list[list[str]] = []
+        self.acc_lbls: list[QLabel] = []
 
         root = QVBoxLayout(self)
         bar = QHBoxLayout()
@@ -448,9 +451,6 @@ class EvalWindow(QWidget):
             return
 
         mats = QHBoxLayout()
-        self.tables: list[QTableWidget] = []
-        self.cols: list[list[str]] = []
-        self.acc_lbls: list[QLabel] = []
         for p in self.panels:
             box = QVBoxLayout()
             box.addWidget(QLabel(f"<b>{p.cb_mcu.currentText()}</b> · {p.cb_model.currentText()}"))

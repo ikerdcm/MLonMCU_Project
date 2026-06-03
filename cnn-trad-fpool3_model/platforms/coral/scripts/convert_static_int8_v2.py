@@ -108,13 +108,15 @@ def requantize_mode(saved_model: str, data_dir: str | None):
     print(f"Loading SavedModel: {saved_model}")
     model = tf.keras.models.load_model(saved_model)
 
-    input_spec = tf.TensorSpec(shape=INPUT_SHAPE, dtype=tf.float32)
-    serving_fn = tf.function(
-        lambda x: model(x, training=False),
-        input_signature=[input_spec],
-    )
-    concrete_func = serving_fn.get_concrete_function()
-    converter = tf.lite.TFLiteConverter.from_concrete_functions([concrete_func])
+    # Build a minimal functional wrapper with a *fixed* batch_size=1 so that
+    # from_keras_model traces fully static shapes (no dynamic batch dim) and
+    # properly tracks variables for calibration stats collection.
+    # from_concrete_functions without trackable_obj silently drops calibration
+    # stats in Keras 3, leaving float32 DEQUANTIZE ops in the output.
+    static_in  = tf.keras.Input(batch_shape=tuple(INPUT_SHAPE))
+    static_out = model(static_in, training=False)
+    serving_model = tf.keras.Model(inputs=static_in, outputs=static_out)
+    converter = tf.lite.TFLiteConverter.from_keras_model(serving_model)
 
     converter.optimizations = [tf.lite.Optimize.DEFAULT]
     converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]

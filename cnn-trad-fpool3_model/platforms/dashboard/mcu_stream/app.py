@@ -847,7 +847,9 @@ class MonitorWindow(QWidget):
         report = REPORT_MODES[self.flash_report.currentText()]
         max_model = next((p.model_token() for p in self.panels
                           if p.mcu_key() == "max78000"), "dscnn")
-        cmd = flash_command(mode, mcu, report, max_model)
+        coral_model = next((p.model_token() for p in self.panels
+                            if p.mcu_key() == "coral"), "int8")
+        cmd = flash_command(mode, mcu, report, max_model, coral_model)
         self._log(f"\n=== flashing {mcu or 'ALL'} (mode={mode}) ===")
         self._set_flash_enabled(False)
         self.flash_proc = QProcess(self)

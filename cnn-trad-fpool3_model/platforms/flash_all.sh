@@ -10,7 +10,8 @@
 #
 # Mode mapping:
 #   live    → mic + BENCH output      offline → fixed test tensor + BENCH output
-#   Coral:    live=kws_live           offline=kws_bench
+#   Coral:    --coral-model int8 (default): live=kws_live      offline=kws_bench      (Edge TPU)
+#             --coral-model fp32         : live=kws_live_cpu  offline=kws_bench_cpu  (M7 CPU, no TPU)
 #   MAX/STM:  ENABLE_MEASURE=1, MEASURE_LIVE=1 (live) / 0 (offline)
 set -uo pipefail
 
@@ -25,20 +26,23 @@ ONLY="coral,max,stm32"
 PARALLEL=1
 REPORT="keywords"   # keywords | unknown | silence | both (applies to all 3 boards)
 MAX_MODEL="dscnn"   # dscnn | kws20_demo | kws20_demo_w90 (which model to flash on MAX)
+CORAL_MODEL="int8"  # int8 (Edge TPU) | fp32 (M7 CPU, no TPU) — which Coral firmware to flash
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --mode)       MODE="$2"; shift 2 ;;
-    --only)       ONLY="$2"; shift 2 ;;
-    --report)     REPORT="$2"; shift 2 ;;
-    --max-model)  MAX_MODEL="$2"; shift 2 ;;
-    --sequential) PARALLEL=0; shift ;;
-    -h|--help)    grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    --mode)        MODE="$2"; shift 2 ;;
+    --only)        ONLY="$2"; shift 2 ;;
+    --report)      REPORT="$2"; shift 2 ;;
+    --max-model)   MAX_MODEL="$2"; shift 2 ;;
+    --coral-model) CORAL_MODEL="$2"; shift 2 ;;
+    --sequential)  PARALLEL=0; shift ;;
+    -h|--help)     grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "Unknown arg: $1" >&2; exit 1 ;;
   esac
 done
 
 [[ "$MODE" == "live" || "$MODE" == "offline" ]] || { echo "Invalid --mode '$MODE'" >&2; exit 1; }
+[[ "$CORAL_MODEL" == "int8" || "$CORAL_MODEL" == "fp32" ]] || { echo "Invalid --coral-model '$CORAL_MODEL' (int8|fp32)" >&2; exit 1; }
 [[ "$MODE" == "live" ]] && MEASURE_LIVE=1 || MEASURE_LIVE=0
 
 # Report-class gating — which non-keyword classes the firmware reports, applied
@@ -57,6 +61,7 @@ set_report() {  # $1 = source file containing the #define KWS_REPORT_* lines
     "$1" && rm -f "$1.bak"
 }
 set_report "$CORAL_DIR/apps/kws_live/kws_live.cc"
+set_report "$CORAL_DIR/apps/kws_live_cpu/kws_live_cpu.cc"   # fp32-cpu live variant
 set_report "$MAX_DIR/kws20_live.c"
 set_report "$STM_DIR/Core/Src/kws20_live.c"
 echo "=== report gating: $REPORT (unknown=$RU silence=$RS) on all 3 boards ==="
@@ -70,8 +75,13 @@ set_measure_mode() {  # $1 = path to kws20_mode_config.h
 
 flash_coral() {
   cd "$CORAL_DIR" || return 1
-  if [[ "$MODE" == "live" ]]; then ./scripts/build_and_flash_live.sh
-  else ./scripts/build_and_flash_bench.sh; fi
+  if [[ "$CORAL_MODEL" == "fp32" ]]; then   # M7 CPU, no Edge TPU
+    if [[ "$MODE" == "live" ]]; then ./scripts/build_and_flash_live_cpu.sh
+    else ./scripts/build_and_flash_bench_cpu.sh; fi
+  else                                       # int8 (Edge TPU)
+    if [[ "$MODE" == "live" ]]; then ./scripts/build_and_flash_live.sh
+    else ./scripts/build_and_flash_bench.sh; fi
+  fi
 }
 
 flash_max() {
@@ -108,7 +118,7 @@ run_one() {  # $1 = mcu name
 }
 
 IFS=',' read -ra MCUS <<< "$ONLY"
-echo "=== flash_all: mode=$MODE, targets=${MCUS[*]}, parallel=$PARALLEL ==="
+echo "=== flash_all: mode=$MODE, targets=${MCUS[*]}, coral-model=$CORAL_MODEL, max-model=$MAX_MODEL, parallel=$PARALLEL ==="
 
 pids=()
 for mcu in "${MCUS[@]}"; do

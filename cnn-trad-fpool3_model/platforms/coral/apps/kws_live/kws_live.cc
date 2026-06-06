@@ -28,7 +28,7 @@
 namespace coralmicro {
 namespace {
 
-const char* kModelPath = "/models/ds_cnn_l_static_edgetpu.tflite";
+const char* kModelPath = "/models/ds_cnn_l_static_v2_edgetpu.tflite";
 
 // DMA buffers must be global (DMA controller accesses them directly).
 constexpr int kNumDmaBuffers   = 4;

@@ -38,7 +38,7 @@ MODELS = {
     # NOTE: the "int8" apps currently load the broken v1.0 edgetpu model
     # (4-block/random-calib, 23.6% acc — see models/MODELS.md). A FIXED-v2 entry
     # needs apps pointed at ds_cnn_l_static_v2_edgetpu.tflite (TODO with re-measure).
-    "coral":    {"DS-CNN (INT8 v1.0, Edge-TPU — random-calib ⚠)": "int8",
+    "coral":    {"DS-CNN (INT8 v2, Edge-TPU)": "int8",
                  "DS-CNN (FP32, CPU)": "fp32"},
 }
 

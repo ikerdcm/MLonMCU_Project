@@ -11,8 +11,8 @@
 #define MFCC_AUDIO_SAMPLES    16000u
 #define MFCC_OUTPUT_ELEMS     (49u * 10u)
 
-#define MFCC_INPUT_SCALE      0.03684842586517334f
-#define MFCC_INPUT_ZERO_POINT (-9)
+#define MFCC_INPUT_SCALE      0.5847026705741882f
+#define MFCC_INPUT_ZERO_POINT (83)
 
 // Small tables in OCRAM (read-only)
 extern const float kMfccWindow[480];

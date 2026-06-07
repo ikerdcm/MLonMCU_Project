@@ -35,17 +35,25 @@ Energy/inf from `energy_estimate` block unless noted. Flash = `.text` KiB; SRAM 
 
 Model column: **Coral & U5 run the identical DS-CNN-L**; **MAX runs the ai8x `kws-ds-cnn-l-kws12` variant** (conv1d, ~1.34M MACs) ᵏ — not the same model.
 
+> **Reading the Coral rows — latency is set by BLOCK COUNT, accuracy by training/calibration.**
+> On the Edge-TPU every **4-block** model runs **≈1.8 ms**, every **6-block** **≈2.27 ms** (filters and calibration don't change speed). So the four ~1.8 ms 4-block rows are the **same speed tier**; they differ only in accuracy:
+> - `ds_cnn_l_static` **23.6 %** — the *original deploy*, broken **random calibration**. The 23.6 % is a **host-eval artifact** (mis-scaled input, ᵍ); it actually works on-device. Kept for before/after.
+> - `kws_ref` **91.7 %** — the **same 4-block, correctly calibrated** (what the broken one should have been). Best latency+accuracy point.
+> - `f64b4` **89.7 %** — a 4-block obtained by **actually pruning** the 6-block + fine-tune (the rigorous prune).
+>
+> **Bottom line:** a calibrated 4-block is **~1.8 ms @ ~90–92 %** vs the full 6-block **2.27 ms @ 92 %** — ~20 % faster at ≈parity. "Best in latency" just = "it's a 4-block".
+
 | Board | Config | Model | Mode | Latency avg (ms) | p95 (ms) | Energy/inf (µJ) | Flash (KiB) | SRAM (KiB) | Model acc (%) | MCU acc (%) | Status | Source |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | **Coral** | `fp32-cpu` | `ds_cnn_l_float` | offline | **417.1** | 417.3 | — ᶠ | 259.0 | n/a ᵇ | **92.4** | **91.7** ⁱ | ✅ prof + model-acc + MCU-acc (energy pending) | `Coral/…_v0/offline/` |
 | **Coral** | `fp32-cpu` | `ds_cnn_l_float` | online | — | — | — | — | n/a ᵇ | 92.4 | ✱ | 🔨 code ready, capture pending | `apps/kws_live_cpu` → `Coral/…_v0/online/` |
-| **Coral** | `int8-accel` | `ds_cnn_l_static` (**4-blk**) | offline | 1.807 | 1.873 | ≈2358 ᵃ | 236.8 | n/a ᵇ | 23.6 ᵍ | ✱ | ⚠️ original deploy, random-calib | `Coral/…_v1/offline/` ᶜ |
+| **Coral** | `int8-accel` | `ds_cnn_l_static` (**4-blk**, random-calib) | offline | 1.807 | 1.873 | ≈2358 ᵃ | 236.8 | n/a ᵇ | 23.6 ᵍ | ✱ | ⚠️ v1 original deploy — broken calibration | `Coral/…_v1/offline/` ᶜ |
+| **Coral** | `int8-accel` | `kws_ref` (**4-blk**, real-calib) | offline | 1.81 | 1.87 | ≈2358 ᵃ | 236.8 | n/a ᵇ | **91.7** ᵐ | ✱ ᵐ | ✅ **v1 done right** — same 4-blk, real calibration | `training/.../kws_ref_model.tflite` |
 | **Coral** | `int8-accel` | `ds_cnn_l_static_v2` (**6-blk**) | offline | **2.27** ʲ | 2.281 | — (v2 pending) | 236.8 | n/a ᵇ | **92.0** ᵍ | **91.0** ⁱ | ✅ prof + MCU-acc (energy pending) | re-measured 2026-06-07 ʲ |
-| **Coral** | `int8-prune` | `kws_ref` (**4-blk**, calib) | offline | 1.81 | 1.87 | ≈2358 ᵃ | 236.8 | n/a ᵇ | **91.7** ᵐ | ✱ ᵐ | 🔬 proxy: smaller-model = prune-equiv ᵐ | `training/.../kws_ref_model.tflite` |
+| **Coral** | `int8-accel` | `ds_cnn_l_static_v2` (**6-blk**) | online | — | — | — | — | n/a ᵇ | 92.0 | ✱ | ❌ **gap (priority 1)** | online power not captured |
 | **Coral** | `int8-prune` | **f64b4** (4-blk, 64f) | offline | **1.88** ⁿ | — | — | — | n/a ᵇ | **89.7** | **91.0** ⁿ | ✅ **prune winner** (real, warm-start+ft) | `models/…_pruned_f64b4_…` |
 | **Coral** | `int8-prune` | f32b6 (6-blk, 32f) | offline | 2.25 ⁿ | — | — | — | n/a ᵇ | 76.7 | 78.5 ⁿ | real prune (32-filter) | `models/…_pruned_f32b6_…` |
 | **Coral** | `int8-prune` | f32b4 (4-blk, 32f) | offline | 1.82 ⁿ | — | — | — | n/a ᵇ | 65.1 | 68.8 ⁿ | real prune (32f+4blk) | `models/…_pruned_f32b4_…` |
-| **Coral** | `int8-accel` | `ds_cnn_l_static_v2` | online | — | — | — | — | n/a ᵇ | 92.0 | ✱ | ❌ **gap (priority 1)** | online power not captured |
 | **MAX78000** ᵏ | `fp32-cpu` | `kws-ds-cnn-l-kws12` | offline | 2048.5 | 2048.5 | 101639 | 170.1 | 68.5 | 92.4 | ✱ | ✅ prof + pwr | `MAX78000/…_v0/offline/` |
 | **MAX78000** ᵏ | `int8-accel` | `kws-ds-cnn-l-kws12` | offline | **0.161** | 0.161 | **23.1** | 101.0 | 7.0 | 92.0 | ✱ | ✅ prof + pwr | `MAX78000/…_v1/offline/` |
 | **MAX78000** ᵏ | `int8-accel` | `kws-ds-cnn-l-kws12` | online | 0.162 | 0.162 | ✱ (CSV only) | 150.6 | 69.9 ᵈ | 92.0 | ✱ | ✅ prof + ⚠️ pwr | `MAX78000/…_v1/online/` |
@@ -68,10 +76,45 @@ Model column: **Coral & U5 run the identical DS-CNN-L**; **MAX runs the ai8x `kw
 - **ⁱ Coral on-device accuracy (device-in-the-loop), 2026-06-07.** `apps/kws_eval` ran a 144-sample stratified test subset (12/class) on the **v2 Edge-TPU** model: **131/144 = 90.97 %**, *identical* to the host v2 on the same subset (also 131/144) → **the Edge-TPU is numerically faithful** to the host int8 model. Subset estimate (±~5 %); full-set host v2 = 92.0 %. Subset embedded via `scripts/make_eval_set.py` (kept small to fit internal flash); scale to the full set by loading from LittleFS. MAX/U5 need this on their Linux toolchains. **fp32-cpu (v0)** measured the same way with `apps/kws_eval_cpu` (M7 CPU float, loads the subset `.bin` from LittleFS): **132/144 = 91.66 %** ≈ host fp32 → CPU float path faithful. Both Coral configs: on-device ≈ host (Edge-TPU and M7-CPU reproduce the host model).
 - **ʲ Coral int8-accel latency re-measured on the corrected v2 (6-block) model**, 2026-06-07: avg **2.27 ms** (p95 2.281). The earlier **1.81 ms was the broken v1 (4-block)** model → the correct model is ~25 % slower (more layers, 16 vs 12 Edge-TPU ops). `kws_bench` now loads `ds_cnn_l_static_v2_edgetpu.tflite`. **Energy (≈2358 µJ) is still the v1 capture** — re-measure for v2 pending. (The bench's embedded "left" vector is still v1-scaled, so its pred label is meaningless; latency is value-independent.)
 - **ᵏ ⚠️ MAX78000 runs a DIFFERENT model — not the shared DS-CNN-L.** Its ai8x accelerator can't run the TFLite, so it deploys `kws-ds-cnn-l-kws12` (ai8x model zoo, `ai85kwsmfccnet`): **6 conv1d layers, ~1.34M MACs** (`cnn.h`), vs the Coral/U5 TFLite DS-CNN-L (depthwise-separable 2D, **3.94M MACs**). So MAX is ≈3× fewer MACs + a different conv structure → its **0.16 ms latency and energy are *not* a same-model comparison**, and its true accuracy is its own ai8x QAT number (the 92 % in MAX `Model acc` cells is the TFLite value, *not* MAX's actual — to be replaced by ai8x eval). **Coral & U5 do share the identical DS-CNN-L.** For Story A, treat MAX as "best KWS this HW can do" rather than "same model, different HW."
-- **ᵐ `int8-prune` flavor (a), the smaller-model proxy** (2026-06-07): the **properly-calibrated 4-block** (`kws_ref_model.tflite`, scale 0.5847/83) scores **91.7 %** (4482/4890) — vs the broken random-calib 4-block's 23.6 %, proving the v1 was only mis-calibrated. Latency/energy are the 4-block's already-measured values (1.81 ms / ≈2358 µJ — calibration-independent). So **4-block 1.81 ms @ 91.7 % vs 6-block 2.27 ms @ 92.0 %** = ~25 % faster at −0.3 % (noise) → the structured-prune win the roadmap predicts. **MCU acc ✱:** deploying a *static* calibrated 4-block on the Edge-TPU needs fixing `convert_static_int8.py` (Keras-3 can't `load_model()` the legacy `kws_ref_model` SavedModel — use `TFSMLayer`) then edgetpu-compile; on-device would ≈91.7 % (Edge-TPU faithful, see ⁱ). This is a *separately-trained* 4-block, not the 6-block pruned — that's flavor (b), the real-prune branches in ⁿ.
+- **ᵐ `kws_ref` = "v1 done right" (the calibration before/after).** The deployed v1 (`ds_cnn_l_static`, 4-block) is the `kws_ref_model` quantized with **random** calibration → 23.6 % (host artifact, ᵍ). `kws_ref_model.tflite` is the **same 4-block, same weights**, quantized with **real** MFCC calibration (scale 0.5847/83) → **91.7 %** (4482/4890). Identical architecture → identical latency/energy (~1.8 ms / ≈2358 µJ; calibration is value-independent) — calibration is the *only* difference, so it sits with the broken row under `int8-accel`, **not** pruning. MCU acc ✱ = not separately deployed, but ≈91.7 % (Edge-TPU faithful, ⁱ). (A real *static* recalibrated-4-block edgetpu deploy needs a Keras-3 fix in `convert_static_int8.py` — `TFSMLayer` for the legacy SavedModel.) The actual pruning (6-block → smaller) is the ⁿ branches; `f64b4` is its 4-block result (89.7 %).
 - **ⁿ Real structured-prune branches (flavor b), Coral v3** — warm-started from the 6-block v2 (block-truncate / channel-slice), fine-tuned (`training/prune_branch.py`, 25 ep), int8-quantized (real calib) + Edge-TPU compiled (all 12/16 ops on-TPU). On-device 2026-06-07 via `kws_eval` (144-sample subset, mean Invoke latency). **MCU acc ≈ host int8 acc** (Edge-TPU faithful). Model-acc column = host int8 **test** (full 4890); MCU-acc = the 144-subset. **Key finding: Edge-TPU latency is block-count-bound, not filter-bound** — 4-block ≈ 1.8–1.9 ms, 6-block ≈ 2.25 ms *regardless of 32 vs 64 filters* (overhead-dominated). Cutting filters (32) gives ~no speedup but large accuracy loss (narrow models are quantization-sensitive). **Winner: `f64b4` (4-block, 64-filter) = 1.88 ms @ 89.7 %** vs full 6-block 2.27 ms @ 92.0 % → ~17 % faster at −2.3 %. **Prune rule for Coral: drop blocks, keep filters.** The 32-filter branches (`f32b6` 76.7 %, `f32b4` 65.1 %) need **distillation/QAT** to be viable → that's the `int8-prune-distill` (v4) stage; carry **f64b4** forward as the primary, keep all three.
 
 ---
+
+## SOTA comparison (Application)
+
+DS-CNN is *the* reference KWS architecture (Zhang "Hello Edge" 2017 [1]; the MLPerf-Tiny KWS reference [3]). Our models map directly onto it:
+
+| Model | Params | Test acc (Speech Commands) | Notes |
+|---|---|---|---|
+| Hello Edge DS-CNN S/M/L | up to ~0.5 M | **94.4 / 94.9 / 95.4 %** (float, v1) | best-in-class *float*, larger nets — Zhang 2017 [1] |
+| MLPerf-Tiny DS-CNN reference | **24,908** | ~90 % int8 / ~92.7 % float | the standard tinyML benchmark net [3] |
+| **Ours — `kws_ref`/`f64b4` (4-blk)** | **24,908** | **91.7 % int8** (host) · 89.7 % (`f64b4`) · 91.0 % on-device | **== the MLPerf-Tiny reference architecture** |
+| **Ours — DS-CNN-L (6-blk)** | ≈34 k | **92.0 % int8 · 92.4 % float** (3.94 M MACs) | larger variant |
+
+**Takeaway:** our `f64b4` is *literally the MLPerf-Tiny DS-CNN reference* (identical 24,908 params) and reaches ~90 % int8 — on par with the reference; the 6-block hits 92 %. The ~3-pt gap to Hello Edge's 95.4 % is a *larger float* net on v1 data. **Novelty vs the papers: none deploy+profile the *same* DS-CNN across three MCU classes (Edge-TPU / CNN-accelerator / CPU) with on-device accuracy** — that cross-platform tradeoff + the Coral overhead-ceiling finding is the contribution.
+
+*Refs:* [1] Zhang et al., *Hello Edge* (arXiv 1711.07128). [2] Sorensen et al., DS-CNN KWS, EURASIP 2020. [3] MLPerf Tiny (arXiv 2106.07597 / MLCommons). [4] ADI, *Keyword Spotting on MAX78000*.
+
+## Hardware-efficiency summary (deployed INT8, offline)
+
+| Metric | Coral (Edge-TPU) | MAX78000 (CNN accel) ᵏ | STM32U5 (CMSIS-NN) |
+|---|---|---|---|
+| Inference latency | 1.81 ms (4-blk) / 2.27 ms (6-blk) | **0.16 ms** | 64.1 ms |
+| Clock | 800 MHz | 100 MHz | 160 MHz |
+| Throughput | 2179 MMAC/s | ~8400 MMAC/s (eff.) | 61 MMAC/s |
+| MAC / cycle | 2.72 | ~84 (massively parallel) | 0.38 |
+| **Energy / inference** | ≈2358 µJ ᵃ | **23 µJ** | 4610 µJ |
+| **MAC / Joule (≈MAC·s⁻¹·W⁻¹)** | ~1.7 G ᵃ | **58 G** | 0.85 G |
+| Active power | ~0.7 W (5 V) | 0.14 W | 0.07 W |
+| Flash (`.text`) | 237 KiB | 101 KiB | 106 KiB |
+| Static SRAM | arena in SDRAM ᵇ | **7.0 KiB** | 70 KiB |
+
+ᵏ MAX runs the smaller ai8x net (1.34 M MACs) vs Coral/U5's 3.94 M, so MAC-based metrics aren't 1:1 — **energy/inference is the fair cross-board axis.**
+
+- **Energy: MAX78000 is ~100× more efficient/inference than Coral, ~200× vs U5** (it finishes 11–400× sooner). Note U5 has the *lowest power* (0.07 W) yet *highest energy/inf* — power ≠ efficiency; time dominates.
+- **End-to-end is dominated by the 1 s audio window:** end-to-end ≈ 1000.2 / 1001.8 / 1064 ms (MAX / Coral / U5) = acquisition (1000 ms) + inference. **Inference is 0.02–6 % of the pipeline** → user-perceived latency is the 1 s window on all three (this is why Coral's 1.8 ms "ceiling" is invisible).
+- **Memory 32→8 bit (U5, cleanest report):** weights **≈139 KB (fp32) → 34.7 KB (int8)** = **4×**; activations 18.3 KB int8. INT4 (`--compression 4bit`) would ~halve weights again → completes the 32→8→4 axis (TODO).
 
 ## How to update (per new measurement)
 

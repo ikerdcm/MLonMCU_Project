@@ -1,7 +1,7 @@
 add_executable_m7(kws_bench
     kws_bench.cc
     DATA
-    ${CMAKE_CURRENT_LIST_DIR}/../../model/ds_cnn_l_static_edgetpu.tflite>/models/ds_cnn_l_static_edgetpu.tflite
+    ${CMAKE_CURRENT_LIST_DIR}/../../model/ds_cnn_l_static_v2_edgetpu.tflite>/models/ds_cnn_l_static_v2_edgetpu.tflite
 )
 
 target_include_directories(kws_bench PRIVATE

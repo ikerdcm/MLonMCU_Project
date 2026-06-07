@@ -90,7 +90,7 @@ DS-CNN is *the* reference KWS architecture (Zhang "Hello Edge" 2017 [1]; the MLP
 | Hello Edge DS-CNN S/M/L | up to ~0.5 M | **94.4 / 94.9 / 95.4 %** (float, v1) | best-in-class *float*, larger nets — Zhang 2017 [1] |
 | MLPerf-Tiny DS-CNN reference | **24,908** | ~90 % int8 / ~92.7 % float | the standard tinyML benchmark net [3] |
 | **Ours — `kws_ref`/`f64b4` (4-blk)** | **24,908** | **91.7 % int8** (host) · 89.7 % (`f64b4`) · 91.0 % on-device | **== the MLPerf-Tiny reference architecture** |
-| **Ours — DS-CNN-L (6-blk)** | ≈34 k | **92.0 % int8 · 92.4 % float** (3.94 M MACs) | larger variant |
+| **Ours — DS-CNN-L (6-blk)** | 35,532 | **92.0 % int8 · 92.4 % float** (3.94 M MACs) | larger variant |
 
 **Takeaway:** our `f64b4` is *literally the MLPerf-Tiny DS-CNN reference* (identical 24,908 params) and reaches ~90 % int8 — on par with the reference; the 6-block hits 92 %. The ~3-pt gap to Hello Edge's 95.4 % is a *larger float* net on v1 data. **Novelty vs the papers: none deploy+profile the *same* DS-CNN across three MCU classes (Edge-TPU / CNN-accelerator / CPU) with on-device accuracy** — that cross-platform tradeoff + the Coral overhead-ceiling finding is the contribution.
 

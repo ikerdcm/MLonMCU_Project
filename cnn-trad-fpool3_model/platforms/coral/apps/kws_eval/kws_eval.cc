@@ -70,11 +70,15 @@ void run_eval() {
 
     printf("EVAL,event=start,total=%d\r\n", EVAL_N);
     int correct = 0;
+    uint64_t sum_us = 0, min_us = UINT64_MAX, max_us = 0;
     for (int i = 0; i < EVAL_N; i++) {
         memcpy(input->data.int8, &eval_features[i * EVAL_INPUT_SIZE], EVAL_INPUT_SIZE);
+        uint64_t t0 = TimerMicros();
         if (interpreter.Invoke() != kTfLiteOk) {
             printf("ERROR: Invoke() failed at i=%d\r\n", i); return;
         }
+        uint64_t us = TimerMicros() - t0;
+        sum_us += us; if (us < min_us) min_us = us; if (us > max_us) max_us = us;
         int   best_idx = 0;
         int8_t best_val = output->data.int8[0];
         for (int j = 1; j < kNumClasses; j++) {
@@ -87,8 +91,10 @@ void run_eval() {
 
     // acc_x100 = accuracy * 100 in basis points-ish (e.g. 9208 = 92.08%)
     int acc_x100 = (int)((10000LL * correct) / EVAL_N);
-    printf("EVAL,event=done,correct=%d,total=%d,acc_x100=%d\r\n",
-           correct, EVAL_N, acc_x100);
+    printf("EVAL,event=done,correct=%d,total=%d,acc_x100=%d"
+           ",cnn_us_avg=%lu,cnn_us_min=%lu,cnn_us_max=%lu\r\n",
+           correct, EVAL_N, acc_x100,
+           (unsigned long)(sum_us / EVAL_N), (unsigned long)min_us, (unsigned long)max_us);
     LedSet(Led::kUser, true);
 }
 

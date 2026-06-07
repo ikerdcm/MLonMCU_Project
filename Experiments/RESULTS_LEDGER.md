@@ -33,19 +33,22 @@ Latency = pure CNN inference (`cnn_latency_us`, excludes the 1 s audio window).
 Energy/inf from `energy_estimate` block unless noted. Flash = `.text` KiB; SRAM = `data+bss` (static).
 **Model acc** = host TFLite reference accuracy (`eval_quantized_model.py`, n=4890). **MCU acc** = on-device test-set accuracy (device-in-the-loop). ✱ = not yet measured. See ʰ for the model-vs-MCU distinction.
 
-| Board | Config | Mode | Latency avg (ms) | p95 (ms) | Energy/inf (µJ) | Flash (KiB) | SRAM (KiB) | Model acc (%) | MCU acc (%) | Status | Source |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| **Coral** | `fp32-cpu` | offline | **417.1** | 417.3 | — ᶠ | 259.0 | n/a ᵇ | **92.4** | **91.7** ⁱ | ✅ prof + model-acc + MCU-acc (energy pending) | `Coral/…_v0/offline/` |
-| **Coral** | `fp32-cpu` | online | — | — | — | — | n/a ᵇ | 92.4 | ✱ | 🔨 code ready, capture pending | `apps/kws_live_cpu` → `Coral/…_v0/online/` |
-| **Coral** | `int8-accel` | offline | **2.27** ʲ | 2.281 | ≈2358 ᵃʲ | 236.8 | n/a ᵇ | **92.0** ᵍ | **91.0** ⁱ | ✅ prof (v2) + ⚠️ pwr(v1) + MCU-acc | `Coral/…_v1/offline/` ᶜ |
-| **Coral** | `int8-accel` | online | — | — | — | — | n/a ᵇ | 92.0 | ✱ | ❌ **gap (priority 1)** | online power not captured |
-| **MAX78000** | `fp32-cpu` | offline | 2048.5 | 2048.5 | 101639 | 170.1 | 68.5 | 92.4 | ✱ | ✅ prof + pwr | `MAX78000/…_v0/offline/` |
-| **MAX78000** | `int8-accel` | offline | **0.161** | 0.161 | **23.1** | 101.0 | 7.0 | 92.0 | ✱ | ✅ prof + pwr | `MAX78000/…_v1/offline/` |
-| **MAX78000** | `int8-accel` | online | 0.162 | 0.162 | ✱ (CSV only) | 150.6 | 69.9 ᵈ | 92.0 | ✱ | ✅ prof + ⚠️ pwr | `MAX78000/…_v1/online/` |
-| **STM32U5** | `fp32-cpu` | offline | 224.5 | 224.5 | 16159 | 172.7 | 94.5 | 92.4 | ✱ | ✅ prof + pwr | `U5/…_v0/offline/` |
-| **STM32U5** | `fp32-cpu` | online | 224.6 | 224.6 | 16161 | 228.6 | 193.9 ᵈ | 92.4 | ✱ | ✅ prof + pwr | `U5/…_v0/online/` |
-| **STM32U5** | `int8-cpu` | offline | 64.06 | 64.06 | 4610 ᵉ | 105.8 | 70.3 | 92.0 | ✱ | ✅ prof | `U5/…_v1/offline/` |
-| **STM32U5** | `int8-cpu` | online | 64.08 | 64.09 | 4927 ᵉ | 158.5 | 151.4 ᵈ | 92.0 | ✱ | ✅ prof + ⚠️ pwr | `U5/…_v1/online/` |
+Model column: **Coral & U5 run the identical DS-CNN-L**; **MAX runs the ai8x `kws-ds-cnn-l-kws12` variant** (conv1d, ~1.34M MACs) ᵏ — not the same model.
+
+| Board | Config | Model | Mode | Latency avg (ms) | p95 (ms) | Energy/inf (µJ) | Flash (KiB) | SRAM (KiB) | Model acc (%) | MCU acc (%) | Status | Source |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| **Coral** | `fp32-cpu` | `ds_cnn_l_float` | offline | **417.1** | 417.3 | — ᶠ | 259.0 | n/a ᵇ | **92.4** | **91.7** ⁱ | ✅ prof + model-acc + MCU-acc (energy pending) | `Coral/…_v0/offline/` |
+| **Coral** | `fp32-cpu` | `ds_cnn_l_float` | online | — | — | — | — | n/a ᵇ | 92.4 | ✱ | 🔨 code ready, capture pending | `apps/kws_live_cpu` → `Coral/…_v0/online/` |
+| **Coral** | `int8-accel` | `ds_cnn_l_static` (**4-blk**) | offline | 1.807 | 1.873 | ≈2358 ᵃ | 236.8 | n/a ᵇ | 23.6 ᵍ | ✱ | ⚠️ original deploy, random-calib | `Coral/…_v1/offline/` ᶜ |
+| **Coral** | `int8-accel` | `ds_cnn_l_static_v2` (**6-blk**) | offline | **2.27** ʲ | 2.281 | — (v2 pending) | 236.8 | n/a ᵇ | **92.0** ᵍ | **91.0** ⁱ | ✅ prof + MCU-acc (energy pending) | re-measured 2026-06-07 ʲ |
+| **Coral** | `int8-accel` | `ds_cnn_l_static_v2` | online | — | — | — | — | n/a ᵇ | 92.0 | ✱ | ❌ **gap (priority 1)** | online power not captured |
+| **MAX78000** ᵏ | `fp32-cpu` | `kws-ds-cnn-l-kws12` | offline | 2048.5 | 2048.5 | 101639 | 170.1 | 68.5 | 92.4 | ✱ | ✅ prof + pwr | `MAX78000/…_v0/offline/` |
+| **MAX78000** ᵏ | `int8-accel` | `kws-ds-cnn-l-kws12` | offline | **0.161** | 0.161 | **23.1** | 101.0 | 7.0 | 92.0 | ✱ | ✅ prof + pwr | `MAX78000/…_v1/offline/` |
+| **MAX78000** ᵏ | `int8-accel` | `kws-ds-cnn-l-kws12` | online | 0.162 | 0.162 | ✱ (CSV only) | 150.6 | 69.9 ᵈ | 92.0 | ✱ | ✅ prof + ⚠️ pwr | `MAX78000/…_v1/online/` |
+| **STM32U5** | `fp32-cpu` | `ds_cnn_l (onnx)` | offline | 224.5 | 224.5 | 16159 | 172.7 | 94.5 | 92.4 | ✱ | ✅ prof + pwr | `U5/…_v0/offline/` |
+| **STM32U5** | `fp32-cpu` | `ds_cnn_l (onnx)` | online | 224.6 | 224.6 | 16161 | 228.6 | 193.9 ᵈ | 92.4 | ✱ | ✅ prof + pwr | `U5/…_v0/online/` |
+| **STM32U5** | `int8-cpu` | `ds_cnn_l (onnx)` | offline | 64.06 | 64.06 | 4610 ᵉ | 105.8 | 70.3 | 92.0 | ✱ | ✅ prof | `U5/…_v1/offline/` |
+| **STM32U5** | `int8-cpu` | `ds_cnn_l (onnx)` | online | 64.08 | 64.09 | 4927 ᵉ | 158.5 | 151.4 ᵈ | 92.0 | ✱ | ✅ prof + ⚠️ pwr | `U5/…_v1/online/` |
 
 **Legend:** ✅ done · ⚠️ partial · ❌ missing · ✱ value not yet captured · — n/a.
 
@@ -60,6 +63,7 @@ Energy/inf from `energy_estimate` block unless noted. Flash = `.text` KiB; SRAM 
 - **ʰ Model acc vs MCU acc.** *Model acc* = host TFLite reference (FP32 `ds_cnn_l_float` 92.4 %, INT8 v2 92.0 %); the same reference model is assumed across boards. *MCU acc* = the accuracy the *deployed* board actually achieves on the test set — separate because each board quantizes independently (Coral Edge-TPU, MAX ai8x, U5 X-CUBE-AI) so it can differ. **No board has MCU acc yet:** the offline firmware runs latency on one fixed vector, not the test set; measuring it needs a **device-in-the-loop** mode (host streams each test feature → board infers → returns pred → host tallies), which doesn't exist, and MAX/U5 also need their (Linux) build toolchains. Colleague's `main` reports FP32 93.0 % / INT8 92.7 % for a different trained lineage (see RECONCILIATION.md).
 - **ⁱ Coral on-device accuracy (device-in-the-loop), 2026-06-07.** `apps/kws_eval` ran a 144-sample stratified test subset (12/class) on the **v2 Edge-TPU** model: **131/144 = 90.97 %**, *identical* to the host v2 on the same subset (also 131/144) → **the Edge-TPU is numerically faithful** to the host int8 model. Subset estimate (±~5 %); full-set host v2 = 92.0 %. Subset embedded via `scripts/make_eval_set.py` (kept small to fit internal flash); scale to the full set by loading from LittleFS. MAX/U5 need this on their Linux toolchains. **fp32-cpu (v0)** measured the same way with `apps/kws_eval_cpu` (M7 CPU float, loads the subset `.bin` from LittleFS): **132/144 = 91.66 %** ≈ host fp32 → CPU float path faithful. Both Coral configs: on-device ≈ host (Edge-TPU and M7-CPU reproduce the host model).
 - **ʲ Coral int8-accel latency re-measured on the corrected v2 (6-block) model**, 2026-06-07: avg **2.27 ms** (p95 2.281). The earlier **1.81 ms was the broken v1 (4-block)** model → the correct model is ~25 % slower (more layers, 16 vs 12 Edge-TPU ops). `kws_bench` now loads `ds_cnn_l_static_v2_edgetpu.tflite`. **Energy (≈2358 µJ) is still the v1 capture** — re-measure for v2 pending. (The bench's embedded "left" vector is still v1-scaled, so its pred label is meaningless; latency is value-independent.)
+- **ᵏ ⚠️ MAX78000 runs a DIFFERENT model — not the shared DS-CNN-L.** Its ai8x accelerator can't run the TFLite, so it deploys `kws-ds-cnn-l-kws12` (ai8x model zoo, `ai85kwsmfccnet`): **6 conv1d layers, ~1.34M MACs** (`cnn.h`), vs the Coral/U5 TFLite DS-CNN-L (depthwise-separable 2D, **3.94M MACs**). So MAX is ≈3× fewer MACs + a different conv structure → its **0.16 ms latency and energy are *not* a same-model comparison**, and its true accuracy is its own ai8x QAT number (the 92 % in MAX `Model acc` cells is the TFLite value, *not* MAX's actual — to be replaced by ai8x eval). **Coral & U5 do share the identical DS-CNN-L.** For Story A, treat MAX as "best KWS this HW can do" rather than "same model, different HW."
 
 ---
 

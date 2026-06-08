@@ -1,0 +1,16 @@
+/*
+ * SPDX-FileCopyrightText: 2024 ETH Zurich and University of Bologna
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#ifndef __DEEPLOY_MATH_INONORM_KERNEL_HEADER_
+#define __DEEPLOY_MATH_INONORM_KERNEL_HEADER_
+
+#include "DeeploySnitchMath.h"
+
+void SnitchiNoNorm_s8_s8(int8_t *data_in, int8_t *data_out, int8_t *weights,
+                         int32_t *bias, uint32_t size, int32_t mul,
+                         int32_t log2D);
+
+#endif // __DEEPLOY_MATH_INONORM_KERNEL_HEADER_

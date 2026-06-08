@@ -1,0 +1,7 @@
+{
+  "project": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/max78000/kws20_32bit",
+  "elf": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/max78000/kws20_32bit/build/max78000.elf",
+  "board": "FTHR_RevA",
+  "openocd_root": "/home/pascal/max78000/ai8x-synthesis/openocd",
+  "maxim_path": null
+}

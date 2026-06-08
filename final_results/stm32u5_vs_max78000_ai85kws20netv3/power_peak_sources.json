@@ -3,5 +3,6 @@
   "u5_v1": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/Experiments/PWR Consumption/U5/ai85kws20netv3_model_v1/online/on_peak_analysis",
   "u5_v2": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/Experiments/PWR Consumption/U5/ai85kws20netv3_model_v2/online/on_peak_analysis",
   "mx_v0": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/Experiments/PWR Consumption/MAX78000/ai85kws20netv3_model_v0/online/on_peak_analysis",
-  "mx_v1": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/Experiments/PWR Consumption/MAX78000/ai85kws20netv3_model_v1/online/on_peak_analysis"
+  "mx_v1": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/Experiments/PWR Consumption/MAX78000/ai85kws20netv3_model_v1/online/on_peak_analysis",
+  "mx_v0_0": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/Experiments/PWR Consumption/MAX78000/ai85kws20netv3_model_v0_0/five_offline_peak_analysis"
 }

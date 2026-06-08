@@ -15,75 +15,81 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827}
 <text x="32.00" y="36.00" class="title" text-anchor="start">MAX78000 v1 vs STM32U5 v1 — Cross-Platform</text>
 <text x="32.00" y="58.00" class="subtitle" text-anchor="start">INT8 variants on both platforms.</text>
 <line x1="705.00" y1="80.00" x2="705.00" y2="542.00" stroke="#334155" stroke-width="1.3"/>
-<line x1="393.00" y1="84.00" x2="393.00" y2="542.00" class="grid"/>
-<text x="393.00" y="74.00" class="tick" text-anchor="middle">-10060%</text>
-<line x1="549.00" y1="84.00" x2="549.00" y2="542.00" class="grid"/>
-<text x="549.00" y="74.00" class="tick" text-anchor="middle">-5030%</text>
-<line x1="705.00" y1="84.00" x2="705.00" y2="542.00" class="grid"/>
-<text x="705.00" y="74.00" class="tick" text-anchor="middle">+0%</text>
-<line x1="861.00" y1="84.00" x2="861.00" y2="542.00" class="grid"/>
-<text x="861.00" y="74.00" class="tick" text-anchor="middle">+5030%</text>
-<line x1="1017.00" y1="84.00" x2="1017.00" y2="542.00" class="grid"/>
-<text x="1017.00" y="74.00" class="tick" text-anchor="middle">+10060%</text>
+<line x1="393.20" y1="84.00" x2="393.20" y2="542.00" class="grid"/>
+<text x="393.20" y="74.00" class="tick" text-anchor="middle">-10k%</text>
+<line x1="471.12" y1="84.00" x2="471.12" y2="542.00" class="grid"/>
+<text x="471.12" y="74.00" class="tick" text-anchor="middle">-1k%</text>
+<line x1="548.77" y1="84.00" x2="548.77" y2="542.00" class="grid"/>
+<text x="548.77" y="74.00" class="tick" text-anchor="middle">-100%</text>
+<line x1="623.83" y1="84.00" x2="623.83" y2="542.00" class="grid"/>
+<text x="623.83" y="74.00" class="tick" text-anchor="middle">-10%</text>
+<line x1="786.17" y1="84.00" x2="786.17" y2="542.00" class="grid"/>
+<text x="786.17" y="74.00" class="tick" text-anchor="middle">+10%</text>
+<line x1="861.23" y1="84.00" x2="861.23" y2="542.00" class="grid"/>
+<text x="861.23" y="74.00" class="tick" text-anchor="middle">+100%</text>
+<line x1="938.88" y1="84.00" x2="938.88" y2="542.00" class="grid"/>
+<text x="938.88" y="74.00" class="tick" text-anchor="middle">+1k%</text>
+<line x1="1016.80" y1="84.00" x2="1016.80" y2="542.00" class="grid"/>
+<text x="1016.80" y="74.00" class="tick" text-anchor="middle">+10k%</text>
 <text x="32.00" y="110.00" class="label" text-anchor="start">CNN latency avg</text>
 <text x="270.00" y="110.00" class="small" text-anchor="end">lower</text>
-<rect x="705.00" y="97.00" width="3.07" height="18.00" rx="3" fill="rgb(234,252,244)" stroke="#ffffff" opacity="1.0"/>
-<text x="716.07" y="111.00" class="label" text-anchor="start">+99.02%</text>
+<rect x="705.00" y="97.00" width="155.90" height="18.00" rx="3" fill="rgb(126,186,178)" stroke="#ffffff" opacity="1.0"/>
+<text x="868.90" y="111.00" class="label" text-anchor="start">+99.02%</text>
 <text x="32.00" y="140.00" class="label" text-anchor="start">Cycles avg</text>
 <text x="270.00" y="140.00" class="small" text-anchor="end">lower</text>
-<rect x="705.00" y="127.00" width="3.09" height="18.00" rx="3" fill="rgb(234,252,244)" stroke="#ffffff" opacity="1.0"/>
-<text x="716.09" y="141.00" class="label" text-anchor="start">+99.76%</text>
+<rect x="705.00" y="127.00" width="156.15" height="18.00" rx="3" fill="rgb(125,185,177)" stroke="#ffffff" opacity="1.0"/>
+<text x="869.15" y="141.00" class="label" text-anchor="start">+99.76%</text>
 <text x="32.00" y="170.00" class="label" text-anchor="start">Throughput</text>
 <text x="270.00" y="170.00" class="small" text-anchor="end">higher</text>
 <rect x="705.00" y="157.00" width="312.00" height="18.00" rx="3" fill="rgb(15,118,110)" stroke="#ffffff" opacity="1.0"/>
-<text x="1025.00" y="171.00" class="label" text-anchor="start">+10060.10%</text>
+<text x="1025.00" y="171.00" class="label" text-anchor="start">+10,060%</text>
 <text x="32.00" y="200.00" class="label" text-anchor="start">End-to-end lower bound</text>
 <text x="270.00" y="200.00" class="small" text-anchor="end">lower</text>
-<rect x="705.00" y="187.00" width="0.45" height="18.00" rx="3" fill="rgb(236,253,245)" stroke="#ffffff" opacity="1.0"/>
-<text x="713.45" y="201.00" class="label" text-anchor="start">+14.37%</text>
+<rect x="705.00" y="187.00" width="92.50" height="18.00" rx="3" fill="rgb(170,213,205)" stroke="#ffffff" opacity="1.0"/>
+<text x="805.50" y="201.00" class="label" text-anchor="start">+14.37%</text>
 <text x="32.00" y="230.00" class="label" text-anchor="start">Text</text>
 <text x="270.00" y="230.00" class="small" text-anchor="end">lower</text>
-<rect x="703.67" y="217.00" width="1.33" height="18.00" rx="3" fill="rgb(254,241,241)" stroke="#ffffff" opacity="1.0"/>
-<text x="695.67" y="231.00" class="label" text-anchor="end">-42.95%</text>
+<rect x="576.93" y="217.00" width="128.07" height="18.00" rx="3" fill="rgb(226,154,154)" stroke="#ffffff" opacity="1.0"/>
+<text x="568.93" y="231.00" class="label" text-anchor="end">-42.95%</text>
 <text x="32.00" y="260.00" class="label" text-anchor="start">Data</text>
 <text x="270.00" y="260.00" class="small" text-anchor="end">lower</text>
-<rect x="705.00" y="247.00" width="2.71" height="18.00" rx="3" fill="rgb(234,252,244)" stroke="#ffffff" opacity="1.0"/>
-<text x="715.71" y="261.00" class="label" text-anchor="start">+87.43%</text>
+<rect x="705.00" y="247.00" width="151.73" height="18.00" rx="3" fill="rgb(129,187,179)" stroke="#ffffff" opacity="1.0"/>
+<text x="864.73" y="261.00" class="label" text-anchor="start">+87.43%</text>
 <text x="32.00" y="290.00" class="label" text-anchor="start">BSS</text>
 <text x="270.00" y="290.00" class="small" text-anchor="end">lower</text>
-<rect x="705.00" y="277.00" width="2.42" height="18.00" rx="3" fill="rgb(234,252,244)" stroke="#ffffff" opacity="1.0"/>
-<text x="715.42" y="291.00" class="label" text-anchor="start">+78.02%</text>
+<rect x="705.00" y="277.00" width="147.93" height="18.00" rx="3" fill="rgb(131,189,181)" stroke="#ffffff" opacity="1.0"/>
+<text x="860.93" y="291.00" class="label" text-anchor="start">+78.02%</text>
 <text x="32.00" y="320.00" class="label" text-anchor="start">Static SRAM</text>
 <text x="270.00" y="320.00" class="small" text-anchor="end">lower</text>
-<rect x="705.00" y="307.00" width="2.45" height="18.00" rx="3" fill="rgb(234,252,244)" stroke="#ffffff" opacity="1.0"/>
-<text x="715.45" y="321.00" class="label" text-anchor="start">+79.07%</text>
+<rect x="705.00" y="307.00" width="148.37" height="18.00" rx="3" fill="rgb(131,189,181)" stroke="#ffffff" opacity="1.0"/>
+<text x="861.37" y="321.00" class="label" text-anchor="start">+79.07%</text>
 <text x="32.00" y="350.00" class="label" text-anchor="start">ELF size</text>
 <text x="270.00" y="350.00" class="small" text-anchor="end">lower</text>
-<rect x="705.00" y="337.00" width="0.13" height="18.00" rx="3" fill="rgb(236,253,245)" stroke="#ffffff" opacity="1.0"/>
-<text x="713.13" y="351.00" class="label" text-anchor="start">+4.35%</text>
+<rect x="705.00" y="337.00" width="56.78" height="18.00" rx="3" fill="rgb(196,228,220)" stroke="#ffffff" opacity="1.0"/>
+<text x="769.78" y="351.00" class="label" text-anchor="start">+4.35%</text>
 <text x="32.00" y="380.00" class="label" text-anchor="start">MAC ops</text>
 <text x="270.00" y="380.00" class="small" text-anchor="end">lower</text>
-<rect x="705.00" y="367.00" width="0.59" height="18.00" rx="3" fill="rgb(236,253,245)" stroke="#ffffff" opacity="1.0"/>
-<text x="713.59" y="381.00" class="label" text-anchor="start">+19.16%</text>
+<rect x="705.00" y="367.00" width="101.68" height="18.00" rx="3" fill="rgb(164,209,201)" stroke="#ffffff" opacity="1.0"/>
+<text x="814.68" y="381.00" class="label" text-anchor="start">+19.16%</text>
 <text x="32.00" y="410.00" class="label" text-anchor="start">MOPS/s</text>
 <text x="270.00" y="410.00" class="small" text-anchor="end">higher</text>
-<rect x="705.00" y="397.00" width="251.63" height="18.00" rx="3" fill="rgb(58,144,136)" stroke="#ffffff" opacity="1.0"/>
-<text x="964.63" y="411.00" class="label" text-anchor="start">+8113.68%</text>
+<rect x="705.00" y="397.00" width="304.72" height="18.00" rx="3" fill="rgb(20,121,113)" stroke="#ffffff" opacity="1.0"/>
+<text x="1017.72" y="411.00" class="label" text-anchor="start">+8,114%</text>
 <text x="32.00" y="440.00" class="label" text-anchor="start">Current</text>
 <text x="270.00" y="440.00" class="small" text-anchor="end">lower</text>
-<rect x="702.60" y="427.00" width="2.40" height="18.00" rx="3" fill="rgb(253,240,240)" stroke="#ffffff" opacity="1.0"/>
-<text x="694.60" y="441.00" class="label" text-anchor="end">-77.24%</text>
+<rect x="557.41" y="427.00" width="147.59" height="18.00" rx="3" fill="rgb(221,141,141)" stroke="#ffffff" opacity="1.0"/>
+<text x="549.41" y="441.00" class="label" text-anchor="end">-77.24%</text>
 <text x="32.00" y="470.00" class="label" text-anchor="start">Power</text>
 <text x="270.00" y="470.00" class="small" text-anchor="end">lower</text>
-<rect x="701.90" y="457.00" width="3.10" height="18.00" rx="3" fill="rgb(253,240,240)" stroke="#ffffff" opacity="1.0"/>
-<text x="693.90" y="471.00" class="label" text-anchor="end">-99.94%</text>
+<rect x="548.79" y="457.00" width="156.21" height="18.00" rx="3" fill="rgb(219,135,135)" stroke="#ffffff" opacity="1.0"/>
+<text x="540.79" y="471.00" class="label" text-anchor="end">-99.94%</text>
 <text x="32.00" y="500.00" class="label" text-anchor="start">Energy/inference</text>
 <text x="270.00" y="500.00" class="small" text-anchor="end">lower</text>
-<rect x="705.00" y="487.00" width="3.04" height="18.00" rx="3" fill="rgb(234,252,244)" stroke="#ffffff" opacity="1.0"/>
-<text x="716.04" y="501.00" class="label" text-anchor="start">+98.03%</text>
+<rect x="705.00" y="487.00" width="155.57" height="18.00" rx="3" fill="rgb(126,186,178)" stroke="#ffffff" opacity="1.0"/>
+<text x="868.57" y="501.00" class="label" text-anchor="start">+98.03%</text>
 <text x="32.00" y="530.00" class="label" text-anchor="start">MAC/J</text>
 <text x="270.00" y="530.00" class="small" text-anchor="end">higher</text>
-<rect x="705.00" y="517.00" width="124.31" height="18.00" rx="3" fill="rgb(148,199,191)" stroke="#ffffff" opacity="1.0"/>
-<text x="837.31" y="531.00" class="label" text-anchor="start">+4008.17%</text>
-<text x="380.00" y="588.00" class="subtitle" text-anchor="start">right of zero = MAX78000 better; left = STM32U5 better</text>
+<rect x="705.00" y="517.00" width="280.85" height="18.00" rx="3" fill="rgb(37,131,123)" stroke="#ffffff" opacity="1.0"/>
+<text x="993.85" y="531.00" class="label" text-anchor="start">+4,008%</text>
+<text x="380.00" y="588.00" class="subtitle" text-anchor="start">right of zero = MAX78000 better; left = STM32U5 better (log₁₀ scale)</text>
 </svg>

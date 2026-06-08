@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="588" viewBox="0 0 1120 588">
+<style>
+text{font-family:Arial,Helvetica,sans-serif;fill:#111827}
+.title{font-size:24px;font-weight:700}
+.subtitle{font-size:13px;fill:#475569}
+.axis{stroke:#94a3b8;stroke-width:1}
+.grid{stroke:#cbd5e1;stroke-width:1;stroke-dasharray:3 4}
+.label{font-size:12px;fill:#334155}
+.small{font-size:10px;fill:#475569}
+.tick{font-size:10px;fill:#64748b}
+.platform_u5{font-size:11px;fill:#1d4ed8;font-style:italic}
+.platform_mx{font-size:11px;fill:#b45309;font-style:italic}
+</style>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"/>
+<text x="32.00" y="36.00" class="title" text-anchor="start">MAX78000 int8 cpu vs STM32U5 v1 — INT8 CPU Comparison</text>
+<text x="32.00" y="58.00" class="subtitle" text-anchor="start">Both INT8 software-only inference; no hardware acceleration on either platform.</text>
+<line x1="705.00" y1="80.00" x2="705.00" y2="512.00" stroke="#334155" stroke-width="1.3"/>
+<line x1="466.34" y1="84.00" x2="466.34" y2="512.00" class="grid"/>
+<text x="466.34" y="74.00" class="tick" text-anchor="middle">-100%</text>
+<line x1="581.00" y1="84.00" x2="581.00" y2="512.00" class="grid"/>
+<text x="581.00" y="74.00" class="tick" text-anchor="middle">-10%</text>
+<line x1="829.00" y1="84.00" x2="829.00" y2="512.00" class="grid"/>
+<text x="829.00" y="74.00" class="tick" text-anchor="middle">+10%</text>
+<line x1="943.66" y1="84.00" x2="943.66" y2="512.00" class="grid"/>
+<text x="943.66" y="74.00" class="tick" text-anchor="middle">+100%</text>
+<text x="32.00" y="110.00" class="label" text-anchor="start">CNN latency avg</text>
+<text x="270.00" y="110.00" class="small" text-anchor="end">lower</text>
+<rect x="393.00" y="97.00" width="312.00" height="18.00" rx="3" fill="rgb(185,28,28)" stroke="#ffffff" opacity="1.0"/>
+<text x="385.00" y="111.00" class="label" text-anchor="end">-416.16%</text>
+<text x="32.00" y="140.00" class="label" text-anchor="start">Cycles avg</text>
+<text x="270.00" y="140.00" class="small" text-anchor="end">lower</text>
+<rect x="491.33" y="127.00" width="213.67" height="18.00" rx="3" fill="rgb(207,95,95)" stroke="#ffffff" opacity="1.0"/>
+<text x="483.33" y="141.00" class="label" text-anchor="end">-61.30%</text>
+<text x="32.00" y="170.00" class="label" text-anchor="start">Throughput</text>
+<text x="270.00" y="170.00" class="small" text-anchor="end">higher</text>
+<rect x="477.36" y="157.00" width="227.64" height="18.00" rx="3" fill="rgb(204,86,86)" stroke="#ffffff" opacity="1.0"/>
+<text x="469.36" y="171.00" class="label" text-anchor="end">-80.63%</text>
+<text x="32.00" y="200.00" class="label" text-anchor="start">Text</text>
+<text x="270.00" y="200.00" class="small" text-anchor="end">lower</text>
+<rect x="493.19" y="187.00" width="211.81" height="18.00" rx="3" fill="rgb(207,97,97)" stroke="#ffffff" opacity="1.0"/>
+<text x="485.19" y="201.00" class="label" text-anchor="end">-59.10%</text>
+<text x="32.00" y="230.00" class="label" text-anchor="start">Data</text>
+<text x="270.00" y="230.00" class="small" text-anchor="end">lower</text>
+<rect x="705.00" y="217.00" width="231.77" height="18.00" rx="3" fill="rgb(72,153,145)" stroke="#ffffff" opacity="1.0"/>
+<text x="944.77" y="231.00" class="label" text-anchor="start">+87.41%</text>
+<text x="32.00" y="260.00" class="label" text-anchor="start">BSS</text>
+<text x="270.00" y="260.00" class="small" text-anchor="end">lower</text>
+<rect x="705.00" y="247.00" width="212.64" height="18.00" rx="3" fill="rgb(85,161,153)" stroke="#ffffff" opacity="1.0"/>
+<text x="925.64" y="261.00" class="label" text-anchor="start">+60.08%</text>
+<text x="32.00" y="290.00" class="label" text-anchor="start">Static SRAM</text>
+<text x="270.00" y="290.00" class="small" text-anchor="end">lower</text>
+<rect x="705.00" y="277.00" width="215.17" height="18.00" rx="3" fill="rgb(84,160,152)" stroke="#ffffff" opacity="1.0"/>
+<text x="928.17" y="291.00" class="label" text-anchor="start">+63.13%</text>
+<text x="32.00" y="320.00" class="label" text-anchor="start">ELF size</text>
+<text x="270.00" y="320.00" class="small" text-anchor="end">lower</text>
+<rect x="705.00" y="307.00" width="168.80" height="18.00" rx="3" fill="rgb(116,180,172)" stroke="#ffffff" opacity="1.0"/>
+<text x="881.80" y="321.00" class="label" text-anchor="start">+25.16%</text>
+<text x="32.00" y="350.00" class="label" text-anchor="start">MAC ops</text>
+<text x="270.00" y="350.00" class="small" text-anchor="end">lower</text>
+<rect x="705.00" y="337.00" width="103.45" height="18.00" rx="3" fill="rgb(163,208,200)" stroke="#ffffff" opacity="1.0"/>
+<text x="816.45" y="351.00" class="label" text-anchor="start">+6.39%</text>
+<text x="32.00" y="380.00" class="label" text-anchor="start">MOPS/s</text>
+<text x="270.00" y="380.00" class="small" text-anchor="end">higher</text>
+<rect x="476.58" y="367.00" width="228.42" height="18.00" rx="3" fill="rgb(203,85,85)" stroke="#ffffff" opacity="1.0"/>
+<text x="468.58" y="381.00" class="label" text-anchor="end">-81.86%</text>
+<text x="32.00" y="410.00" class="label" text-anchor="start">Current</text>
+<text x="270.00" y="410.00" class="small" text-anchor="end">lower</text>
+<rect x="705.00" y="397.00" width="182.77" height="18.00" rx="3" fill="rgb(107,174,166)" stroke="#ffffff" opacity="1.0"/>
+<text x="895.77" y="411.00" class="label" text-anchor="start">+33.28%</text>
+<text x="32.00" y="440.00" class="label" text-anchor="start">Power</text>
+<text x="270.00" y="440.00" class="small" text-anchor="end">lower</text>
+<rect x="705.00" y="427.00" width="167.95" height="18.00" rx="3" fill="rgb(117,180,172)" stroke="#ffffff" opacity="1.0"/>
+<text x="880.95" y="441.00" class="label" text-anchor="start">+24.73%</text>
+<text x="32.00" y="470.00" class="label" text-anchor="start">Energy/inference</text>
+<text x="270.00" y="470.00" class="small" text-anchor="end">lower</text>
+<rect x="411.89" y="457.00" width="293.11" height="18.00" rx="3" fill="rgb(189,41,41)" stroke="#ffffff" opacity="1.0"/>
+<text x="403.89" y="471.00" class="label" text-anchor="end">-288.50%</text>
+<text x="32.00" y="500.00" class="label" text-anchor="start">MAC/J</text>
+<text x="270.00" y="500.00" class="small" text-anchor="end">higher</text>
+<rect x="480.44" y="487.00" width="224.56" height="18.00" rx="3" fill="rgb(204,88,88)" stroke="#ffffff" opacity="1.0"/>
+<text x="472.44" y="501.00" class="label" text-anchor="end">-75.91%</text>
+<text x="380.00" y="558.00" class="subtitle" text-anchor="start">right of zero = MAX78000 better; left = STM32U5 better (log₁₀ scale)</text>
+</svg>

@@ -1,0 +1,20 @@
+{
+  "mode": "offline",
+  "project": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/max78000/kws20_int8_cpu",
+  "elf": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/max78000/kws20_int8_cpu/build/max78000.elf",
+  "port": "/dev/ttyACM0",
+  "baud": 115200,
+  "timeout": 30.0,
+  "clock_mhz": 100.0,
+  "sample_rate": 16000.0,
+  "sample_count": 16384.0,
+  "board": "FTHR_RevA",
+  "variant_name": "int8_cpu",
+  "mac_ops": 8345344.0,
+  "voltage": 3.7,
+  "current_ma": 14.922382541996121,
+  "maxim_path": null,
+  "openocd_root": "/home/pascal/max78000/ai8x-synthesis/openocd",
+  "no_build": true,
+  "no_flash": true
+}

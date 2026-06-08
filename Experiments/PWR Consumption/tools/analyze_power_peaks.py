@@ -531,6 +531,81 @@ def compute_fixed_duration_to_end_metrics(
     return metrics
 
 
+def compute_fixed_duration_from_start_metrics(
+    times_ms,
+    currents_ua,
+    peak_specs,
+    voltage_v,
+    local_baseline_window_ms,
+    local_baseline_guard_ms,
+    transition_start_fraction,
+    transition_end_fraction,
+    transition_settle_ms,
+    transition_smooth_ms,
+    expected_duration_ms,
+    threshold_fraction,
+    plateau_coarse_fraction,
+):
+    """Detect the rising edge (start), then measure exactly expected_duration_ms forward.
+    This correctly handles cases where the end of the power-active period includes
+    overhead (e.g. UART printing) that should be excluded from the measured window."""
+    if expected_duration_ms is None:
+        return compute_plateau_window_metrics(
+            times_ms, currents_ua, peak_specs, threshold_fraction, voltage_v,
+            local_baseline_window_ms, local_baseline_guard_ms,
+            transition_settle_ms, transition_smooth_ms, plateau_coarse_fraction,
+        )
+
+    dt_ms = times_ms[1] - times_ms[0]
+    duration_samples = max(1, int(round(expected_duration_ms / dt_ms)))
+    plateau_metrics = compute_plateau_window_metrics(
+        times_ms, currents_ua, peak_specs, threshold_fraction, voltage_v,
+        local_baseline_window_ms, local_baseline_guard_ms,
+        transition_settle_ms, transition_smooth_ms, plateau_coarse_fraction,
+    )
+    metrics = []
+    for spec, pm in zip(peak_specs, plateau_metrics):
+        peak_number, w0, w1, _ = spec
+        i0 = nearest_index(times_ms, w0)
+        i1 = min(len(times_ms) - 1, nearest_index(times_ms, w1))
+        start_idx = nearest_index(times_ms, pm.start_ms)
+        end_idx = min(i1 - 1, start_idx + duration_samples - 1)
+        if end_idx <= start_idx:
+            end_idx = min(i1 - 1, start_idx + 1)
+
+        event_currents = currents_ua[start_idx:end_idx + 1]
+        baseline_ua = pm.baseline_current_ua
+        mean_current_ua = sum(event_currents) / len(event_currents)
+        mean_excess_ua = sum((v - baseline_ua) for v in event_currents) / len(event_currents)
+        duration_ms = times_ms[end_idx] - times_ms[start_idx] + dt_ms
+        charge_total_uc = sum(v * dt_ms / 1000.0 for v in event_currents)
+        charge_uc = sum((v - baseline_ua) * dt_ms / 1000.0 for v in event_currents)
+        energy_total_uj = None if voltage_v is None else charge_total_uc * voltage_v
+        energy_uj = None if voltage_v is None else charge_uc * voltage_v
+
+        metrics.append(
+            PeakMetrics(
+                peak_number=peak_number,
+                window_start_ms=w0,
+                window_end_ms=w1,
+                peak_time_ms=pm.peak_time_ms,
+                peak_current_ua=pm.peak_current_ua,
+                baseline_current_ua=baseline_ua,
+                threshold_current_ua=pm.threshold_current_ua,
+                start_ms=times_ms[start_idx],
+                end_ms=times_ms[end_idx],
+                duration_ms=duration_ms,
+                mean_current_ua=mean_current_ua,
+                mean_excess_current_ua=mean_excess_ua,
+                charge_total_uc=charge_total_uc,
+                charge_uc=charge_uc,
+                energy_total_uj=energy_total_uj,
+                energy_uj=energy_uj,
+            )
+        )
+    return metrics
+
+
 def compute_peak_metrics(
     times_ms,
     currents_ua,
@@ -587,6 +662,22 @@ def compute_peak_metrics(
             transition_settle_ms,
             transition_smooth_ms,
             expected_duration_ms,
+        )
+    if window_mode == "fixed_duration_from_start":
+        return compute_fixed_duration_from_start_metrics(
+            times_ms,
+            currents_ua,
+            peak_specs,
+            voltage_v,
+            local_baseline_window_ms,
+            local_baseline_guard_ms,
+            transition_start_fraction,
+            transition_end_fraction,
+            transition_settle_ms,
+            transition_smooth_ms,
+            expected_duration_ms,
+            threshold_fraction,
+            plateau_coarse_fraction,
         )
     return compute_positive_peak_metrics(
         times_ms,

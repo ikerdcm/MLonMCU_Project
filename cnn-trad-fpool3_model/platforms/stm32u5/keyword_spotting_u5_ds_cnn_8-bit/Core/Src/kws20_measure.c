@@ -204,4 +204,12 @@ void kws20_measure_run_once(void)
 
     ai_network_destroy(network);
     printf("BENCH,event=done\r\n");
+
+#if KWS20_CFG_POWER_MODE && !KWS20_CFG_POWER_CONTINUOUS
+    /* Post-run: sleep the core forever so the LAST inference returns to the
+     * idle baseline (clean falling edge). Otherwise main()'s while(1)
+     * MX_X_CUBE_AI_Process() spin holds current at the active level and the
+     * 6th spike never falls -> the PPK2 auto-segmenter drops it. */
+    for (;;) { __WFI(); }
+#endif
 }

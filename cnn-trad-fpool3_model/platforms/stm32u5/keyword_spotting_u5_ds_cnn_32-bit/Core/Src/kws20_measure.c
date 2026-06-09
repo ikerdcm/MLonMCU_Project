@@ -14,6 +14,25 @@
 #define KWS20_CFG_MEASURE_RUNS 50
 #endif
 
+#ifndef KWS20_CFG_POWER_MODE
+#define KWS20_CFG_POWER_MODE 0
+#endif
+
+#if KWS20_CFG_POWER_MODE
+/* Low-power wait: sleep the core (WFI) between inferences so each inference is a
+ * visible current spike above a lower idle baseline. SysTick (1 ms) still wakes
+ * it, so HAL_GetTick timing remains valid. */
+static void kws20_idle_ms(uint32_t ms)
+{
+    uint32_t end = HAL_GetTick() + ms;
+#if KWS20_CFG_POWER_SLEEP_IDLE
+    while ((int32_t)(end - HAL_GetTick()) > 0) { __WFI(); }
+#else
+    while ((int32_t)(end - HAL_GetTick()) > 0) { /* busy-wait (active idle) */ }
+#endif
+}
+#endif
+
 #define DS_CNN_AUDIO_WINDOW_SAMPLES 16000u
 #define DS_CNN_SAMPLE_RATE_HZ       16000u
 
@@ -104,7 +123,23 @@ void kws20_measure_run_once(void)
            49u,
            10u);
 
-    for (uint32_t run = 0; run < KWS20_CFG_MEASURE_RUNS; run++) {
+#if KWS20_CFG_POWER_MODE
+    printf("BENCH,event=power_mode,runs=%u,period_ms=%u,settle_ms=%u\r\n",
+           (unsigned)KWS20_CFG_POWER_RUNS, (unsigned)KWS20_CFG_POWER_PERIOD_MS,
+           (unsigned)KWS20_CFG_POWER_SETTLE_MS);
+    /* WFI-sleep the settle (not HAL_Delay busy-wait) so settle sits at the idle
+     * baseline. Otherwise the busy-wait runs at the same current as inference. */
+    kws20_idle_ms(KWS20_CFG_POWER_SETTLE_MS);
+    const uint32_t kws20_total_runs = KWS20_CFG_POWER_RUNS;
+#else
+    const uint32_t kws20_total_runs = KWS20_CFG_MEASURE_RUNS;
+#endif
+
+#if KWS20_CFG_POWER_MODE && KWS20_CFG_POWER_CONTINUOUS
+    for (uint32_t run = 0; ; run++) {
+#else
+    for (uint32_t run = 0; run < kws20_total_runs; run++) {
+#endif
         ai_i32 batch;
         uint32_t start_cycles;
         uint32_t end_cycles;
@@ -136,8 +171,27 @@ void kws20_measure_run_once(void)
                (unsigned long)time_us,
                (unsigned long)cycles,
                pred);
+
+#if KWS20_CFG_POWER_MODE
+        {
+            uint32_t infer_ms = time_us / 1000U;
+            kws20_idle_ms((KWS20_CFG_POWER_PERIOD_MS > infer_ms)
+                          ? (KWS20_CFG_POWER_PERIOD_MS - infer_ms) : 0U);
+        }
+#endif
     }
 
     ai_network_destroy(network);
     printf("BENCH,event=done\r\n");
+
+#if KWS20_CFG_POWER_MODE && !KWS20_CFG_POWER_CONTINUOUS
+    /* Post-run idle, matching the between-inference behaviour:
+     *  - sleep mode: WFI so the last inference returns to the idle baseline;
+     *  - run mode: busy-spin so the core never sleeps. */
+#if KWS20_CFG_POWER_SLEEP_IDLE
+    for (;;) { __WFI(); }
+#else
+    for (;;) { /* run mode: keep the CPU active */ }
+#endif
+#endif
 }

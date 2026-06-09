@@ -10,7 +10,9 @@ Automated power capture with the Nordic **Power Profiler Kit II** over USB
   Ampere mode for measuring (matches the colleague's ~22 mA U5 numbers).
 - **⚠️ The nRF Connect / Power Profiler app must be CLOSED** — only one program can
   own the PPK2 at a time, or `ppk2-api` gets `Resource busy`.
-- **venv** (recreate if `/tmp/ppk2venv` is gone): `python3 -m venv venv && venv/bin/pip install -r requirements.txt`
+- **Deps:** just use the normal `python3` — it already has numpy/pyserial/matplotlib;
+  the only extra is `pip install ppk2-api`. (No venv needed. `requirements.txt` lists
+  them all if you ever want one.)
 
 ## Scripts
 - `run_power_test.py <dur_s> <label>` — power DUT, capture, **auto-detect inference

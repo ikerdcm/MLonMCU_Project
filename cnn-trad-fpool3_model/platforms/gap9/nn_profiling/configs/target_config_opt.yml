@@ -1,0 +1,46 @@
+# Target execution config — GVSOC simulator
+#
+# Usage: python nn_profiler.py model.onnx --scheme sq8 --target-config configs/target_gvsoc.yml
+
+# model_settings() parameters — controls AutoTiler code generation and memory layout
+settings:
+  l1_size: 128000
+  l2_size: 1350000
+  l3_size: 8000000
+
+  fc_freq: 370000000
+  cl_freq: 370000000
+
+  cluster_stack_size: 2048
+  cluster_slave_stack_size: 512
+
+  # Performance monitoring (set to true to get per-node cycle counts)
+  graph_monitor_cycles: true
+  graph_produce_node_names: true
+  graph_produce_operinfos: true
+
+  # Tensor dump level (bitmask: 1=const, 2=input, 4=output, 7=all)
+  graph_dump_tensor: 0
+
+  # Memory locations
+  l3_ram_device: AT_MEM_L3_DEFAULTRAM
+  l3_flash_device: AT_MEM_L3_MRAMFLASH
+
+  privileged_l3_flash_device: AT_MEM_L3_MRAMFLASH
+  privileged_l3_flash_size: 1500000
+
+  graph_const_exec_from_flash: true
+  graph_l1_promotion: 2
+  graph_size_opt: 2
+
+# Extra keyword arguments passed directly to G.execute_on_target()
+# execute_on_target_kwargs:
+#   at_loglevel: 1
+#   pmsis_os: freertos
+#   do_clean: true
+#   gpio_meas: false
+
+# Extra settings for input/output nodes (e.g. to specify quantization parameters)
+io_settings:
+  input_1:
+    allocate: 0

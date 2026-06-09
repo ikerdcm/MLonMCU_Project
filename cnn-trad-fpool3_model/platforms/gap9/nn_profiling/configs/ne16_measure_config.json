@@ -1,0 +1,13 @@
+{
+  "runs": 20,
+  "clock_hz": 240000000.0,
+  "mac_ops": 3832460.0,
+  "variant_name": "ds_cnn_l_ne16_int8",
+  "model_path": "/app/models/ds_cnn_l.onnx",
+  "left_input_npz": "/app/nn_profiling/data/dscnnl_left_input.npz",
+  "quant_config": "configs/quant_ne16.yml",
+  "target_config": "configs/target_config_opt.yml",
+  "build_dir": "/tmp/nn_profiler_ne16",
+  "measurements_root": "/app/gap9_measurements",
+  "board": "GAP9_EVK"
+}

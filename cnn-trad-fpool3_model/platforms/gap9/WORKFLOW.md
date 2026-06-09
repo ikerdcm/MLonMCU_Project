@@ -258,7 +258,72 @@ python tools/kws20_measure_gap9_ds_cnn_int8.py
 
 ---
 
-## Schritt 6b — Offline-Messung INT8: 20 Inferences auf dem Board (im Container)
+## NNTool / NE16 — Docker-Container starten
+
+Separater Container für NNTool/GAPflow (kein Deeploy nötig):
+
+```bash
+cd /home/pascal/Documents/ml_on_mcu/MLonMCU_Project/cnn-trad-fpool3_model/platforms/gap9
+
+docker run -it --rm --privileged --network host \
+  -v "$PWD/nn_profiling":/app/nn_profiling \
+  -v "$PWD/../../models":/app/models \
+  -v "$PWD/measurements":/app/gap9_measurements \
+  -v /dev/bus/usb:/dev/bus/usb \
+  ghcr.io/pulp-platform/deeploy-gap9:latest \
+  /bin/bash -lc '
+    source /app/install/gap9-sdk/.gap9-venv/bin/activate
+    source /app/install/gap9-sdk/configs/gap9_evk_audio.sh
+    export GAP_SDK_VERSION=dev
+    sed -i "s/^ftdi_vid_pid.*/ftdi_vid_pid 0x0403 0x6011/" \
+      /app/install/gap9-sdk/utils/openocd_tools/tcl/gapuino_ftdi.cfg
+    pip install ipython --quiet
+    exec /bin/zsh
+  '
+```
+
+### NE16 Profiling (einmaliger Run, Board)
+
+```bash
+# Im Container
+cd /app/nn_profiling
+python nn_profiler.py /app/models/ds_cnn_l.onnx \
+  --config configs/quant_ne16.yml \
+  --target-config configs/target_config_opt.yml \
+  --platform board \
+  --exp-label ne16_int8_board
+```
+
+Erwartetes Ergebnis:
+```
+Total: 188,646 cycles  (~0.79 ms @ 240 MHz)
+MACs/cycle: 20.32
+```
+
+### NE16 Offline-Messung: 20 Inferences + "Left"-Verifikation
+
+```bash
+# Im Container (nach erstem board-Run damit Binary gecacht ist)
+cd /app/nn_profiling
+python ne16_measure.py --config configs/ne16_measure_config.json
+```
+
+Optionale Argumente:
+```bash
+python ne16_measure.py --runs 5     # Quick-Test
+python ne16_measure.py --runs 20    # default: 20
+```
+
+**Wichtig**: Erster Run kompiliert (~5-6 Min). Folge-Runs nutzen den Build in `/tmp/nn_profiler_ne16/`
+(make sieht keine Änderungen → nur gapy läuft → schnell).
+
+Ergebnis wird gespeichert unter:
+`/app/gap9_measurements/offline_measurements/ds_cnn_l_ne16_int8_offline_YYYYMMDD_HHMMSS/`
+→ Host: `platforms/gap9/measurements/offline_measurements/`
+
+---
+
+## Schritt 6b — Offline-Messung INT8 SIMD: 20 Inferences auf dem Board (im Container)
 
 Nach dem ersten erfolgreichen `board`-Run für INT8 läuft das Binary bereits. Jetzt 20 Inferences messen:
 
@@ -303,3 +368,38 @@ Ergebnis wird gespeichert unter:
 | Fehler | 0 / 12 ✓ |
 | Predicted class | 2 = "Left" (logit 109) ✓ |
 | **Speedup vs Float32** | **~6.7×** |
+
+---
+
+## Metriken DS-CNN-L auf GAP9 (INT8 NE16 Accelerator, Board)
+
+Gemessen mit NNTool/GAPflow, `use_ne16: true`, SQ8-Quantisierung.
+Experiment: `nn_profiling/experiments/ds_cnn_l_quant_ne16_ne16_int8_board_20260609_172228/`
+
+| Metrik | Wert |
+|--------|------|
+| Cycles (Board) | 188,646 |
+| Cycles (GVSoC) | 184,055 (2.5% Abweichung) |
+| Latenz @ 240 MHz | ~0.79 ms |
+| MACs | 3,832,460 |
+| MACs/Cycle | 20.32 |
+| L1 Speicher (Shared) | 20.0 KB / 119 KB (16.8%) |
+| L2 / eMRAM (Gewichte) | 36.4 KB |
+| **Speedup vs Float32** | **~146×** |
+| **Speedup vs INT8 SIMD** | **~21.8×** |
+
+### Layer-Breakdown (NE16, Board)
+
+| Layer | Cycles | Ops | Ops/Cycle |
+|-------|--------|-----|-----------|
+| Conv2D (initial) | 12,950 | 320,000 | 24.71 |
+| DW Conv × 6 | ~17,700 | 72,000 | ~4.1 |
+| PW Conv × 6 | ~10,700 | 512,000 | ~47–48 |
+| AvgPool | 2,843 | 7,680 | 2.70 |
+| Dense | 1,252 | 768 | 0.61 |
+| Softmax | 1,445 | 12 | 0.01 |
+| **Total** | **188,646** | **3,832,460** | **20.32** |
+
+> Bottleneck: Depthwise Convolutions (DW) laufen mit nur ~4 Ops/Cycle auf NE16 —
+> NE16 ist für pointwise/dense Convolutions optimiert; DW sind weniger effizient.
+> Pointwise Convs erreichen ~48 Ops/Cycle (sehr gut).

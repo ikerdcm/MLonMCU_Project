@@ -1,0 +1,12 @@
+# Quantization config — FP16 (no calibration needed)
+#
+# Usage: python nn_profiler.py model.onnx --config configs/quant_fp16.yml
+
+adjust_order: true
+
+fusions:
+  - scaled_match_group
+
+graph_options:
+  scheme: FLOAT
+  float_type: float16

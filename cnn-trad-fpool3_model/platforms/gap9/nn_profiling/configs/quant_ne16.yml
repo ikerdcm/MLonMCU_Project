@@ -1,0 +1,24 @@
+# Quantization config — NE16 (hardware accelerator, GAP9)
+#
+# Usage: python nn_profiler.py model.onnx --config configs/quant_ne16.yml --calib-dir ./calib/
+
+adjust_order: true
+
+fusions:
+  - scaled_match_group
+
+graph_options:
+  scheme: SQ8
+  use_ne16: true
+  quantized_dimension: channel
+  narrow_weights: true
+  force_input_size: 8
+  force_output_size: 8
+  weight_bits: 8
+
+# Example per-node override: use 4-bit weights on heavy layers
+# node_options:
+#   backbone_conv2d_0:
+#     weight_bits: 4
+#   backbone_conv2d_1:
+#     weight_bits: 4

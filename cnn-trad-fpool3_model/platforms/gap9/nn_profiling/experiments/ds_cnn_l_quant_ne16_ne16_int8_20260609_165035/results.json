@@ -1,0 +1,179 @@
+{
+  "performance": [
+    [
+      "S4_functional_1_conv2d_1_BiasAdd_fusion",
+      14603,
+      320000,
+      21.913305,
+      8.34972837289887,
+      7.934041454999864
+    ],
+    [
+      "S7_Conv__100_fusion",
+      17100,
+      72000,
+      4.210526,
+      1.8786888839022455,
+      9.290701149113037
+    ],
+    [
+      "S10_functional_1_conv2d_1_2_BiasAdd_fusion",
+      11149,
+      512000,
+      45.923401,
+      13.35956539663819,
+      6.057428486050365
+    ],
+    [
+      "S13_Conv__118_fusion",
+      16348,
+      72000,
+      4.404209,
+      1.8786888839022455,
+      8.882127624894732
+    ],
+    [
+      "S16_functional_1_conv2d_2_1_BiasAdd_fusion",
+      10554,
+      512000,
+      48.512413,
+      13.35956539663819,
+      5.734155551329765
+    ],
+    [
+      "S19_Conv__136_fusion",
+      16378,
+      72000,
+      4.396141,
+      1.8786888839022455,
+      8.898427100594931
+    ],
+    [
+      "S22_functional_1_conv2d_3_1_BiasAdd_fusion",
+      10534,
+      512000,
+      48.604519,
+      13.35956539663819,
+      5.7232892341963
+    ],
+    [
+      "S25_Conv__154_fusion",
+      16402,
+      72000,
+      4.389709,
+      1.8786888839022455,
+      8.911466681155089
+    ],
+    [
+      "S28_functional_1_conv2d_4_1_BiasAdd_fusion",
+      10541,
+      512000,
+      48.572243,
+      13.35956539663819,
+      5.727092445193013
+    ],
+    [
+      "S31_Conv__172_fusion",
+      16353,
+      72000,
+      4.402862,
+      1.8786888839022455,
+      8.8848442041781
+    ],
+    [
+      "S34_functional_1_conv2d_5_1_BiasAdd_fusion",
+      10523,
+      512000,
+      48.655327,
+      13.35956539663819,
+      5.717312759772894
+    ],
+    [
+      "S37_Conv__190_fusion",
+      16285,
+      72000,
+      4.421247,
+      1.8786888839022455,
+      8.847898725924317
+    ],
+    [
+      "S40_functional_1_conv2d_6_1_BiasAdd_fusion",
+      10545,
+      512000,
+      48.553818,
+      13.35956539663819,
+      5.729265708619706
+    ],
+    [
+      "S41_functional_1_average_pooling2d_1_AvgPool",
+      3201,
+      7680,
+      2.39925,
+      0.20039348094957285,
+      1.7391540572111597
+    ],
+    [
+      "S45_functional_1_dense_1_MatMul",
+      1719,
+      768,
+      0.446771,
+      0.020039348094957287,
+      0.9339599576213632
+    ],
+    [
+      "S47_functional_1_dense_1_Softmax",
+      1820,
+      12,
+      0.006593,
+      0.0003131148139837076,
+      0.9888348591453642
+    ],
+    [
+      "IO_Wait",
+      0,
+      0,
+      NaN,
+      0.0,
+      0.0
+    ],
+    [
+      "Total",
+      184055,
+      3832460,
+      20.822362880660673,
+      100,
+      100
+    ]
+  ],
+  "memory": {
+    "Graph Max Alive Size": 20500,
+    "Shared L1": {
+      "given": 121856,
+      "used": 20500
+    },
+    "L2": {
+      "given": 1350000,
+      "used": 37248
+    },
+    "L2 Static Memory Usage": 37248,
+    "L2 Dyn Memory Usage": 0,
+    "DefaultRam": {
+      "given": 8000000,
+      "used": 0
+    },
+    "eMRAM": {
+      "given": 67108864,
+      "used": 37248
+    },
+    "Total Flash Used at runtime": 37248,
+    "L3 Memory bandwidth for 1 graph run": 0,
+    "L2 Memory bandwidth for 1 graph run": 245914,
+    "Sum of all Kernels arguments size": 245914,
+    "Tiling Bandwith overhead": 1.0,
+    "Sum of baseline bandwidth": 245370,
+    "Percentage of baseline BW for L2": 100.222,
+    "Percentage of baseline BW for L3": 0.0,
+    "Sum of all Kernels operations": 3832460,
+    "Total amount of flash coefficients": 37248
+  }
+}

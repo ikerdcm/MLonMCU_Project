@@ -1,0 +1,11 @@
+adjust_order: true
+fusions:
+- scaled_match_group
+graph_options:
+  scheme: SQ8
+  use_ne16: true
+  quantized_dimension: channel
+  narrow_weights: true
+  force_input_size: 8
+  force_output_size: 8
+  weight_bits: 8

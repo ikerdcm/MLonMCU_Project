@@ -14,6 +14,44 @@
 #define KWS20_CFG_MEASURE_RUNS 50
 #endif
 
+#ifndef KWS20_CFG_POWER_MODE
+#define KWS20_CFG_POWER_MODE 0
+#endif
+
+#if KWS20_CFG_POWER_MODE
+static void kws20_marker_gpio_init(void)
+{
+    GPIO_InitTypeDef g = {0};
+    KWS20_CFG_MARKER_CLK_ENABLE();
+    g.Pin   = KWS20_CFG_MARKER_PIN;
+    g.Mode  = GPIO_MODE_OUTPUT_PP;
+    g.Pull  = GPIO_NOPULL;
+    g.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(KWS20_CFG_MARKER_PORT, &g);
+    HAL_GPIO_WritePin(KWS20_CFG_MARKER_PORT, KWS20_CFG_MARKER_PIN, GPIO_PIN_RESET);
+}
+#define KWS20_MARKER_HIGH() HAL_GPIO_WritePin(KWS20_CFG_MARKER_PORT, KWS20_CFG_MARKER_PIN, GPIO_PIN_SET)
+#define KWS20_MARKER_LOW()  HAL_GPIO_WritePin(KWS20_CFG_MARKER_PORT, KWS20_CFG_MARKER_PIN, GPIO_PIN_RESET)
+#else
+#define KWS20_MARKER_HIGH() ((void)0)
+#define KWS20_MARKER_LOW()  ((void)0)
+#endif
+
+#if KWS20_CFG_POWER_MODE
+/* Low-power wait: sleep the core (WFI) between inferences so each inference is a
+ * visible current spike above a lower idle baseline. SysTick (1 ms) still wakes
+ * it, so HAL_GetTick timing remains valid. */
+static void kws20_idle_ms(uint32_t ms)
+{
+    uint32_t end = HAL_GetTick() + ms;
+#if KWS20_CFG_POWER_SLEEP_IDLE
+    while ((int32_t)(end - HAL_GetTick()) > 0) { __WFI(); }
+#else
+    while ((int32_t)(end - HAL_GetTick()) > 0) { /* busy-wait (active idle) */ }
+#endif
+}
+#endif
+
 #define DS_CNN_AUDIO_WINDOW_SAMPLES 16000u
 #define DS_CNN_SAMPLE_RATE_HZ       16000u
 
@@ -104,7 +142,23 @@ void kws20_measure_run_once(void)
            49u,
            10u);
 
-    for (uint32_t run = 0; run < KWS20_CFG_MEASURE_RUNS; run++) {
+#if KWS20_CFG_POWER_MODE
+    kws20_marker_gpio_init();
+    printf("BENCH,event=power_mode,runs=%u,period_ms=%u,settle_ms=%u\r\n",
+           (unsigned)KWS20_CFG_POWER_RUNS, (unsigned)KWS20_CFG_POWER_PERIOD_MS,
+           (unsigned)KWS20_CFG_POWER_SETTLE_MS);
+    HAL_Delay(KWS20_CFG_POWER_SETTLE_MS);
+    const uint32_t kws20_total_runs = KWS20_CFG_POWER_RUNS;
+#else
+    const uint32_t kws20_total_runs = KWS20_CFG_MEASURE_RUNS;
+#endif
+    (void)kws20_total_runs;
+
+#if KWS20_CFG_POWER_MODE && KWS20_CFG_POWER_CONTINUOUS
+    for (uint32_t run = 0; ; run++) {
+#else
+    for (uint32_t run = 0; run < kws20_total_runs; run++) {
+#endif
         ai_i32 batch;
         uint32_t start_cycles;
         uint32_t end_cycles;
@@ -113,10 +167,12 @@ void kws20_measure_run_once(void)
         int pred;
 
         memset(measure_output_data, 0, sizeof(measure_output_data));
+        KWS20_MARKER_HIGH();
         DWT->CYCCNT = 0;
         start_cycles = DWT->CYCCNT;
         batch = ai_network_run(network, ai_input, ai_output);
         end_cycles = DWT->CYCCNT;
+        KWS20_MARKER_LOW();
 
         if (batch != 1) {
             ai_error run_err = ai_network_get_error(network);
@@ -136,6 +192,14 @@ void kws20_measure_run_once(void)
                (unsigned long)time_us,
                (unsigned long)cycles,
                pred);
+
+#if KWS20_CFG_POWER_MODE
+        {
+            uint32_t infer_ms = time_us / 1000U;
+            kws20_idle_ms((KWS20_CFG_POWER_PERIOD_MS > infer_ms)
+                          ? (KWS20_CFG_POWER_PERIOD_MS - infer_ms) : 0U);
+        }
+#endif
     }
 
     ai_network_destroy(network);

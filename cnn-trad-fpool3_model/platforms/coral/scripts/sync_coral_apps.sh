@@ -23,7 +23,7 @@ cp "$SRC/CMakeLists.txt" "$DST/CMakeLists.txt"
 echo "  CMakeLists.txt"
 
 # Sync each app directory (source files only, no build artifacts)
-for APP in kws_coral kws_live kws_bench single_inference; do
+for APP in kws_coral kws_live kws_bench single_inference common; do
     if [[ -d "$SRC/$APP" ]]; then
         mkdir -p "$DST/$APP"
         rsync -a --include="*.cc" --include="*.c" --include="*.h" \

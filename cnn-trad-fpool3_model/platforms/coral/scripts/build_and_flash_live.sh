@@ -19,17 +19,37 @@ if [[ ! -f "$VENV_PYTHON" ]]; then
     exit 1
 fi
 
+# --- Ensure build/ is configured for THIS worktree ---
+# A CMakeCache.txt created in another checkout (e.g. a sibling git worktree)
+# cannot be reused and makes cmake abort; detect that and (re)configure.
+if [[ -d "$CORALMICRO_ROOT" ]]; then
+    CORALMICRO_ROOT="$(cd "$CORALMICRO_ROOT" && pwd)"
+fi
+if [[ ! -f "$BUILD_DIR/CMakeCache.txt" ]] || \
+   ! grep -qF "CMAKE_HOME_DIRECTORY:INTERNAL=$CORALMICRO_ROOT" "$BUILD_DIR/CMakeCache.txt"; then
+    echo "=== Configure (build/ missing or from another worktree) ==="
+    rm -rf "$BUILD_DIR"
+    cmake -S "$CORALMICRO_ROOT" -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release
+    echo ""
+fi
+
+JOBS="$( (command -v nproc >/dev/null && nproc) || sysctl -n hw.ncpu 2>/dev/null || echo 4)"
+
 echo "=== Build kws_live ==="
-cmake --build "$BUILD_DIR" -j"$(nproc)" --target kws_live
+# flashtool.py needs two infra artifacts besides the app: elf_loader
+# (apps/elf_loader/image.srec) and flashloader (libs/nxp/flashloader/image.srec).
+# Build them alongside the app so a fresh build/ has everything the flasher needs.
+cmake --build "$BUILD_DIR" -j"$JOBS" --target elf_loader flashloader kws_live
 echo ""
 
 echo "=== Flash kws_live to Coral Dev Board Micro ==="
+DYLD_LIBRARY_PATH=/opt/homebrew/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH} \
 "$VENV_PYTHON" "$CORALMICRO_ROOT/scripts/flashtool.py" \
     --build_dir "$BUILD_DIR" \
-    --app kws_live
+    --elf_path "$BUILD_DIR/kws_apps/kws_live/kws_live"
 echo ""
-echo "Flash complete. Connect serial terminal:"
-echo "  screen /dev/ttyACM0 115200"
+echo "Flash complete. Connect serial terminal (must assert DTR — screen/cat won't show output):"
+echo "  $VENV_PYTHON -m serial.tools.miniterm \$(ls /dev/cu.usbmodem* 2>/dev/null | head -1) 115200"
 echo ""
 echo "Speak a keyword (left, right, yes, no, go, stop, up, down, on, off)."
 echo "Output every 500 ms. Confident detections are marked with >>>."

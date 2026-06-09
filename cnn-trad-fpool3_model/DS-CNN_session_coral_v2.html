@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Coral §7 — Session Summary</title>
+<style>
+  body{font-family:system-ui,sans-serif;max-width:900px;margin:2rem auto;padding:0 1rem;line-height:1.5;color:#222}
+  h1{color:#1a1a2e;border-bottom:3px solid #e63946;padding-bottom:.4rem}
+  h2{color:#457b9d;margin-top:2rem}
+  table{border-collapse:collapse;width:100%;margin:.8rem 0}
+  th{background:#1d3557;color:#fff;padding:.5rem .8rem;text-align:left}
+  td{padding:.45rem .8rem;border-bottom:1px solid #ddd;vertical-align:top}
+  tr:nth-child(even)td{background:#f1faee}
+  .good{color:#2d6a4f;font-weight:bold}
+  .bad{color:#c1121f;font-weight:bold}
+  .warn{color:#e07a00;font-weight:bold}
+  code{background:#f0f0f0;padding:.1rem .3rem;border-radius:3px;font-size:.9em}
+  pre{background:#1d3557;color:#a8dadc;padding:1rem;border-radius:6px;overflow-x:auto;font-size:.85em}
+  .box{border-left:4px solid #457b9d;background:#edf6ff;padding:.6rem 1rem;margin:.8rem 0;border-radius:0 6px 6px 0}
+  .bug{border-left-color:#c1121f;background:#fff0f0}
+  .fix{border-left-color:#2d6a4f;background:#f0fff4}
+</style>
+</head>
+<body>
+
+<h1>Coral §7.1 + §7.2 — What Changed</h1>
+<p><em>Session date: 2026-06-03 · Branch: DS-CNN_Optimization_Iker</em></p>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>1 — Root Bug Discovered</h2>
+
+<div class="box bug">
+  <strong>The deployed <code>ds_cnn_l_static_edgetpu.tflite</code> was actually a 4-block model, not 6-block.</strong><br>
+  <code>convert_static_int8.py</code> was loading <code>training/trained_models/kws_ref_model</code>
+  (the MLCommons 4-block DS-CNN, ~2.6M MACs) instead of the 6-block DS-CNN-L (~3.94M MACs).
+  It also defaulted to <em>random calibration</em> data.
+</div>
+
+<table>
+  <tr><th>File</th><th>Bytes</th><th>Tensors</th><th>Shapes</th><th>Blocks</th><th>Calibration</th></tr>
+  <tr><td><code>ds_cnn_l_static.tflite</code> <span class="bad">(v1, wrong)</span></td><td>48 160</td><td>33</td><td>static</td><td class="bad">4</td><td class="bad">random</td></tr>
+  <tr><td><code>ds_cnn_l_static_v2.tflite</code> <span class="good">(v2, fixed)</span></td><td>75 424</td><td>45</td><td>static</td><td class="good">6</td><td class="good">MFCC real</td></tr>
+  <tr><td><code>ds_cnn_l.tflite</code> (original source)</td><td>73 560</td><td>52</td><td class="bad">dynamic</td><td class="good">6</td><td class="good">MFCC real</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>2 — Accuracy Results</h2>
+
+<table>
+  <tr><th>Model</th><th>Architecture</th><th>INT8 Test Accuracy</th><th>Notes</th></tr>
+  <tr><td><code>kws_ref_model.tflite</code></td><td>4-block DS-CNN</td><td><strong>91.7 %</strong> (4482/4890)</td><td>Baseline — what was deployed</td></tr>
+  <tr><td><code>ds_cnn_l_static_v2.tflite</code></td><td>6-block DS-CNN-L</td><td class="good"><strong>92.0 %</strong> (4497/4890)</td><td>+0.3 % gain; real MFCC calibration</td></tr>
+  <tr><td>Float32 (no quantization)</td><td>6-block DS-CNN-L</td><td>92.7 %</td><td>Quantization cost: −0.7 %</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>3 — EdgeTPU Compilation</h2>
+
+<table>
+  <tr><th></th><th>v1 (4-block, old)</th><th>v2 (6-block, new)</th></tr>
+  <tr><td>Input size</td><td>47 KB</td><td>74 KB</td></tr>
+  <tr><td>Output size</td><td>121 KB</td><td>145 KB</td></tr>
+  <tr><td>Total ops</td><td>12</td><td>16</td></tr>
+  <tr><td>Ops on Edge TPU</td><td class="good">12 / 12</td><td class="good">16 / 16</td></tr>
+  <tr><td>Ops on CPU</td><td class="good">0</td><td class="good">0</td></tr>
+  <tr><td>On-chip memory</td><td>46.0 KB</td><td>62.0 KB</td></tr>
+</table>
+
+<div class="box fix">
+  v2 compiled on macOS M4 via Docker (linux/amd64 Rosetta emulation) — no Linux machine needed.
+  <code>compile_edgetpu_v2.sh</code> falls back to Docker automatically when <code>edgetpu_compiler</code> is not installed natively.
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>4 — Files Created / Modified</h2>
+
+<table>
+  <tr><th>File</th><th>Status</th><th>Purpose</th></tr>
+  <tr>
+    <td><code>platforms/coral/scripts/convert_static_int8_v2.py</code></td>
+    <td class="good">NEW</td>
+    <td>Fixed conversion pipeline. Two modes: <em>patch</em> (byte-patch <code>ds_cnn_l.tflite</code>) and <em>requantize</em> (<code>--saved_model + --data_dir</code> for full MFCC calibration). Correct 6-block source.</td>
+  </tr>
+  <tr>
+    <td><code>platforms/coral/scripts/compile_edgetpu_v2.sh</code></td>
+    <td class="good">NEW</td>
+    <td>Compiles <code>ds_cnn_l_static_v2.tflite</code>. Detects OS — uses native <code>edgetpu_compiler</code> on Linux, falls back to Docker on macOS automatically.</td>
+  </tr>
+  <tr>
+    <td><code>platforms/coral/scripts/restore_ds_cnn_l_float.py</code></td>
+    <td class="good">NEW</td>
+    <td>Reconstructs the 6-block float Keras model (not in repo). Transfers blocks 1–4 from <code>kws_ref_model</code> by name, initialises blocks 5–6 from block 4. Saves as <code>ds_cnn_l_restored.keras</code>.</td>
+  </tr>
+  <tr>
+    <td><code>training/train_ds_cnn_l.py</code></td>
+    <td class="good">NEW</td>
+    <td>Clean fine-tune script starting from <code>ds_cnn_l_restored.keras</code>. Replaces the broken <code>finetune.py</code> weight transfer (which only copied 6/82 variables → NaN weights). Includes ModelCheckpoint + ReduceLROnPlateau.</td>
+  </tr>
+  <tr>
+    <td><code>platforms/coral/scripts/convert_static_int8.py</code></td>
+    <td class="warn">FIXED</td>
+    <td>Path bug: <code>../../training</code> → <code>../../../training</code> (was pointing to non-existent <code>platforms/training/</code>; MFCC calibration path was silently broken).</td>
+  </tr>
+  <tr>
+    <td><code>platforms/coral/scripts/convert_static_int8_v2.py</code></td>
+    <td class="warn">FIXED</td>
+    <td>Same path bug fix. Also fixed <code>@do_not_convert + @tf.function</code> decorator stacking (was stripping tf.function → AttributeError). Uses <code>tf.keras.Input(batch_shape=...)</code> + <code>from_keras_model</code> for Keras 3 / TF 2.21 compatibility.</td>
+  </tr>
+  <tr>
+    <td><code>platforms/dashboard/mcu_stream/app.py</code></td>
+    <td class="warn">FIXED</td>
+    <td>Dashboard crash: <code>EvalWindow.tables</code> AttributeError when opening Evaluate with no MCU connected. Moved list initialisation before the early-return guard.</td>
+  </tr>
+  <tr>
+    <td><code>models/ds_cnn_l_static_v2.tflite</code></td>
+    <td class="good">NEW</td>
+    <td>6-block INT8 static TFLite — final conversion from trained+calibrated model.</td>
+  </tr>
+  <tr>
+    <td><code>platforms/coral/model/ds_cnn_l_static_v2_edgetpu.tflite</code></td>
+    <td class="good">NEW</td>
+    <td>6-block compiled EdgeTPU model — 16 ops, all on TPU.</td>
+  </tr>
+  <tr>
+    <td><code>training/trained_models/ds_cnn_l_restored.keras</code></td>
+    <td class="good">NEW</td>
+    <td>Reconstructed 6-block float model (proper backbone init, placeholder blocks 5–6).</td>
+  </tr>
+  <tr>
+    <td><code>training/trained_models/ds_cnn_l_finetuned.keras</code></td>
+    <td class="good">NEW</td>
+    <td>Final fine-tuned 6-block model: 95.98 % val accuracy, 92.7 % test (float32).</td>
+  </tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>5 — Pipeline: Before vs After</h2>
+
+<table>
+  <tr><th>Step</th><th class="bad">Before (broken)</th><th class="good">After (§7 fixed)</th></tr>
+  <tr><td>Source model</td><td>kws_ref_model SavedModel (4-block)</td><td>ds_cnn_l_finetuned.keras (6-block, fine-tuned)</td></tr>
+  <tr><td>Calibration</td><td>Random noise (200 samples)</td><td>Real MFCC features from speech_commands (quant_cal_idxs.txt)</td></tr>
+  <tr><td>Shape fix</td><td>from_concrete_functions w/ static trace</td><td>tf.keras.Input(batch_shape=(1,49,10,1)) → from_keras_model</td></tr>
+  <tr><td>Compile</td><td>Linux edgetpu_compiler only</td><td>Native or Docker fallback (macOS M4 compatible)</td></tr>
+  <tr><td>INT8 accuracy</td><td>91.7 % (4-block)</td><td>92.0 % (6-block)</td></tr>
+</table>
+
+<pre>
+# Full §7 pipeline (run from cnn-trad-fpool3_model/training):
+
+~/.pyenv/versions/3.11.8/bin/python3 ../platforms/coral/scripts/restore_ds_cnn_l_float.py
+~/.pyenv/versions/3.11.8/bin/python3 train_ds_cnn_l.py --data_dir ~/data --epochs 36
+
+~/.pyenv/versions/3.11.8/bin/python3 ../platforms/coral/scripts/convert_static_int8_v2.py \
+    --saved_model trained_models/ds_cnn_l_finetuned.keras --data_dir ~/data
+
+../platforms/coral/scripts/compile_edgetpu_v2.sh   # Docker auto-fallback on macOS
+
+~/.pyenv/versions/3.11.8/bin/python3 eval_quantized_model.py \
+    --tfl_file_name ../models/ds_cnn_l_static_v2.tflite --target_set test --data_dir ~/data
+</pre>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>6 — Remaining (§7.3, §7.4)</h2>
+<ul>
+  <li><strong>§7.3</strong>: Measure Coral power / energy (only platform still missing it). Drop results into <code>platforms/coral/measurements/</code>.</li>
+  <li><strong>§7.4</strong> (optional): Compile and measure the 4-block DS-CNN (<code>kws_ref_model</code>) as a separate smaller/faster Coral variant (~1.2 ms). Use the v2 pipeline — it already works for 4-block. Add as a new version, don't replace v2.</li>
+</ul>
+
+</body>
+</html>

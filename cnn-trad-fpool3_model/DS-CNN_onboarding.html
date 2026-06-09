@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DS-CNN (cnn-trad-fpool3) — Project Onboarding &amp; Next Steps</title>
+<style>
+  :root{
+    --bg:#0f1419; --panel:#1a2029; --panel2:#222a35; --ink:#e6edf3; --muted:#9aa7b4;
+    --line:#2d3742; --accent:#4ea1ff; --green:#3fb950; --amber:#d29922; --red:#f85149;
+    --violet:#a371f7; --teal:#39c5cf;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 24px 80px;}
+  h1{font-size:30px;margin:0 0 4px;letter-spacing:-.4px}
+  h2{font-size:22px;margin:42px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line);}
+  h3{font-size:17px;margin:26px 0 8px;color:#fff}
+  .sub{color:var(--muted);margin:0 0 8px}
+  p{margin:10px 0}
+  code{background:#0b0f14;border:1px solid var(--line);border-radius:5px;padding:1px 6px;
+       font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#cdd9e5}
+  pre{background:#0b0f14;border:1px solid var(--line);border-radius:8px;padding:14px 16px;
+      overflow:auto;font:12.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#cdd9e5}
+  pre .c{color:#6b7785}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:#fff;font-weight:600}
+  tr:nth-child(even) td{background:#161c24}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin:14px 0}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid{grid-template-columns:1fr}}
+  .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.3px;
+       padding:2px 8px;border-radius:20px;text-transform:uppercase}
+  .t-green{background:rgba(63,185,80,.15);color:#56d364;border:1px solid rgba(63,185,80,.4)}
+  .t-amber{background:rgba(210,153,34,.15);color:#e3b341;border:1px solid rgba(210,153,34,.4)}
+  .t-red{background:rgba(248,81,73,.15);color:#ff7b72;border:1px solid rgba(248,81,73,.4)}
+  .t-blue{background:rgba(78,161,255,.15);color:#79c0ff;border:1px solid rgba(78,161,255,.4)}
+  .t-violet{background:rgba(163,113,247,.15);color:#c4a5fb;border:1px solid rgba(163,113,247,.4)}
+  .pill{font-weight:700}
+  .muted{color:var(--muted)}
+  .big{font-size:18px}
+  ul{margin:8px 0 8px 0;padding-left:22px}
+  li{margin:5px 0}
+  .lead{background:linear-gradient(180deg,#1c2530,#161c24);border:1px solid var(--line);
+        border-left:4px solid var(--accent);border-radius:10px;padding:18px 22px;margin:18px 0}
+  .num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;
+       border-radius:50%;background:var(--accent);color:#04121f;font-weight:800;font-size:14px;margin-right:8px}
+  .step{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px dashed var(--line)}
+  .step:last-child{border-bottom:none}
+  .step .body{flex:1}
+  .kbd{font-size:12px}
+  .winner{color:#56d364;font-weight:700}
+  .legend span{margin-right:16px;font-size:12.5px}
+  .footnote{font-size:12.5px;color:var(--muted);margin-top:6px}
+  a{color:var(--accent)}
+  .toc{columns:2;column-gap:30px;font-size:13.5px}
+  @media(max-width:760px){.toc{columns:1}}
+  .toc a{display:block;padding:3px 0;text-decoration:none}
+  .barwrap{background:#0b0f14;border-radius:5px;height:14px;overflow:hidden;border:1px solid var(--line);min-width:120px}
+  .bar{height:100%}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>DS-CNN&nbsp;/&nbsp;<code>cnn-trad-fpool3_model</code> — Onboarding &amp; Next Steps</h1>
+  <p class="sub">Keyword spotting (KWS), DS-CNN-L deployed on 3 MCUs · prepared 2026-06-02 · branch <code>DS-CNN_Optimization_Iker</code></p>
+
+  <div class="lead">
+    <p class="big" style="margin-top:0"><strong>TL;DR</strong></p>
+    <ul>
+      <li><strong>The folder is well-organized and consistent</strong> across the three platforms — each has the same <code>tools/ · measurements/ · project</code> shape. You do <em>not</em> need a big normalization pass. Spend ~30&nbsp;min on a few small fixes (mostly Coral-local) and move on.</li>
+      <li><strong>"Are the others maxed out?"</strong> — <span class="winner">MAX78000: yes</span> (0.16&nbsp;ms is fixed by its CNN hardware accelerator). <span style="color:#ff7b72;font-weight:700">STM32U5: NO</span> — it actually has the <em>most</em> headroom (64&nbsp;ms → realistic ~20–30&nbsp;ms). <span style="color:#e3b341;font-weight:700">Coral: nearly</span> — already 1.8&nbsp;ms; the only real lever is a smaller model (→ ~1.2&nbsp;ms).</li>
+      <li><strong>Best Coral wins for low effort:</strong> (1) re-quantize with <em>real</em> calibration data — the conversion script currently defaults to <em>random</em> calibration, which costs accuracy for free; (2) fix the conversion pipeline so it's reproducible; (3) add a Coral power/energy measurement (it's the only board with no energy number). A 4-block model for ~1.2&nbsp;ms is the bigger-effort latency play.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <strong>Contents</strong>
+    <div class="toc">
+      <a href="#repo">1 · Repository structure</a>
+      <a href="#model">2 · The model (DS-CNN-L)</a>
+      <a href="#pipeline">3 · Train → quantize → deploy pipeline</a>
+      <a href="#platforms">4 · Platforms &amp; measured performance</a>
+      <a href="#maxed">5 · Is each board maxed out?</a>
+      <a href="#norm">6 · Normalization: what's worth it</a>
+      <a href="#coral">7 · Coral deep-dive &amp; improvements</a>
+      <a href="#next">8 · Recommended next steps</a>
+      <a href="#ref">9 · Quick reference (commands &amp; files)</a>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="repo">1 · Repository structure</h2>
+  <p>The DS-CNN work lives in <code>cnn-trad-fpool3_model/</code>, which has three clean top-level parts: the model artifacts, the training pipeline, and the per-platform deployments.</p>
+<pre>cnn-trad-fpool3_model/
+├── <span style="color:#79c0ff">models/</span>                         <span class="c"># exported artifacts (the "handoff" between training and platforms)</span>
+│   ├── ds_cnn_l.onnx                <span class="c"># 6-block DS-CNN-L, ONNX (→ STM32 X-CUBE-AI)</span>
+│   ├── ds_cnn_l.tflite             <span class="c"># INT8, dynamic batch (=-1)</span>
+│   └── ds_cnn_l_static.tflite      <span class="c"># INT8, fixed [1,49,10,1]  → required by Edge TPU</span>
+│
+├── <span style="color:#79c0ff">training/</span>                       <span class="c"># Keras pipeline (MLCommons-tiny KWS lineage)</span>
+│   ├── keras_model.py              <span class="c"># model defs: ds_cnn, ds_cnn_l, fc4, td_cnn</span>
+│   ├── get_dataset.py / kws_util.py<span class="c"># Speech Commands v2 loader + MFCC + CLI flags</span>
+│   ├── train.py / finetune.py      <span class="c"># train from scratch / warm-start from ref ckpt</span>
+│   ├── quantize.py                 <span class="c"># Keras → INT8 TFLite (representative dataset)</span>
+│   ├── eval_quantized_model.py     <span class="c"># accuracy of a .tflite on val/test  ← USE THIS</span>
+│   ├── make_bin_files.py / mk_cal_set.py / quant_cal_idxs.txt
+│   └── trained_models/kws_ref_model/   <span class="c"># MLCommons reference checkpoint (SavedModel)</span>
+│
+└── <span style="color:#79c0ff">platforms/</span>
+    ├── flash_all.sh                <span class="c"># flash every board at once (used by dashboard)</span>
+    ├── <span style="color:#c4a5fb">coral/</span>       <span class="c"># Coral Dev Board Micro — Edge TPU (INT8)</span>
+    ├── <span style="color:#c4a5fb">max78000/</span>    <span class="c"># MAX78000 — on-chip CNN accelerator (INT8) + float32 baseline</span>
+    ├── <span style="color:#c4a5fb">stm32u5/</span>     <span class="c"># STM32U5 — Cortex-M33 + X-CUBE-AI/CMSIS-NN (INT8) + float32 baseline</span>
+    └── <span style="color:#c4a5fb">dashboard/</span>   <span class="c"># PyQt GUI: flash all boards + live multi-MCU monitor</span></pre>
+
+  <p>Every platform folder follows the <strong>same pattern</strong>, which is the nice part:</p>
+  <ul>
+    <li>a vendor project (the actual firmware) — often <strong>two variants</strong>: a <code>32-bit</code>/float baseline and an optimized <code>8-bit</code>/INT8 version, so you can show the optimization delta;</li>
+    <li><code>tools/</code> — measurement driver (<code>kws_measure_*.py</code>), JSON configs, and <code>run_{offline,live}_measurement.sh</code>;</li>
+    <li><code>measurements/</code> — captured runs as <code>summary.json</code> + <code>*.csv</code>.</li>
+  </ul>
+  <p class="footnote">Context: the repo root also holds a second model family (<code>ai85kws20netv3_model/</code>), a top-level <code>Experiments/</code> results store with its own schema, plus <code>Papers/</code> and the project brief. Those are outside your DS-CNN scope but explain why measurement results appear in more than one place (see §6).</p>
+
+  <!-- ============================================================ -->
+  <h2 id="model">2 · The model — DS-CNN-L</h2>
+  <div class="grid">
+    <div class="card">
+      <h3 style="margin-top:0">Architecture</h3>
+      <ul>
+        <li>Depthwise-Separable CNN, defined in <code>keras_model.py → 'ds_cnn_l'</code></li>
+        <li><strong>64 filters · 6 DS blocks</strong> (the reference <code>ds_cnn</code> is 4 blocks)</li>
+        <li>Conv(10×4, s2) + BN + ReLU → 6×[ DW-Conv(3×3) + BN + ReLU + Conv(1×1) + BN + ReLU ] → AvgPool → Dense(12)</li>
+        <li>The first 4 blocks share shapes with the MLCommons <code>kws_ref_model</code>, so <code>finetune.py</code> warm-starts from it.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">I/O &amp; size</h3>
+      <ul>
+        <li><strong>Input:</strong> <code>[1, 49, 10, 1]</code> — 49 time frames × 10 MFCC bins (1&nbsp;s @ 16&nbsp;kHz, 30/20&nbsp;ms window/stride)</li>
+        <li><strong>Output:</strong> 12 classes — down, go, left, no, off, on, right, stop, up, yes, silence, unknown</li>
+        <li><strong>Compute:</strong> 3,937,717 MACs / inference</li>
+        <li><strong>INT8 weights:</strong> ~35–48&nbsp;KB (STM32 reports <code>weights=34.7&nbsp;KB, activations=18.3&nbsp;KB</code>)</li>
+      </ul>
+    </div>
+  </div>
+  <p class="footnote">⚠️ The Coral README claims "~460&nbsp;KB params (INT8)" — that looks like a typo (off by 10×); the real INT8 model is ~35–48&nbsp;KB. Worth correcting when you touch that file.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="pipeline">3 · Train → quantize → deploy pipeline</h2>
+<pre>Speech Commands v2
+      │  get_dataset.py (MFCC)
+      ▼
+ Keras DS-CNN-L  ──train.py / finetune.py──►  trained_models/  (SavedModel)
+      │
+      ├─ quantize.py ───────────────────────►  models/ds_cnn_l.tflite      (INT8, dynamic batch)
+      │                                         models/ds_cnn_l.onnx        → <b>STM32U5</b> (X-CUBE-AI)
+      │
+      └─ coral/scripts/convert_static_int8.py►  models/ds_cnn_l_static.tflite (INT8, fixed shape)
+                  │  compile_edgetpu.sh
+                  ▼
+            coral/model/ds_cnn_l_static_edgetpu.tflite  → <b>Coral</b> (Edge TPU)
+
+ MAX78000: trained via the ai8x / MAX78000 synthesizer toolchain (separate flow)</pre>
+  <p>Accuracy of any <code>.tflite</code> is checked with <code>training/eval_quantized_model.py --tfl_file_name … --target_set test</code>. This is your before/after yardstick for any model change.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="platforms">4 · Platforms &amp; measured performance</h2>
+  <p>All numbers below are pulled from the committed <code>measurements/*/summary.json</code> (offline, 50-run batches, same DS-CNN-L, INT8 unless noted). "CNN latency" = pure inference, excluding the 1&nbsp;s audio window.</p>
+
+  <table>
+    <thead><tr>
+      <th>Platform / variant</th><th>CNN latency</th><th>Throughput</th>
+      <th>Energy / inf.</th><th>SRAM (data+bss)</th><th>How it runs</th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>MAX78000</strong> · INT8 + CNN accel <span class="tag t-green">fastest</span></td>
+        <td class="winner">0.16 ms</td><td>6,227 / s</td><td class="winner">23 µJ</td><td>7.0 KB</td>
+        <td>Dedicated on-chip CNN accelerator</td>
+      </tr>
+      <tr>
+        <td>MAX78000 · float32 (CPU baseline)</td>
+        <td>2,048 ms</td><td>0.49 / s</td><td>101,600 µJ</td><td>68.5 KB</td>
+        <td>Arm core, no accelerator (shows accel value)</td>
+      </tr>
+      <tr>
+        <td><strong>Coral</strong> Dev Board Micro · INT8</td>
+        <td>1.81 ms <span class="muted">(p95 1.87)</span></td><td>553 / s</td>
+        <td><span class="t-red tag">not measured</span></td><td>arena in SDRAM</td>
+        <td>Edge TPU, all 12 ops mapped, 2.18 GOPS</td>
+      </tr>
+      <tr>
+        <td><strong>STM32U5</strong> · INT8 (X-CUBE-AI) <span class="tag t-amber">most headroom</span></td>
+        <td>64.06 ms</td><td>~15.6 / s</td><td>4,610 µJ</td><td>70.3 KB</td>
+        <td>Cortex-M33 @160 MHz + CMSIS-NN</td>
+      </tr>
+      <tr>
+        <td>STM32U5 · float32 (baseline)</td>
+        <td>224.5 ms</td><td>~4.5 / s</td><td>16,159 µJ</td><td>94.5 KB</td>
+        <td>Cortex-M33, no quantization</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="legend"><strong>Latency, log-ish view (INT8 variants):</strong></p>
+  <table style="font-size:13px">
+    <tr><td style="width:130px">MAX78000</td><td><div class="barwrap"><div class="bar" style="width:2px;background:var(--green)"></div></div></td><td style="width:90px">0.16 ms</td></tr>
+    <tr><td>Coral</td><td><div class="barwrap"><div class="bar" style="width:18px;background:var(--teal)"></div></div></td><td>1.81 ms</td></tr>
+    <tr><td>STM32U5</td><td><div class="barwrap"><div class="bar" style="width:100%;background:var(--amber)"></div></div></td><td>64.06 ms</td></tr>
+  </table>
+  <p class="footnote">Two things to note: (1) MAX78000 is ~200× more energy-efficient per inference than STM32U5 because it finishes 400× sooner; (2) Coral has the cleanest compute story but is the one board with <em>no energy number captured yet</em>.</p>
+
+  <h3>The dashboard ties it together</h3>
+  <p><code>platforms/dashboard/</code> is a PyQt app that flashes all three boards (<code>flash_all.sh</code>) and shows live inference from up to 3 MCUs side-by-side over USB serial @115200. It auto-detects which board is on which port by debug-probe VID/PID and normalizes the two serial formats (the <code>BENCH,event=…</code> line and Coral's <code>&gt;&gt;&gt; left (73%) …</code> line) in <code>mcu_stream/protocol.py</code>. This is the live demo surface for the project — and is exactly what your uncommitted changes touch right now.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="maxed">5 · Is each board "maxed out"?</h2>
+  <p>Your assumption was that the non-Coral boards are already at their max. That's <strong>half right</strong> — here's the honest per-board verdict and the actual levers (matches the optimization table you have):</p>
+
+  <div class="card">
+    <p><span class="tag t-green">MAX78000 — effectively maxed</span></p>
+    <p style="margin:8px 0 0">0.16&nbsp;ms is set by the <strong>fixed CNN-accelerator pipeline</strong>, not by code you can tune. INT4 isn't supported on the path used; compiler <code>-O3</code> only touches wrapper code; even a smaller model barely changes accelerator timing. <strong>No meaningful optimization remains</strong> — leave it. (Only theoretical lever: clock/voltage scaling for energy, not latency.)</p>
+  </div>
+
+  <div class="card">
+    <p><span class="tag t-amber">STM32U5 — NOT maxed; the biggest opportunity</span></p>
+    <p style="margin:8px 0 0">This is a CPU/CMSIS-NN workload, so software changes move the needle a lot. From 224&nbsp;ms (float) it's already at 64&nbsp;ms (INT8). Remaining levers: <strong>INT4 weight compression</strong> (X-CUBE-AI <code>--compression 4bit</code>, ~2× fewer memory reads), <strong>latency-optimized codegen</strong>, compiler <code>-Os/-O3</code>, and a <strong>smaller model</strong> (4 blocks / 32 filters). Realistic target ≈ <strong>20–30&nbsp;ms</strong>. If the project cares about absolute latency/energy, this is where the hours pay off — but it's outside your Coral focus.</p>
+  </div>
+
+  <div class="card">
+    <p><span class="tag t-violet">Coral — nearly maxed for latency, but real wins elsewhere</span></p>
+    <p style="margin:8px 0 0">All 12 ops already map to the Edge TPU (0 CPU fallback), and 1.8&nbsp;ms is tiny. Edge TPU is INT8-only (no INT4), and host-side compiler flags don't help. So the <em>only</em> latency lever is a <strong>smaller model → ~1.2&nbsp;ms</strong> (−33%). BUT the more valuable Coral work is <strong>accuracy</strong> (fix calibration), <strong>reproducibility</strong>, and <strong>energy measurement</strong> — see §7.</p>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="norm">6 · Normalization — what's actually worth it</h2>
+  <p>You asked whether to normalize first. <strong>Recommendation: do the 4 quick Coral-local fixes (~30 min), skip the rest.</strong> The structure is already consistent enough; a big reorg would burn your limited time for little gain.</p>
+
+  <h3>Worth doing now (small, Coral-local)</h3>
+  <table>
+    <thead><tr><th>Issue</th><th>Why it matters</th><th>Fix</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Dead <code>coral/app/</code> folder (old single-app layout) vs live <code>coral/apps/</code> (4 apps)</td>
+        <td>README still documents <code>app/</code>; confusing for the next person</td>
+        <td>Delete <code>app/</code>; it's superseded by <code>apps/{kws_coral,kws_live,kws_bench,single_inference}</code></td>
+      </tr>
+      <tr>
+        <td>Stale <code>coral/README.md</code> (your branch already tweaks it)</td>
+        <td>Steps reference <code>app/</code>, wrong step order, "~460 KB" typo</td>
+        <td>Update to <code>apps/</code> layout, fix size figure</td>
+      </tr>
+      <tr>
+        <td><code>ds_cnn_test_input_left_int8.h</code> duplicated in 4 apps</td>
+        <td>3 copies identical, 1 differs — drift risk</td>
+        <td>Move to one shared <code>coral/apps/common/</code> header</td>
+      </tr>
+      <tr>
+        <td><code>kws_coral/model_data.cc</code> (762&nbsp;KB C array) appears unused</td>
+        <td>The app actually loads from filesystem (<code>LfsReadFile("/models/…")</code>), so the embedded array is dead weight</td>
+        <td>Confirm &amp; delete, or commit to one embedding strategy across apps</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Skip unless you get spare time (bigger, low ROI)</h3>
+  <ul>
+    <li><strong>Measurement sprawl.</strong> Results live in 3+ places with 2 naming schemes: <code>platforms/&lt;p&gt;/measurements/</code>, a second <code>measurements/</code> inside some project subdirs, and the top-level <code>Experiments/</code> store — some folders named <code>baseline/quantized</code>, others timestamped <code>kws20_metrics_2026…</code>. Unifying these would be nice but is a half-day with no functional payoff.</li>
+    <li><strong>Absolute paths in configs.</strong> Captured <code>summary.json</code> files embed a teammate's <code>/home/pascal/…</code> paths. Harmless (they're outputs), but if you re-run measurements, make sure the <em>configs</em> use relative paths so runs are portable.</li>
+    <li>Verbose project dir names (<code>keyword_spotting_max78000_ds_cnn_8-bit_with-acc</code>) — cosmetic only.</li>
+  </ul>
+
+  <!-- ============================================================ -->
+  <h2 id="coral">7 · Coral deep-dive &amp; improvement opportunities</h2>
+  <p>Ranked by <strong>value ÷ effort</strong>. The first two are nearly free and the most defensible "improvements" you can show.</p>
+
+  <div class="step">
+    <div><span class="num">1</span></div>
+    <div class="body">
+      <h3 style="margin:0">Re-quantize with REAL calibration data <span class="tag t-green">low effort · accuracy win</span></h3>
+      <p><code>convert_static_int8.py</code> falls back to <strong>random Gaussian calibration</strong> unless you pass <code>--data_dir</code>. Random calibration picks poor INT8 ranges → avoidable accuracy loss on the deployed Edge-TPU model. Re-run with the real Speech Commands set, then re-compile:</p>
+<pre>python3 scripts/convert_static_int8.py --data_dir ~/data/speech_commands_v002
+./scripts/compile_edgetpu.sh ../../models/ds_cnn_l_static.tflite</pre>
+      <p>Measure accuracy before/after with <code>eval_quantized_model.py</code>. Zero architecture change, pure quality gain.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div><span class="num">2</span></div>
+    <div class="body">
+      <h3 style="margin:0">Make the Coral pipeline reproducible <span class="tag t-blue">correctness</span></h3>
+      <p>Mismatch to resolve: <code>convert_static_int8.py</code> reads <code>trained_models/kws_ref_model</code> — that's the <strong>4-block reference</strong> (~2.6M MACs) — but the <em>deployed</em> <code>ds_cnn_l_static_edgetpu.tflite</code> measures <strong>3.94M MACs (6-block DS-CNN-L)</strong>. So the script in the repo does not reproduce the shipped model. Pin the script to the actual 6-block SavedModel (or document which checkpoint was really used) so anyone can regenerate the Coral model from scratch.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div><span class="num">3</span></div>
+    <div class="body">
+      <h3 style="margin:0">Measure Coral power/energy <span class="tag t-blue">fills a gap</span></h3>
+      <p>Energy/inference is the project's main cross-board comparison metric, and Coral's <code>summary.json</code> is the only one with <strong>no <code>energy_estimate</code></strong>. Capture board power during the bench run so Coral is comparable to MAX78000 (23&nbsp;µJ) and STM32U5 (4,610&nbsp;µJ) on the same axis. Likely your single highest-value deliverable for "improving Coral".</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div><span class="num">4</span></div>
+    <div class="body">
+      <h3 style="margin:0">Smaller model → ~1.2 ms <span class="tag t-amber">higher effort · the latency lever</span></h3>
+      <p>Train/finetune a 4-block (or 32-filter) DS-CNN, quantize with real data, recompile for Edge TPU (fewer ops → less TPU time). Expect ~1.8&nbsp;ms → ~1.2&nbsp;ms and lower energy, at a small accuracy cost. <em>Reality check:</em> 1.8&nbsp;ms is already invisible next to the 1&nbsp;s audio window — so frame this as an <strong>energy/headroom</strong> win, not user-perceived latency.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div><span class="num">5</span></div>
+    <div class="body">
+      <h3 style="margin:0">Tune the live path (MFCC + stride) <span class="tag t-violet">live UX</span></h3>
+      <p>In <code>apps/kws_live/kws_live.cc</code> the Edge TPU inference (~1.8&nbsp;ms) is dwarfed by the CPU MFCC compute and the <strong>500&nbsp;ms inference stride</strong>. The firmware already prints <code>mfcc=… us infer=… us</code> — use that to decide whether to shorten the stride or move MFCC tables to OCRAM (both <code>_ocram</code> and <code>_sdram</code> table variants already exist). This improves <em>responsiveness</em>, which is what's actually felt in the live demo.</p>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="next">8 · Recommended next steps (time-boxed)</h2>
+  <div class="card">
+    <p style="margin-top:0"><strong>If you have ~half a day</strong> and want defensible Coral improvements:</p>
+    <ol>
+      <li><span class="pill">~30 min</span> — The 4 Coral-local cleanups from §6 (delete <code>app/</code>, dedupe header, fix README). Optional but makes the rest cleaner.</li>
+      <li><span class="pill">~1 h</span> — <strong>§7.1 + §7.2</strong>: re-quantize with real calibration data and pin the conversion source. Run <code>eval_quantized_model.py</code> to capture the accuracy delta. <em>(Best effort/reward.)</em></li>
+      <li><span class="pill">~1–2 h</span> — <strong>§7.3</strong>: capture Coral power/energy so all three boards are comparable. Drop the result into <code>coral/measurements/</code>.</li>
+      <li><span class="pill">optional, ~half day</span> — <strong>§7.4</strong>: build a 4-block variant for the ~1.2&nbsp;ms / lower-energy data point.</li>
+    </ol>
+    <p style="margin-bottom:0" class="muted">Leave MAX78000 alone (maxed). Only touch STM32U5 if the project pivots to "lowest latency wins" — that's where the big absolute gains are, but it's outside the Coral scope you described.</p>
+  </div>
+  <p class="footnote">Before any of this, decide whether to commit/stash your current uncommitted dashboard + <code>kws_live.cc</code> changes so the working tree is clean for the Coral model work.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="ref">9 · Quick reference</h2>
+  <h3>Key commands</h3>
+<pre><span class="c"># Evaluate a quantized model's accuracy (your before/after yardstick)</span>
+cd training &amp;&amp; python3 eval_quantized_model.py \
+    --tfl_file_name ../models/ds_cnn_l_static.tflite --target_set test
+
+<span class="c"># Re-build the Coral static INT8 model WITH real calibration, then compile</span>
+cd platforms/coral
+python3 scripts/convert_static_int8.py --data_dir ~/data/speech_commands_v002
+./scripts/compile_edgetpu.sh ../../models/ds_cnn_l_static.tflite   <span class="c"># needs Docker</span>
+
+<span class="c"># Build + flash a Coral app (live / offline)</span>
+./scripts/build_and_flash_live.sh        <span class="c"># mic → MFCC → Edge TPU → serial</span>
+./scripts/build_and_flash_bench.sh       <span class="c"># 50-run offline benchmark</span>
+
+<span class="c"># Measure (writes summary.json + csv)</span>
+./tools/run_offline_measurement.sh
+./tools/run_live_measurement.sh
+
+<span class="c"># The multi-board dashboard (flash all + live monitor)</span>
+cd platforms/dashboard &amp;&amp; ./run_dashboard.sh</pre>
+
+  <h3>Files you'll touch most</h3>
+  <table>
+    <thead><tr><th>File</th><th>Role</th></tr></thead>
+    <tbody>
+      <tr><td><code>training/keras_model.py</code></td><td>Model architectures — edit here for a smaller (4-block/32-filter) variant</td></tr>
+      <tr><td><code>training/eval_quantized_model.py</code></td><td>Accuracy of any <code>.tflite</code> — your A/B yardstick</td></tr>
+      <tr><td><code>platforms/coral/scripts/convert_static_int8.py</code></td><td>Keras → static INT8 TFLite (calibration lives here)</td></tr>
+      <tr><td><code>platforms/coral/scripts/compile_edgetpu.sh</code></td><td>Static TFLite → Edge TPU model</td></tr>
+      <tr><td><code>platforms/coral/apps/kws_live/kws_live.cc</code></td><td>Live mic→MFCC→TPU loop (currently uncommitted edits)</td></tr>
+      <tr><td><code>platforms/coral/tools/kws_measure_coral.py</code></td><td>Coral measurement driver (add energy capture here)</td></tr>
+      <tr><td><code>platforms/dashboard/mcu_stream/protocol.py</code></td><td>Serial-line parsing &amp; label normalization across boards</td></tr>
+    </tbody>
+  </table>
+
+  <p class="footnote" style="margin-top:30px">Generated for project onboarding · DS-CNN (<code>cnn-trad-fpool3_model</code>) · all performance figures sourced from committed <code>measurements/*/summary.json</code>.</p>
+
+</div>
+</body>
+</html>

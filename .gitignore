@@ -322,3 +322,9 @@ ai85kws20netv3_model/platforms/stm32u5/u5_keyword_spotting_pruned_quantized/.set
 ai85kws20netv3_model/platforms/stm32u5/u5_keyword_spotting_pruned_quantized/.settings/stm32cubeide.project.prefs
 ai85kws20netv3_model/platforms/stm32u5/u5_keyword_spotting_pruned_quantized/Drivers/STM32U5xx_HAL_Driver/LICENSE.md
 ai85kws20netv3_model/platforms/stm32u5/u5_keyword_spotting_pruned_quantized/Drivers/STM32U5xx_HAL_Driver/LICENSE.txt
+
+# X-CUBE-AI / stedgeai scratch
+cnn-trad-fpool3_model/st_ai_ws/
+cnn-trad-fpool3_model/st_ai_output/
+st_ai_ws/
+st_ai_output/

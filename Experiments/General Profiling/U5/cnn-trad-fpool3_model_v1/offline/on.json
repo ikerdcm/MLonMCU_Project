@@ -1,0 +1,106 @@
+{
+  "timestamp": "2026-05-16T20:24:45.006152",
+  "mode": "offline",
+  "config": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/cnn-trad-fpool3_model/platforms/stm32u5/keyword_spotting_u5_ds_cnn_v1/tools/kws20_measure_u5_ds_cnn_v1_config.json",
+  "project": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/cnn-trad-fpool3_model/platforms/stm32u5/keyword_spotting_u5_ds_cnn_v1",
+  "port": "/dev/ttyACM0",
+  "baud": 115200,
+  "elf": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/cnn-trad-fpool3_model/platforms/stm32u5/keyword_spotting_u5_ds_cnn_v1/Debug/keyword_spotting_u5_ds_cnn_v1.elf",
+  "elf_size_bytes": 1998272,
+  "memory": {
+    "text_bytes": 108337,
+    "data_bytes": 8632,
+    "bss_bytes": 63368,
+    "dec_bytes": 180337,
+    "hex": "2c071"
+  },
+  "static_sram_usage": {
+    "static_sram_bytes": 72000,
+    "static_sram_kib": 70.3125,
+    "data_bytes": 8632,
+    "bss_bytes": 63368
+  },
+  "counts": {
+    "num_uart_events": 83,
+    "num_inference_events": 50,
+    "done_seen": true
+  },
+  "model_info": {
+    "event": "model_info",
+    "mode": "offline",
+    "hclk_hz": "160000000",
+    "input_elems": "490",
+    "input_bytes": "490",
+    "output_elems": "12",
+    "output_bytes": "12",
+    "activations_bytes": "18252",
+    "weights_bytes": "34736",
+    "sample_rate_hz": "16000",
+    "full_window_samples": "16000",
+    "runs": "50"
+  },
+  "sensor_acquisition": {
+    "sample_rate_hz": 16000.0,
+    "sample_count": 16000.0,
+    "audio_window_s": 1.0,
+    "audio_window_ms": 1000.0,
+    "fw_reported": {
+      "event": "acquisition",
+      "mode": "offline",
+      "sample_rate_hz": "16000",
+      "sample_count": "16000",
+      "audio_window_ms": "1000",
+      "feature_frames": "49",
+      "feature_bins": "10"
+    }
+  },
+  "cnn_latency_us": {
+    "count": 50,
+    "min": 64056.0,
+    "max": 64063.0,
+    "avg": 64057.74,
+    "median": 64058.0,
+    "std": 1.5227526096526913,
+    "p95": 64061.0
+  },
+  "cycles": {
+    "count": 50,
+    "min": 10248991.0,
+    "max": 10250096.0,
+    "avg": 10249293.08,
+    "median": 10249312.0,
+    "std": 238.52829721319978,
+    "p95": 10249853.0
+  },
+  "uart_transmission_time_estimate_s": {
+    "count": 83,
+    "min": 0.0,
+    "max": 0.01875,
+    "avg": 0.005320239290495309,
+    "median": 0.00703125,
+    "std": 0.0030711509252771855,
+    "p95": 0.00703125
+  },
+  "cnn_latency_ms_avg": 64.05774,
+  "inferences_per_second_from_cnn_time": 15.610916026697163,
+  "estimated_end_to_end_lower_bound_ms": 1064.05774,
+  "cycles_estimate": {
+    "clock_mhz": 160.0,
+    "cycles_per_inference_avg": 10249238.399999999,
+    "mac_ops_per_cycle": 0.3841960588993618
+  },
+  "compute_estimate": {
+    "mac_ops_per_inference": 3937717.0,
+    "mac_ops_per_second": 61471369.42389788,
+    "mops_per_second": 61.471369423897876
+  },
+  "energy_estimate": {
+    "voltage_v": 3.28,
+    "current_ma": 21.94,
+    "power_w": 0.0719632,
+    "energy_per_inference_j": 0.004609799955168001,
+    "energy_per_inference_uj": 4609.799955168,
+    "mac_ops_per_joule": 854205613.7567239,
+    "mac_ops_per_second_per_watt": 854205613.7567239
+  }
+}

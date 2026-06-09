@@ -590,6 +590,13 @@ int main(void)
 
         sampleCounter += CHUNK;
 
+#if KWS20_CFG_ENABLE_MEASURE
+        /* Mic level + threshold for the dashboard plot (throttled ~30 Hz). */
+        if ((sampleCounter % (CHUNK * 4)) == 0) {
+            PR_INFO("BENCH,event=level,rms=%u,thr=%u\r\n", avg, thresholdHigh);
+        }
+#endif
+
 #ifdef ENABLE_MIC_DEBUG_STATUS
         if ((sampleCounter % (CHUNK * 64)) == 0) {
             const char *state_name = "stop";
@@ -872,6 +879,19 @@ int main(void)
                         (unsigned int)((ret && out_class != NUM_OUTPUTS - 1) ? 1u : 0u),
                         (unsigned int)((probability >= 0.0) ? (probability * 10.0 + 0.5) : 0u),
                         (unsigned int)sampleCounter, (unsigned int)wordCounter);
+
+                /* Decision view: per-class scores 0..100 for the dashboard bars. */
+                {
+                    char sb[256];
+                    int n = snprintf(sb, sizeof(sb),
+                                     "BENCH,event=scores,run=%u,s=", (unsigned int)wordCounter);
+                    for (int i = 0; i < NUM_OUTPUTS; i++) {
+                        int s = (100 * ml_softmax[i] + 0x4000) >> 15;   /* q15 -> 0..100 */
+                        if (s < 0) s = 0; else if (s > 100) s = 100;
+                        n += snprintf(sb + n, sizeof(sb) - n, "%s%d", i ? ";" : "", s);
+                    }
+                    PR_INFO("%s\n", sb);
+                }
 
                 Max = 0;
                 Min = 0;

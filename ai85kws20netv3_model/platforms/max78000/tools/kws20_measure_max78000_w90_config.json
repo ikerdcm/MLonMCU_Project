@@ -13,8 +13,8 @@
   "mac_ops": 7207328.0,
   "voltage": 3.7,
   "current_ma": 36.69,
-  "maxim_path": null,
-  "openocd_root": "/home/pascal/max78000/ai8x-synthesis/openocd",
-  "no_build": true,
-  "no_flash": true
+  "maxim_path": "/Users/iker/Projects/ETHZ/Q2/ML_on_MCUs/max78000/ai8x-synthesis/sdk",
+  "openocd_root": "/Users/iker/Projects/ETHZ/Q2/ML_on_MCUs/max78000/ai8x-synthesis/openocd",
+  "no_build": false,
+  "no_flash": false
 }

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Keyword Spotting across Edge MCUs</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css" id="theme"/>
+<style>
+  :root{
+    --done:#1b7f3b; --done-bg:#e6f5ec;
+    --plan:#b8860b; --plan-bg:#fbf3df;
+    --block:#b3261e; --block-bg:#fbe7e6;
+    --accent:#1f3a93; --accent-bg:#e7ecfb;
+  }
+  .reveal{font-size:30px}
+  .reveal h1{font-size:1.5em;color:var(--accent)}
+  .reveal h2{font-size:1.15em;color:var(--accent);text-transform:none;letter-spacing:0}
+  .reveal h3{font-size:0.8em;color:#444;text-transform:none}
+  .reveal section{text-align:left}
+  .reveal .center{text-align:center}
+  .reveal table{font-size:0.62em;margin:8px 0}
+  .reveal table th{background:var(--accent);color:#fff;padding:5px 9px;font-weight:600}
+  .reveal table td{padding:4px 9px}
+  .reveal table tr:nth-child(even) td{background:#f4f6fb}
+  .reveal .small{font-size:0.62em;color:#666}
+  .reveal .tag{display:inline-block;font-size:0.5em;font-weight:700;border-radius:6px;padding:2px 8px;vertical-align:middle}
+  .tag.done{background:var(--done-bg);color:var(--done);border:1px solid var(--done)}
+  .tag.plan{background:var(--plan-bg);color:var(--plan);border:1px dashed var(--plan)}
+  .tag.block{background:var(--block-bg);color:var(--block);border:1px solid var(--block)}
+  .reveal .big-num{color:var(--accent);font-weight:700}
+  .reveal .win{color:var(--done);font-weight:700}
+  .reveal ul{margin-left:.4em}
+  .reveal li{margin:.18em 0}
+  .reveal .cols{display:flex;gap:30px}
+  .reveal .cols>div{flex:1}
+  .reveal .kpi{display:flex;gap:18px;justify-content:center;margin:18px 0}
+  .reveal .kpi .card{background:var(--accent-bg);border:1px solid #c7d2f0;border-radius:12px;padding:14px 20px;text-align:center}
+  .reveal .kpi .card .v{font-size:1.5em;font-weight:700;color:var(--accent);line-height:1}
+  .reveal .kpi .card .l{font-size:0.5em;color:#555;margin-top:6px}
+  .reveal .note{font-size:0.55em;color:#8a4b00;background:var(--plan-bg);border-left:3px solid var(--plan);padding:6px 10px;border-radius:4px;margin-top:10px}
+  .reveal .footer{position:fixed;bottom:8px;right:14px;font-size:14px;color:#aaa}
+  .reveal section.divider{text-align:center}
+  .reveal section.divider h1{font-size:1.8em}
+  .reveal .arrow{color:#999;font-weight:700}
+  .reveal .strike{color:var(--block);font-weight:700}
+  .reveal .legend{font-size:.5em;color:#555;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<!-- ============ 1. TITLE ============ -->
+<section class="divider">
+  <h1>Keyword Spotting on Edge MCUs</h1>
+  <h3>A cross-platform study: same task, four accelerators, two optimization ladders</h3>
+  <p class="small">ETH Zürich · Machine Learning on Microcontrollers · 2026</p>
+  <p class="small">Pascal — AI85KWS (KWS20) &nbsp;·&nbsp; Iker — DS-CNN-L</p>
+  <aside class="notes">One-line pitch: we take always-on keyword spotting and ask (A) which MCU runs it best, and (B) how far we can push one model with optimization. Two model families, four boards.</aside>
+</section>
+
+<!-- ============ 2. APPLICATION ============ -->
+<section>
+  <h2>The application — always-on Keyword Spotting</h2>
+  <div class="cols">
+    <div>
+      <ul>
+        <li><b>Task:</b> detect spoken keywords from a 1 s mic window, on-device.</li>
+        <li><b>Why on the MCU?</b> always-on, &lt;mW budget, low latency, <b>privacy</b> (no audio leaves the chip).</li>
+        <li><b>Pipeline:</b> 16 kHz audio → <b>MFCC</b> features → CNN → class.</li>
+        <li><b>Dataset:</b> Google Speech Commands.</li>
+      </ul>
+    </div>
+    <div>
+      <table>
+        <tr><th>Stage</th><th>Detail</th></tr>
+        <tr><td>Audio window</td><td>1.0–1.024 s @ 16 kHz</td></tr>
+        <tr><td>Features</td><td>MFCC (e.g. 49×10)</td></tr>
+        <tr><td>Model</td><td>small CNN (DS-CNN / ai8x)</td></tr>
+        <tr><td>Classes</td><td>12 (DS-CNN) / 20-kw (AI85KWS)</td></tr>
+      </table>
+      <p class="note">Inference is tiny vs the 1 s window → <b>energy/inference</b>, not user latency, is the real edge metric.</p>
+    </div>
+  </div>
+  <aside class="notes">KWS is the canonical TinyML task — "Hey Google" style. The point of running it on an MCU is power and privacy, not raw speed.</aside>
+</section>
+
+<!-- ============ 3. STUDY DESIGN ============ -->
+<section>
+  <h2>Two questions drive the study</h2>
+  <div class="cols">
+    <div>
+      <h3>Story A — Which MCU wins?</h3>
+      <p>Take the <b>same model</b>, deploy across boards, compare latency · energy · memory · accuracy at a matched (int8) config.</p>
+    </div>
+    <div>
+      <h3>Story B — How far can we push one?</h3>
+      <p>Take the champion and climb an <b>optimization ladder</b>: fp32 → int8 → prune → distill. Where's the ceiling, and what bounds it?</p>
+    </div>
+  </div>
+  <table>
+    <tr><th>Model family</th><th>Boards</th><th>Owner</th><th>Role</th></tr>
+    <tr><td><b>AI85KWS</b> (KWS20-v3)</td><td>STM32U5 · MAX78000</td><td>Pascal</td><td>completed cross-board ladder <span class="tag done">done</span></td></tr>
+    <tr><td><b>DS-CNN-L</b></td><td>Coral · U5 · MAX · GAP9</td><td>Iker</td><td>optimization ladder + ceiling study</td></tr>
+  </table>
+  <aside class="notes">A is the "horizontal" comparison, B is the "vertical" deep-dive. Today we present the intro and the finished AI85KWS work; DS-CNN results follow.</aside>
+</section>
+
+<!-- ============ 4. MODELS ============ -->
+<section>
+  <h2>The models</h2>
+  <table>
+    <tr><th>Model</th><th>Type</th><th>MACs</th><th>Classes</th><th>Runs on</th></tr>
+    <tr><td><b>DS-CNN-L</b></td><td>depthwise-separable 2D, 6 blocks, 35.5k params</td><td>3.94 M</td><td>12</td><td>Coral, U5 (identical)</td></tr>
+    <tr><td><b>AI85KWS</b> (KWS20-v3)</td><td>ai8x CNN, 8 conv layers</td><td>~8.3 M</td><td>20 kw (21 out)</td><td>MAX78000, U5</td></tr>
+    <tr><td>&nbsp;↳ <b>kws12mfcc</b></td><td>ai8x conv1d port of DS-CNN</td><td>1.34 M</td><td>12</td><td>MAX78000 (DS-CNN branch)</td></tr>
+  </table>
+  <p class="note">⚠️ <b>Honesty caveat:</b> the MAX78000 accelerator can't run a TFLite DS-CNN directly — on the DS-CNN branch it deploys the <code>kws12mfcc</code> ai8x port (conv1d, ~3× fewer MACs). So MAX is <i>"best this HW can do"</i>, not a same-model row. <b>Coral &amp; U5 run the identical DS-CNN-L.</b></p>
+  <aside class="notes">Two distinct tasks: AI85KWS is a harder 20-keyword problem; DS-CNN is the 12-class MLPerf-Tiny reference. Be upfront that MAX runs a different graph.</aside>
+</section>
+
+<!-- ============ 5. HARDWARE ============ -->
+<section>
+  <h2>Four platforms, four philosophies</h2>
+  <table>
+    <tr><th>Board</th><th>Compute</th><th>NN engine</th><th>Precision</th><th>Toolchain</th></tr>
+    <tr><td><b>Coral Dev Board Micro</b></td><td>NXP RT1176 (M7+M4)</td><td>Edge-TPU, 4 TOPS</td><td><b>int8 only</b></td><td>TFLite-Micro + edgetpu</td></tr>
+    <tr><td><b>MAX78000</b></td><td>M4 @100 MHz + RV32</td><td>CNN accel (64 PE)</td><td><b>1/2/4/8-bit</b></td><td>ai8x synthesizer</td></tr>
+    <tr><td><b>STM32U5</b></td><td>Cortex-M33 @160 MHz</td><td>CMSIS-NN (CPU)</td><td>fp32 / int8</td><td>X-CUBE-AI</td></tr>
+    <tr><td><b>GAP9</b> <span class="tag plan">upcoming</span></td><td>RISC-V 9-core cluster</td><td>NE16 NPU</td><td>int8 / sub-8-bit</td><td>GAP-flow / NNTool</td></tr>
+  </table>
+  <p class="small">Spectrum: dedicated TPU (Coral) → in-SoC CNN accelerator (MAX) → CPU + DSP kernels (U5) → multi-core RISC-V + NPU (GAP9).</p>
+  <aside class="notes">The boards span the full design space. Crucially only MAX and GAP9 do native sub-8-bit — that gates the 4-bit story later.</aside>
+</section>
+
+<!-- ============ 6. METHODOLOGY ============ -->
+<section>
+  <h2>Methodology — one disciplined process</h2>
+  <div class="cols">
+    <div>
+      <ul>
+        <li><b>Versioning:</b> every optimization is a <i>new version</i> — never overwrite, so before/after is always measurable.</li>
+        <li><b>Two modes:</b> <b>offline</b> (latency on a fixed vector) + <b>online</b> (live mic, power CSV).</li>
+        <li><b>Metrics:</b> CNN latency, energy/inference, flash (.text), SRAM, accuracy.</li>
+        <li><b>Single source of truth:</b> a results ledger every measurement feeds into.</li>
+      </ul>
+    </div>
+    <div>
+      <p class="small"><b>Per-board ladders</b> (bit-width · runtime):</p>
+      <p class="small"><b>AI85KWS:</b> U5 32→8→prune · MAX 8→8-prune</p>
+      <p class="small"><b>DS-CNN:</b> Coral 32→8→prune→distill · U5 32→8 · MAX 8 · GAP9 ⧖</p>
+      <p class="legend">🟩 done · 🟨 planned · 🟥 toolchain-blocked</p>
+      <p class="note">Full interactive pipeline map: <code>presentation_pipeline_diagram.html</code></p>
+    </div>
+  </div>
+  <aside class="notes">Emphasize rigor: identical measurement harness across boards, everything versioned and logged. This is what makes the cross-board numbers trustworthy.</aside>
+</section>
+
+<!-- ============ 7. DIVIDER: AI85KWS ============ -->
+<section class="divider" data-background-color="#1f3a93">
+  <h1 style="color:#fff">Part 1 — AI85KWS</h1>
+  <h3 style="color:#cdd8f5">KWS20-v3 · STM32U5 vs MAX78000 · completed</h3>
+  <aside class="notes">Now the finished half of the study: the 20-keyword AI85KWS model, taken across U5 and MAX with quantization and pruning.</aside>
+</section>
+
+<!-- ============ 8. AI85KWS MODEL ============ -->
+<section>
+  <h2>AI85KWS — the KWS20-v3 model</h2>
+  <div class="cols">
+    <div>
+      <ul>
+        <li><b>Task:</b> 20 keywords + unknown/silence → <b>21 classes</b> (harder than 12-class).</li>
+        <li><b>Arch:</b> ai8x CNN, 8 conv layers, MaxPool, final Gemm.</li>
+        <li><b>Compute:</b> ~8.3 M ops (baseline) → ~7.2 M (pruned "w90").</li>
+        <li><b>Deployed on:</b> MAX78000 (CNN accelerator) and STM32U5 (CMSIS-NN).</li>
+      </ul>
+    </div>
+    <div>
+      <p class="small">Two optimization axes explored:</p>
+      <ul class="small">
+        <li><b>Quantization</b> — fp32 → int8 (QAT, true-2D NCHW → CubeAI for U5).</li>
+        <li><b>Pruning</b> — the <b>w90</b> variant (structured width reduction).</li>
+      </ul>
+      <p class="note">Accuracy numbers from the ai8x / U5 eval — <b>to fill from Pascal's results</b>.</p>
+    </div>
+  </div>
+  <aside class="notes">KWS20 is a 20-keyword task — broader and harder than the 12-class DS-CNN. w90 is the pruned variant used on both boards.</aside>
+</section>
+
+<!-- ============ 9. AI85KWS on U5 ============ -->
+<section>
+  <h2>AI85KWS on STM32U5 — the quantize→prune ladder</h2>
+  <table>
+    <tr><th>Version</th><th>Precision</th><th>Latency (offline)</th><th>Flash (.text)</th><th>SRAM</th><th>Weights</th></tr>
+    <tr><td>v0</td><td>fp32 (CPU)</td><td class="big-num">397.2 ms</td><td>779.4 KiB</td><td>169.2 KiB</td><td>—</td></tr>
+    <tr><td>v1</td><td>int8 (CMSIS-NN)</td><td class="big-num">170.8 ms</td><td>305.2 KiB</td><td>111.9 KiB</td><td>168.2 KiB</td></tr>
+    <tr><td>v2</td><td>int8 + prune (w90)</td><td class="win">152.9 ms</td><td>281.5 KiB</td><td>107.7 KiB</td><td>145.1 KiB</td></tr>
+  </table>
+  <div class="kpi">
+    <div class="card"><div class="v">2.3×</div><div class="l">faster: fp32 → int8</div></div>
+    <div class="card"><div class="v">−10%</div><div class="l">latency from pruning</div></div>
+    <div class="card"><div class="v">−61%</div><div class="l">flash: fp32 → pruned-int8</div></div>
+  </div>
+  <p class="note">Energy/inference for v1/v2 pending (power-CSV gap — power logged 0); v0 fp32 ≈ 31.4 mJ/inf.</p>
+  <aside class="notes">On the CPU-class U5, int8 buys 2.3× and pruning another 10%. But it's still 150+ ms — that sets up the contrast with the accelerator.</aside>
+</section>
+
+<!-- ============ 10. AI85KWS on MAX ============ -->
+<section>
+  <h2>AI85KWS on MAX78000 — the CNN accelerator</h2>
+  <table>
+    <tr><th>Version</th><th>Precision</th><th>Latency (offline)</th><th>Energy/inf</th><th>Flash (.text)</th><th>SRAM</th></tr>
+    <tr><td>v0 baseline</td><td>int8 (accel)</td><td class="big-num">1.85 ms</td><td>251.1 µJ</td><td>410.5 KiB</td><td>37.3 KiB</td></tr>
+    <tr><td>v1 pruned (w90)</td><td>int8 (accel)</td><td class="win">1.71 ms</td><td>232.3 µJ</td><td>386.8 KiB</td><td>37.3 KiB</td></tr>
+  </table>
+  <div class="kpi">
+    <div class="card"><div class="v">1.71 ms</div><div class="l">pruned inference</div></div>
+    <div class="card"><div class="v">232 µJ</div><div class="l">energy/inference</div></div>
+    <div class="card"><div class="v">−7.6%</div><div class="l">latency from pruning</div></div>
+  </div>
+  <p class="small">The accelerator slashes SRAM to ~37 KiB and runs the full 8.3 M-op model in under 2 ms.</p>
+  <aside class="notes">Same model, dedicated CNN engine: sub-2ms and sub-300µJ. Pruning helps a bit, but the accelerator is already the dominant win.</aside>
+</section>
+
+<!-- ============ 11. AI85KWS cross-board ============ -->
+<section>
+  <h2>AI85KWS verdict — accelerator vs CPU</h2>
+  <table>
+    <tr><th>Metric (int8, same model)</th><th>STM32U5 (CMSIS-NN)</th><th>MAX78000 (accel)</th><th>Factor</th></tr>
+    <tr><td>Latency</td><td>170.8 ms</td><td class="win">1.85 ms</td><td><b>≈ 92× faster</b></td></tr>
+    <tr><td>SRAM</td><td>111.9 KiB</td><td class="win">37.3 KiB</td><td>≈ 3× less</td></tr>
+    <tr><td>Energy/inf</td><td>pending</td><td class="win">251 µJ</td><td>—</td></tr>
+    <tr><td>Pruned latency</td><td>152.9 ms</td><td class="win">1.71 ms</td><td>≈ 89×</td></tr>
+  </table>
+  <p><b>Takeaways:</b></p>
+  <ul>
+    <li>A dedicated CNN accelerator wins decisively — <span class="win">~92×</span> on the identical model.</li>
+    <li>Quantization is the big lever on the CPU (2.3×); <b>pruning is secondary</b> (~10% / ~8%) on both.</li>
+    <li>But remember: end-to-end is still dominated by the <b>1 s audio window</b> on both boards.</li>
+  </ul>
+  <aside class="notes">This is Story A for the AI85KWS model: the accelerator is ~92× faster on the exact same network. Pruning is a minor refinement next to quantization + the accelerator.</aside>
+</section>
+
+<!-- ============ 12. DIVIDER: DS-CNN (next) ============ -->
+<section class="divider">
+  <h1>Part 2 — DS-CNN-L <span class="tag plan">coming next</span></h1>
+  <h3>Coral champion · the optimization ladder · the Edge-TPU ceiling · GAP9</h3>
+  <ul class="small" style="display:inline-block;text-align:left;margin-top:14px">
+    <li>fp32 (417 ms) → int8 Edge-TPU (2.27 ms) → prune (1.88 ms) → distill (90.8%) ★</li>
+    <li>Key finding: Edge-TPU latency is <b>block-count-bound, not filter-bound</b></li>
+    <li>The calibration bug · prune-then-distill · the 32→8→4 bit-width axis</li>
+  </ul>
+  <aside class="notes">Placeholder for the DS-CNN half — to be built out next per Iker's results.</aside>
+</section>
+
+</div></div>
+<div class="footer">KWS on Edge MCUs · ETHZ ML-on-MCUs</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+<script>
+  Reveal.initialize({ hash:true, slideNumber:'c/t', width:1280, height:760,
+    margin:0.04, plugins:[ RevealNotes ] });
+</script>
+</body>
+</html>

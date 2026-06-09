@@ -1,0 +1,94 @@
+{
+  "timestamp": "2026-06-07T10:46:34.533155",
+  "mode": "offline",
+  "config": "/Users/iker/Projects/ETHZ/Q2/ML_on_MCUs/MLonMCU_Project_Real/MLonMCU_Project/cnn-trad-fpool3_model/platforms/coral/tools/coral_bench_config.json",
+  "port": "/dev/cu.usbmodem1301",
+  "baud": 115200,
+  "platform": "coral_dev_board_micro",
+  "elf": "/Users/iker/Projects/ETHZ/Q2/ML_on_MCUs/MLonMCU_Project_Real/MLonMCU_Project/cnn-trad-fpool3_model/platforms/coral/build/kws_apps/kws_bench/kws_bench",
+  "elf_size_bytes": 13295052,
+  "memory": {
+    "text_bytes": 242404,
+    "data_bytes": 11440,
+    "bss_bytes": 17598120,
+    "dec_bytes": 17851964,
+    "hex": "110663c"
+  },
+  "static_sram_usage": {
+    "static_sram_bytes": 17609560,
+    "static_sram_kib": 17196.8359375,
+    "data_bytes": 11440,
+    "bss_bytes": 17598120
+  },
+  "counts": {
+    "num_uart_events": 60,
+    "num_inference_events": 50,
+    "done_seen": true
+  },
+  "model_info": {
+    "event": "model_info",
+    "mode": "offline",
+    "cpu_hz": "800000000",
+    "input_elems": "490",
+    "output_elems": "12",
+    "sample_rate_hz": "16000",
+    "full_window_samples": "16000",
+    "runs": "50",
+    "version": "ds_cnn_l_edgetpu_int8"
+  },
+  "sensor_acquisition": {
+    "sample_rate_hz": 16000.0,
+    "sample_count": 16000.0,
+    "audio_window_s": 1.0,
+    "audio_window_ms": 1000.0,
+    "fw_reported": {
+      "event": "acquisition",
+      "mode": "offline",
+      "sample_rate_hz": "16000",
+      "sample_count": "16000",
+      "audio_window_ms": "1000",
+      "feature_frames": "49",
+      "feature_bins": "10"
+    }
+  },
+  "cnn_latency_us": {
+    "count": 50,
+    "min": 2168.0,
+    "max": 4958.0,
+    "avg": 2265.5,
+    "median": 2198.0,
+    "std": 389.77011801568267,
+    "p95": 2281.0
+  },
+  "cycles": {
+    "count": 50,
+    "min": 1734400.0,
+    "max": 3966400.0,
+    "avg": 1812400.0,
+    "median": 1758400.0,
+    "std": 311816.09441254614,
+    "p95": 1824800.0
+  },
+  "uart_transmission_time_estimate_s": {
+    "count": 60,
+    "min": 0.0,
+    "max": 0.014670138888888889,
+    "avg": 0.006449652777777781,
+    "median": 0.006857638888888889,
+    "std": 0.00212264411621738,
+    "p95": 0.006857638888888889
+  },
+  "cnn_latency_ms_avg": 2.2655,
+  "inferences_per_second_from_cnn_time": 441.40366365040836,
+  "estimated_end_to_end_lower_bound_ms": 1002.2655,
+  "cycles_estimate": {
+    "clock_mhz": 800.0,
+    "cycles_per_inference_avg": 1812399.9999999998,
+    "mac_ops_per_cycle": 2.172653387773119
+  },
+  "compute_estimate": {
+    "mac_ops_per_inference": 3937717.0,
+    "mac_ops_per_second": 1738122710.2184951,
+    "mops_per_second": 1738.122710218495
+  }
+}

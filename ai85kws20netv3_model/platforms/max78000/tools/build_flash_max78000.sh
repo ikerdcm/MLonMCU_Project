@@ -114,7 +114,10 @@ find_openocd_root() {
 }
 
 PROJECT="$(cfg_get project)"
-ELF="$(cfg_get elf)"
+# Worktree-portable: relocate to THIS checkout using only the project's basename
+# (the config's absolute path may point at another machine/worktree).
+PROJECT="$SCRIPT_DIR/../$(basename "$PROJECT")"
+ELF=""   # always derive from the relocated project (below)
 BOARD="$(cfg_get board)"
 CFG_MAXIM_PATH="$(cfg_get maxim_path)"
 CFG_OPENOCD_ROOT="$(cfg_get openocd_root)"
@@ -155,7 +158,13 @@ if [[ $DO_FLASH -eq 1 ]]; then
     exit 1
   fi
 
-  OPENOCD_BIN="${OPENOCD_ROOT}/bin/Linux_x86_64/openocd"
+  # Pick the openocd binary for THIS host (the config ships a Linux path).
+  case "$(uname -s)-$(uname -m)" in
+    Darwin-arm64)  OO_PLAT="Darwin_arm64" ;;
+    Darwin-x86_64) OO_PLAT="Darwin_x86_64" ;;
+    *)             OO_PLAT="Linux_x86_64" ;;
+  esac
+  OPENOCD_BIN="${OPENOCD_ROOT}/bin/${OO_PLAT}/openocd"
 
   if [[ ! -x "$OPENOCD_BIN" ]]; then
     echo "openocd not found or not executable: $OPENOCD_BIN" >&2

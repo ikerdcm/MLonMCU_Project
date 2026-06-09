@@ -1,0 +1,16 @@
+{
+  "mode": "offline",
+  "build_dir": "build",
+  "target": "kws_bench_cpu",
+  "elf": "build/kws_apps/kws_bench_cpu/kws_bench_cpu",
+  "port": "/dev/ttyACM0",
+  "baud": 115200,
+  "clock_mhz": 800.0,
+  "mac_ops": 3937717.0,
+  "sample_rate": 16000.0,
+  "sample_count": 16000.0,
+  "voltage": null,
+  "current_ma": null,
+  "timeout": 60.0,
+  "no_build": true
+}

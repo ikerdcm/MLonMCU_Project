@@ -27,7 +27,7 @@ namespace {
 
 constexpr int kBenchRuns = 50;
 
-const char* kModelPath = "/models/ds_cnn_l_static_edgetpu.tflite";
+const char* kModelPath = "/models/ds_cnn_l_static_v2_edgetpu.tflite";
 
 const char* kLabels[] = {
     "down", "go", "left", "no", "off", "on",

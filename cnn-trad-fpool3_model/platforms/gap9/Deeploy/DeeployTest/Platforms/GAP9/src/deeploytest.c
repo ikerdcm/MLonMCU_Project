@@ -94,20 +94,25 @@ int main(void) {
   uint32_t core_id = pi_core_id(), cluster_id = pi_cluster_id();
   printf("[%d %d] Hello World!\n", cluster_id, core_id);
 #endif
+  printf("Step A\n");
   struct pi_cluster_conf conf;
-
   pi_cluster_conf_init(&conf);
+  printf("Step B\n");
   conf.id = 0;
+  printf("Step C\n");
   pi_open_from_conf(&cluster_dev, &conf);
-  if (pi_cluster_open(&cluster_dev))
+  printf("Step D\n");
+  int cl_ret = pi_cluster_open(&cluster_dev);
+  printf("pi_cluster_open returned: %d\n", cl_ret);
+  if (cl_ret)
     return -1;
 
-  mem_init();
 #ifndef NOFLASH
+  mem_init();
   open_fs();
 #endif
 
-  printf("Intializing\r\n");
+  printf("Initializing\n");
 
   struct pi_cluster_task cluster_task;
 
@@ -201,6 +206,16 @@ int main(void) {
 
   printf("Runtime: %u cycles\r\n", total_cycles);
   printf("Errors: %u out of %u \r\n", tot_err, tot_tested);
+
+  // Print predicted class (argmax over float output buffer 0)
+  if (ISOUTPUTFLOAT && DeeployNetwork_num_outputs > 0) {
+    float *out = (float *)DeeployNetwork_outputs[0];
+    int n = DeeployNetwork_outputs_bytes[0] / sizeof(float);
+    int argmax = 0;
+    for (int i = 1; i < n; i++)
+      if (out[i] > out[argmax]) argmax = i;
+    printf("Predicted class: %d (confidence %.4f)\r\n", argmax, out[argmax]);
+  }
 
   return 0;
 }

@@ -22,6 +22,14 @@ target_compile_options(deeploygap9 PUBLIC
     -DNUM_CORES=${NUM_CORES}
   )
 
+# Mirror DeeployTest's NOFLASH detection so dory_mem.c compiles correctly.
+# In L2 mode (no hex files) the flash/RAM functions are never called;
+# stubs are sufficient and avoid board-mode type unavailability.
+file(GLOB_RECURSE GAP9_HEXLIST "${GENERATED_SOURCE}/hex/*")
+if (NOT GAP9_HEXLIST)
+  target_compile_options(deeploygap9 PRIVATE -DNOFLASH)
+endif()
+
 target_compile_options(deeploygap9 PRIVATE
   -Wno-sign-conversion
   -Wno-sign-compare

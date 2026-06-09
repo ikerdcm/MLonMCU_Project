@@ -15,9 +15,6 @@ macro(add_board_deployment name target)
     set(DEEPLOY_BINARY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${name}")
     set(GAP9_SDK_HOME $ENV{GAP_SDK_HOME})
     set(GAPY "${GAP9_SDK_HOME}/utils/gapy_v2/bin/gapy")
-    set(FLASH_LAYOUT "${GAP9_SDK_HOME}/utils/layouts/default_layout_multi_readfs.json")
-    set(FSBL_BINARY "${GAP9_SDK_HOME}/install/target/bin/fsbl")
-    set(SSBL_BINARY "${GAP9_SDK_HOME}/install/target/bin/ssbl")
 
     make_directory(${BOARD_WORKDIR})
 
@@ -25,7 +22,10 @@ macro(add_board_deployment name target)
         message(FATAL_ERROR "Environment variable GAP_SDK_HOME not set")
     endif()
 
-    # Command to run on board
+    # Use load_and_start_binary via gapy (same as helloworld run target).
+    # Omitting --flash-property for fsbl/ssbl makes gapy generate
+    # "load_and_start_binary" instead of a true MRAM flash boot, which
+    # is required for semihost to work correctly on the GAP9 EVK.
     set(GAPY_CMD
         ${GAPY}
         --target=gap9.evk
@@ -38,11 +38,7 @@ macro(add_board_deployment name target)
         --openocd-tools=${GAP9_SDK_HOME}/utils/openocd_tools
         --binary=${DEEPLOY_BINARY}
         --work-dir=${BOARD_WORKDIR}
-        --multi-flash-content=${FLASH_LAYOUT}
-        --flash-size=67108864
-        --flash-property=${FSBL_BINARY}@mram:fsbl:binary
-        --flash-property=${SSBL_BINARY}@mram:ssbl:binary
-        --flash-property=${DEEPLOY_BINARY}@mram:app:binary run
+        run
         --py-stack
     )
 
@@ -59,10 +55,6 @@ macro(add_board_deployment name target)
     add_custom_target(board_${name}
         DEPENDS ${name}
         WORKING_DIRECTORY ${BOARD_WORKDIR}
-        COMMAND bash -c "${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/*.bin ${BOARD_WORKDIR}/ 2>/dev/null || true"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${GAP9_SDK_HOME}/utils/efuse/GAP9/efuse_hyper_preload.data
-            ${BOARD_WORKDIR}/chip.efuse_preload.data
         COMMAND ${CMAKE_COMMAND} -E echo "=========================================="
         COMMAND ${CMAKE_COMMAND} -E echo "[Deeploy GAP9] Executing gapy command to run on board:"
         COMMAND ${CMAKE_COMMAND} -E echo "${GAPY_CMD_STR}"

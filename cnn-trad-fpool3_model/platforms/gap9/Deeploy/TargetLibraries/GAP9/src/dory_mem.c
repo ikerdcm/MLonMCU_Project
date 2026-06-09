@@ -5,12 +5,12 @@
  */
 
 #include "dory_mem.h"
-#include "bsp/bsp.h"
-// #include "bsp/flash.h"
+#include "pmsis.h"
+
+#ifndef NOFLASH
+
 #include "bsp/fs.h"
 #include "bsp/fs/readfs.h"
-// #include "bsp/ram.h"
-#include "pmsis.h"
 
 #ifdef USE_HYPERFLASH
 #include "bsp/flash/hyperflash.h"
@@ -37,7 +37,7 @@ typedef struct pi_default_ram_conf ram_conf_t;
 #define ram_conf_init(conf) pi_default_ram_conf_init(conf)
 #endif
 
-#define BUFFER_SIZE 2048 // 128
+#define BUFFER_SIZE 2048
 static uint8_t buffer[BUFFER_SIZE];
 
 static struct pi_device flash;
@@ -50,8 +50,6 @@ struct pi_device ram;
 static ram_conf_t ram_conf;
 
 void open_fs() {
-  // SCHEREMO: Fix FS
-  // Open filesystem on flash.
   pi_readfs_conf_init(&fs_conf);
   fs_conf.fs.flash = &flash;
   pi_open_from_conf(&fs, &fs_conf);
@@ -133,10 +131,9 @@ size_t load_file_to_ram(const void *dest, const char *filename) {
   size_t size = fd->size;
   size_t load_size = 0;
   size_t remaining_size = size;
-
   size_t offset = 0;
-  do {
 
+  do {
     remaining_size = size - offset;
     load_size = BUFFER_SIZE < remaining_size ? BUFFER_SIZE : remaining_size;
 
@@ -174,3 +171,23 @@ size_t load_file_to_local(const void *dest, const char *filename) {
 
   return offset;
 }
+
+#else /* NOFLASH — L2 mode: all data compiled into binary, no external memory */
+
+struct pi_device ram;
+
+void open_fs() {}
+void mem_init() {}
+struct pi_device *get_ram_ptr() { return &ram; }
+void *ram_malloc(size_t size) { return NULL; }
+void ram_free(void *ptr, size_t size) {}
+void ram_read(void *dest, void *src, const size_t size) {}
+void ram_write(void *dest, void *src, const size_t size) {}
+void *cl_ram_malloc(size_t size) { return NULL; }
+void cl_ram_free(void *ptr, size_t size) {}
+void cl_ram_read(void *dest, void *src, const size_t size) {}
+void cl_ram_write(void *dest, void *src, const size_t size) {}
+size_t load_file_to_ram(const void *dest, const char *filename) { return 0; }
+size_t load_file_to_local(const void *dest, const char *filename) { return 0; }
+
+#endif /* NOFLASH */

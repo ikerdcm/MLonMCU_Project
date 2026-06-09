@@ -16,10 +16,13 @@ class _ReduceMeanTemplate(NodeTemplate):
                        operatorRepresentation: OperatorRepresentation) -> Tuple[NetworkContext, Dict, List[str]]:
 
         data_in = ctxt.lookup(operatorRepresentation['data_in'])
+        data_out = ctxt.lookup(operatorRepresentation['data_out'])
         operatorRepresentation['input_offset'] = 0
         if hasattr(data_in, "_signed") and hasattr(data_in, "nLevels"):
             operatorRepresentation['input_offset'] = (data_in._signed == 0) * int(data_in.nLevels / 2)
-        operatorRepresentation['output_offset'] = 0  #-(data_out._signed==0) * int(data_in.nLevels/2)
+        operatorRepresentation['output_offset'] = 0
+        if hasattr(data_out, "_signed") and hasattr(data_out, "nLevels"):
+            operatorRepresentation['output_offset'] = -(data_out._signed == 0) * int(data_in.nLevels / 2)
 
         return ctxt, operatorRepresentation, []
 
@@ -59,7 +62,7 @@ ${data_out}_accumulator = ${input_offset}*${reduceLength};
 % for i in list(axes):
 for(uint32_t i_${i} = 0; i_${i}<${data_in_shape[i]}; i_${i}++){
 % endfor
-${data_out}_accumulator += ((${data_in_type.typeName} ${shapeStr})${data_in})${accessStr};
+${data_out}_accumulator += ((${data_in_type.referencedType.typeName} (*)${shapeStr})${data_in})${accessStr};
 
 % for i in range(len(axes)):
 }
@@ -70,7 +73,7 @@ ${data_out}_accumulator += ((${data_in_type.typeName} ${shapeStr})${data_in})${a
 <%
 
 import numpy as np
-
+shift = None
 if (np.log2(reduceLength) - int(np.log2(reduceLength))) == 0:
     shift = int(np.log2(reduceLength))
 %>

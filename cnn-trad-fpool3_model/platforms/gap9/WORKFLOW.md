@@ -158,10 +158,37 @@ Inhalt:
 
 ```bash
 cd /home/pascal/Documents/ml_on_mcu/MLonMCU_Project/cnn-trad-fpool3_model/platforms/gap9
+
+# Float32
 python3 create_dscnnl_test.py
+# → Deeploy/DeeployTest/Tests/Models/DSCNNL/network.onnx, inputs.npz, outputs.npz
+
+# INT8 (PULP SIMD)
+python3 create_dscnnl_int8_test.py
+# → Deeploy/DeeployTest/Tests/Models/DSCNNL_INT8/network.onnx, inputs.npz, outputs.npz
 ```
 
-Erzeugt `Deeploy/DeeployTest/Tests/Models/DSCNNL/network.onnx`, `inputs.npz`, `outputs.npz` neu.
+---
+
+### Unser DS-CNN-L (INT8 PULP SIMD)
+
+Im Container:
+
+```bash
+# GVSoC (Simulator)
+python deeployRunner_gap9.py -t Tests/Models/DSCNNL_INT8 -s gvsoc
+
+# Board
+python deeployRunner_gap9.py -t Tests/Models/DSCNNL_INT8 -s board
+```
+
+Erwartetes Ergebnis:
+```
+Errors: 0 out of 12
+Runtime: ~4,120,000 cycles  (INT8 SIMD, ~6.7× schneller als Float32 ~27.6M)
+Predicted class: 2 (logit 109)   ← "Left"
+✓ Test DSCNNL_INT8 PASSED
+```
 
 ---
 
@@ -204,11 +231,15 @@ cd /app/Deeploy && pip install -e .          # Deeploy installieren (jedes Mal!)
 cd DeeployTest
 
 python deeployRunner_gap9.py -t Tests/Models/MLPerf/KeywordSpotting -s board   # Referenz
-python deeployRunner_gap9.py -t Tests/Models/DSCNNL -s board                   # DS-CNN-L
+python deeployRunner_gap9.py -t Tests/Models/DSCNNL -s board                   # DS-CNN-L Float32
+python deeployRunner_gap9.py -t Tests/Models/DSCNNL_INT8 -s board              # DS-CNN-L INT8
 
-# Offline-Messung (50 Inferences, danach summary.json + CSV)
+# Offline-Messung Float32 (20 Runs → summary.json + CSV)
 cd /app/Deeploy
 python tools/kws20_measure_gap9_ds_cnn.py
+
+# Offline-Messung INT8 (20 Runs → summary.json + CSV)
+python tools/kws20_measure_gap9_ds_cnn_int8.py
 ```
 
 ---
@@ -227,6 +258,28 @@ python tools/kws20_measure_gap9_ds_cnn.py
 
 ---
 
+## Schritt 6b — Offline-Messung INT8: 20 Inferences auf dem Board (im Container)
+
+Nach dem ersten erfolgreichen `board`-Run für INT8 läuft das Binary bereits. Jetzt 20 Inferences messen:
+
+```bash
+# Im Container (nach deeployRunner_gap9.py -t Tests/Models/DSCNNL_INT8 -s board)
+cd /app/Deeploy
+python tools/kws20_measure_gap9_ds_cnn_int8.py
+```
+
+Optionale Argumente:
+```bash
+python tools/kws20_measure_gap9_ds_cnn_int8.py --runs 10       # nur 10 Runs (schneller)
+python tools/kws20_measure_gap9_ds_cnn_int8.py --runs 20       # default: 20
+```
+
+Ergebnis wird gespeichert unter:
+`/app/gap9_measurements/offline_measurements/kws20_ds_cnn_l_int8_offline_YYYYMMDD_HHMMSS/`
+→ Host: `platforms/gap9/measurements/offline_measurements/`
+
+---
+
 ## Metriken DS-CNN-L auf GAP9 (Float32, Board)
 
 | Metrik | Wert |
@@ -236,4 +289,17 @@ python tools/kws20_measure_gap9_ds_cnn.py
 | MACs | 3,824,768 (3.82 M) |
 | L2 Speicher | ~180 KB |
 | Fehler | 0 / 12 ✓ |
-| Predicted class | 2 = "Left" (99.98%) ✓ |
+| Predicted class | 2 = "Left" (confidence 0.9998) ✓ |
+
+---
+
+## Metriken DS-CNN-L auf GAP9 (INT8 SIMD, Board)
+
+| Metrik | Wert |
+|--------|------|
+| Cycles | 4,120,265 |
+| Latenz @ 240 MHz | ~17.2 ms |
+| MACs | 3,824,768 (3.82 M) |
+| Fehler | 0 / 12 ✓ |
+| Predicted class | 2 = "Left" (logit 109) ✓ |
+| **Speedup vs Float32** | **~6.7×** |

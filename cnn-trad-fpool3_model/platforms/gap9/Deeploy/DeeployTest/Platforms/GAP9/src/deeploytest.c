@@ -217,5 +217,15 @@ int main(void) {
     printf("Predicted class: %d (confidence %.4f)\r\n", argmax, out[argmax]);
   }
 
+  // Print predicted class (argmax over integer/quantized output buffer 0)
+  if (!ISOUTPUTFLOAT && DeeployNetwork_num_outputs > 0) {
+    OUTPUTTYPE *out = (OUTPUTTYPE *)DeeployNetwork_outputs[0];
+    int n = DeeployNetwork_outputs_bytes[0] / sizeof(OUTPUTTYPE);
+    int argmax = 0;
+    for (int i = 1; i < n; i++)
+      if (out[i] > out[argmax]) argmax = i;
+    printf("Predicted class: %d (logit %d)\r\n", argmax, (int)out[argmax]);
+  }
+
   return 0;
 }

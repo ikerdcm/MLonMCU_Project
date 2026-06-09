@@ -1,0 +1,3 @@
+ppk2-api
+pyserial
+numpy

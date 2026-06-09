@@ -37,8 +37,8 @@
  * Set to 0 to restore the normal 50-run latency benchmark.
  */
 #define KWS20_CFG_POWER_MODE        1
-#define KWS20_CFG_POWER_CONTINUOUS  0      /* loop forever for live PPK watching; 0 = one POWER_RUNS pass (official protocol) */
-#define KWS20_CFG_POWER_SLEEP_IDLE  1      /* __WFI between inferences -> each inference is a visible current spike */
+#define KWS20_CFG_POWER_CONTINUOUS  1      /* loop forever for live PPK watching; 0 = one POWER_RUNS pass (official protocol) */
+#define KWS20_CFG_POWER_SLEEP_IDLE  0      /* 1 = __WFI sleep between inferences (clean spikes); 0 = CPU never sleeps (run mode) */
 #define KWS20_CFG_POWER_RUNS        6
 #define KWS20_CFG_POWER_PERIOD_MS   5000u  /* official 6x5s protocol: 1 inference every 5 s -> spikes at t=1,6,11,16,21,26 s */
 #define KWS20_CFG_POWER_SETTLE_MS   1000u  /* settle 1 s before the first inference */

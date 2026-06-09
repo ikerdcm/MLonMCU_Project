@@ -147,7 +147,11 @@ void kws20_measure_run_once(void)
     printf("BENCH,event=power_mode,runs=%u,period_ms=%u,settle_ms=%u\r\n",
            (unsigned)KWS20_CFG_POWER_RUNS, (unsigned)KWS20_CFG_POWER_PERIOD_MS,
            (unsigned)KWS20_CFG_POWER_SETTLE_MS);
-    HAL_Delay(KWS20_CFG_POWER_SETTLE_MS);
+    /* WFI-sleep the settle (not HAL_Delay busy-wait) so settle sits at the ~10mA
+     * idle baseline. Otherwise the busy-wait runs at the same ~21mA as an
+     * inference and the first inference fuses into the settle blob -> only 5 of
+     * 6 spikes are detectable. */
+    kws20_idle_ms(KWS20_CFG_POWER_SETTLE_MS);
     const uint32_t kws20_total_runs = KWS20_CFG_POWER_RUNS;
 #else
     const uint32_t kws20_total_runs = KWS20_CFG_MEASURE_RUNS;
@@ -206,10 +210,14 @@ void kws20_measure_run_once(void)
     printf("BENCH,event=done\r\n");
 
 #if KWS20_CFG_POWER_MODE && !KWS20_CFG_POWER_CONTINUOUS
-    /* Post-run: sleep the core forever so the LAST inference returns to the
-     * idle baseline (clean falling edge). Otherwise main()'s while(1)
-     * MX_X_CUBE_AI_Process() spin holds current at the active level and the
-     * 6th spike never falls -> the PPK2 auto-segmenter drops it. */
+    /* Post-run idle, matching the between-inference behaviour:
+     *  - sleep mode: WFI so the last inference returns to the idle baseline
+     *    (clean falling edge for the auto-segmenter);
+     *  - run mode: busy-spin so the core never sleeps. */
+#if KWS20_CFG_POWER_SLEEP_IDLE
     for (;;) { __WFI(); }
+#else
+    for (;;) { /* run mode: keep the CPU active */ }
+#endif
 #endif
 }

@@ -19,13 +19,14 @@ th{background:#e2e8f0}
 .dot{width:14px;height:14px;border-radius:3px;display:inline-block}
 </style></head><body><main>
 <h1>STM32U5 vs MAX78000 — ai85kws20netv3</h1>
-<p class="sub">Cross-platform online inference comparison. STM32U5: v0 float32, v1 INT8, v2 pruned INT8. MAX78000: v0 float32 SW, v1 INT8 CNN accelerator.</p>
+<p class="sub">Cross-platform online inference comparison. STM32U5: v0 float32, v1 INT8, v2 pruned INT8. MAX78000: v0 CNN accelerator, v1 pruned CNN accelerator, cpu INT8 software-only.</p>
 <div class="legend">
 <span class="chip"><span class="dot" style="background:#1d4ed8"></span>U5 v0 float32</span>
 <span class="chip"><span class="dot" style="background:#0891b2"></span>U5 v1 INT8</span>
 <span class="chip"><span class="dot" style="background:#0e7490"></span>U5 v2 pruned</span>
 <span class="chip"><span class="dot" style="background:#b45309"></span>MAX78000 v0</span>
 <span class="chip"><span class="dot" style="background:#d97706"></span>MAX78000 v1</span>
+<span class="chip"><span class="dot" style="background:#c2410c"></span>MAX78000 cpu</span>
 </div>
 <section><h2>Key Metrics</h2>
 <table><thead><tr>
@@ -37,6 +38,7 @@ th{background:#e2e8f0}
 <th>U5 v2 pruned</th>
 <th>MAX78000 v0</th>
 <th>MAX78000 v1</th>
+<th>MAX78000 cpu</th>
 </tr></thead><tbody>
 <tr>
 <td>CNN latency avg</td>
@@ -47,6 +49,7 @@ th{background:#e2e8f0}
 <td>152.92</td>
 <td>1.8494</td>
 <td>1.7110</td>
+<td>897.29</td>
 </tr>
 <tr>
 <td>Cycles avg</td>
@@ -57,6 +60,7 @@ th{background:#e2e8f0}
 <td>24,467,522</td>
 <td>72,268</td>
 <td>66,871</td>
+<td>44,864,424</td>
 </tr>
 <tr>
 <td>Throughput</td>
@@ -67,6 +71,7 @@ th{background:#e2e8f0}
 <td>6.5393</td>
 <td>540.73</td>
 <td>584.45</td>
+<td>1.1145</td>
 </tr>
 <tr>
 <td>End-to-end lower bound</td>
@@ -77,6 +82,7 @@ th{background:#e2e8f0}
 <td>1,176.92</td>
 <td>1,025.85</td>
 <td>1,025.71</td>
+<td></td>
 </tr>
 <tr>
 <td>Text</td>
@@ -87,6 +93,7 @@ th{background:#e2e8f0}
 <td>232,160</td>
 <td>390,288</td>
 <td>366,040</td>
+<td>407,392</td>
 </tr>
 <tr>
 <td>Data</td>
@@ -97,6 +104,7 @@ th{background:#e2e8f0}
 <td>20,708</td>
 <td>2,604</td>
 <td>2,604</td>
+<td>2,608</td>
 </tr>
 <tr>
 <td>BSS</td>
@@ -107,6 +115,7 @@ th{background:#e2e8f0}
 <td>160,344</td>
 <td>35,956</td>
 <td>36,140</td>
+<td>65,652</td>
 </tr>
 <tr>
 <td>Static SRAM</td>
@@ -117,6 +126,7 @@ th{background:#e2e8f0}
 <td>181,052</td>
 <td>38,560</td>
 <td>38,744</td>
+<td>68,260</td>
 </tr>
 <tr>
 <td>ELF size</td>
@@ -127,6 +137,7 @@ th{background:#e2e8f0}
 <td>2,335,012</td>
 <td>2,327,128</td>
 <td>2,254,856</td>
+<td>1,764,288</td>
 </tr>
 <tr>
 <td>AI weights</td>
@@ -135,6 +146,7 @@ th{background:#e2e8f0}
 <td>684,404</td>
 <td>172,232</td>
 <td>148,600</td>
+<td></td>
 <td></td>
 <td></td>
 </tr>
@@ -147,6 +159,7 @@ th{background:#e2e8f0}
 <td>47,104</td>
 <td></td>
 <td></td>
+<td></td>
 </tr>
 <tr>
 <td>MAC ops</td>
@@ -157,6 +170,7 @@ th{background:#e2e8f0}
 <td>7,623,538</td>
 <td>8,345,344</td>
 <td>7,207,328</td>
+<td>8,345,344</td>
 </tr>
 <tr>
 <td>MOPS/s</td>
@@ -167,6 +181,7 @@ th{background:#e2e8f0}
 <td>49.853</td>
 <td>4,512.55</td>
 <td>4,212.35</td>
+<td>9.3006</td>
 </tr>
 <tr>
 <td>Current</td>
@@ -177,6 +192,7 @@ th{background:#e2e8f0}
 <td>22.879</td>
 <td>41.415</td>
 <td>39.638</td>
+<td>14.922</td>
 </tr>
 <tr>
 <td>Power</td>
@@ -187,6 +203,7 @@ th{background:#e2e8f0}
 <td>0.0750432</td>
 <td>0.153236</td>
 <td>0.146662</td>
+<td>0.0552128</td>
 </tr>
 <tr>
 <td>Energy/inference</td>
@@ -197,6 +214,7 @@ th{background:#e2e8f0}
 <td>11,475.73</td>
 <td>283.39</td>
 <td>250.94</td>
+<td>49,541.78</td>
 </tr>
 <tr>
 <td>MAC/J</td>
@@ -207,6 +225,7 @@ th{background:#e2e8f0}
 <td>664,318,290</td>
 <td>29,448,369,916</td>
 <td>28,721,395,187</td>
+<td>168,450,619</td>
 </tr>
 </tbody></table>
 </section>
@@ -218,6 +237,8 @@ th{background:#e2e8f0}
 <th>mx_v0 vs u5_v0</th>
 <th>mx_v1 vs u5_v1</th>
 <th>mx_v1 vs u5_v2</th>
+<th>mx_v0_0 vs u5_v0</th>
+<th>mx_v0_0 vs u5_v1</th>
 </tr></thead><tbody>
 <tr>
 <td>CNN latency avg</td>
@@ -225,6 +246,8 @@ th{background:#e2e8f0}
 <td>+99.53%</td>
 <td>+99.02%</td>
 <td>+98.88%</td>
+<td>-125.88%</td>
+<td>-416.16%</td>
 </tr>
 <tr>
 <td>Cycles avg</td>
@@ -232,6 +255,8 @@ th{background:#e2e8f0}
 <td>+99.89%</td>
 <td>+99.76%</td>
 <td>+99.73%</td>
+<td>+29.41%</td>
+<td>-61.30%</td>
 </tr>
 <tr>
 <td>Throughput</td>
@@ -239,6 +264,8 @@ th{background:#e2e8f0}
 <td>+21379.92%</td>
 <td>+10060.10%</td>
 <td>+8837.56%</td>
+<td>-55.73%</td>
+<td>-80.63%</td>
 </tr>
 <tr>
 <td>End-to-end lower bound</td>
@@ -246,6 +273,8 @@ th{background:#e2e8f0}
 <td>+27.82%</td>
 <td>+14.37%</td>
 <td>+12.85%</td>
+<td></td>
+<td></td>
 </tr>
 <tr>
 <td>Text</td>
@@ -253,6 +282,8 @@ th{background:#e2e8f0}
 <td>+47.36%</td>
 <td>-42.95%</td>
 <td>-57.67%</td>
+<td>+45.06%</td>
+<td>-59.10%</td>
 </tr>
 <tr>
 <td>Data</td>
@@ -260,6 +291,8 @@ th{background:#e2e8f0}
 <td>+82.50%</td>
 <td>+87.43%</td>
 <td>+87.43%</td>
+<td>+82.47%</td>
+<td>+87.41%</td>
 </tr>
 <tr>
 <td>BSS</td>
@@ -267,6 +300,8 @@ th{background:#e2e8f0}
 <td>+84.29%</td>
 <td>+78.02%</td>
 <td>+77.46%</td>
+<td>+71.32%</td>
+<td>+60.08%</td>
 </tr>
 <tr>
 <td>Static SRAM</td>
@@ -274,6 +309,8 @@ th{background:#e2e8f0}
 <td>+84.18%</td>
 <td>+79.07%</td>
 <td>+78.60%</td>
+<td>+72.00%</td>
+<td>+63.13%</td>
 </tr>
 <tr>
 <td>ELF size</td>
@@ -281,10 +318,14 @@ th{background:#e2e8f0}
 <td>+15.38%</td>
 <td>+4.35%</td>
 <td>+3.43%</td>
+<td>+35.85%</td>
+<td>+25.16%</td>
 </tr>
 <tr>
 <td>AI weights</td>
 <td>lower</td>
+<td></td>
+<td></td>
 <td></td>
 <td></td>
 <td></td>
@@ -295,6 +336,8 @@ th{background:#e2e8f0}
 <td></td>
 <td></td>
 <td></td>
+<td></td>
+<td></td>
 </tr>
 <tr>
 <td>MAC ops</td>
@@ -302,6 +345,8 @@ th{background:#e2e8f0}
 <td>+5.14%</td>
 <td>+19.16%</td>
 <td>+5.46%</td>
+<td>+5.14%</td>
+<td>+6.39%</td>
 </tr>
 <tr>
 <td>MOPS/s</td>
@@ -309,6 +354,8 @@ th{background:#e2e8f0}
 <td>+20276.15%</td>
 <td>+8113.68%</td>
 <td>+8349.61%</td>
+<td>-58.00%</td>
+<td>-81.86%</td>
 </tr>
 <tr>
 <td>Current</td>
@@ -316,6 +363,8 @@ th{background:#e2e8f0}
 <td>-71.88%</td>
 <td>-77.24%</td>
 <td>-73.25%</td>
+<td>+38.07%</td>
+<td>+33.28%</td>
 </tr>
 <tr>
 <td>Power</td>
@@ -323,6 +372,8 @@ th{background:#e2e8f0}
 <td>-93.89%</td>
 <td>-99.94%</td>
 <td>-95.44%</td>
+<td>+30.14%</td>
+<td>+24.73%</td>
 </tr>
 <tr>
 <td>Energy/inference</td>
@@ -330,6 +381,8 @@ th{background:#e2e8f0}
 <td>+99.10%</td>
 <td>+98.03%</td>
 <td>+97.81%</td>
+<td>-57.80%</td>
+<td>-288.50%</td>
 </tr>
 <tr>
 <td>MAC/J</td>
@@ -337,6 +390,8 @@ th{background:#e2e8f0}
 <td>+10409.04%</td>
 <td>+4008.17%</td>
 <td>+4223.44%</td>
+<td>-39.89%</td>
+<td>-75.91%</td>
 </tr>
 </tbody></table>
 </section>
@@ -395,6 +450,15 @@ th{background:#e2e8f0}
 <td>0.245 mJ</td>
 <td>154.41 µJ</td>
 </tr>
+<tr>
+<td>MAX78000 cpu</td>
+<td>MAX78000</td>
+<td>6</td>
+<td>897.29 ms</td>
+<td>14.922 mA</td>
+<td>49.542 mJ</td>
+<td>10755.06 µJ</td>
+</tr>
 </tbody></table>
 </section>
 <section><h2>Plots</h2>
@@ -412,7 +476,13 @@ th{background:#e2e8f0}
 <div class="plot"><h3>17_mx_v0_vs_u5_v0_improvement_bars</h3><img src="plots/17_mx_v0_vs_u5_v0_improvement_bars.svg" alt="17_mx_v0_vs_u5_v0_improvement_bars"></div>
 <div class="plot"><h3>18_mx_v1_vs_u5_v1_improvement_bars</h3><img src="plots/18_mx_v1_vs_u5_v1_improvement_bars.svg" alt="18_mx_v1_vs_u5_v1_improvement_bars"></div>
 <div class="plot"><h3>19_mx_v1_vs_u5_v2_improvement_bars</h3><img src="plots/19_mx_v1_vs_u5_v2_improvement_bars.svg" alt="19_mx_v1_vs_u5_v2_improvement_bars"></div>
+<div class="plot"><h3>20_mx_cpu_vs_u5_v0_improvement_bars</h3><img src="plots/20_mx_cpu_vs_u5_v0_improvement_bars.svg" alt="20_mx_cpu_vs_u5_v0_improvement_bars"></div>
+<div class="plot"><h3>21_mx_cpu_vs_u5_v1_improvement_bars</h3><img src="plots/21_mx_cpu_vs_u5_v1_improvement_bars.svg" alt="21_mx_cpu_vs_u5_v1_improvement_bars"></div>
 <div class="plot"><h3>23_power_representative_inference_window_overlay</h3><img src="plots/23_power_representative_inference_window_overlay.svg" alt="23_power_representative_inference_window_overlay"></div>
 <div class="plot"><h3>24_power_peak03_inference_window_overlay</h3><img src="plots/24_power_peak03_inference_window_overlay.svg" alt="24_power_peak03_inference_window_overlay"></div>
 <div class="plot"><h3>26_power_peak_average_bars</h3><img src="plots/26_power_peak_average_bars.svg" alt="26_power_peak_average_bars"></div>
+<div class="plot"><h3>30_power_long_inference_overlay</h3><img src="plots/30_power_long_inference_overlay.svg" alt="30_power_long_inference_overlay"></div>
+<div class="plot"><h3>31_power_short_inference_overlay</h3><img src="plots/31_power_short_inference_overlay.svg" alt="31_power_short_inference_overlay"></div>
+<div class="plot"><h3>32_power_long_peak03_overlay</h3><img src="plots/32_power_long_peak03_overlay.svg" alt="32_power_long_peak03_overlay"></div>
+<div class="plot"><h3>33_power_short_peak03_overlay</h3><img src="plots/33_power_short_peak03_overlay.svg" alt="33_power_short_peak03_overlay"></div>
 </section></main></body></html>

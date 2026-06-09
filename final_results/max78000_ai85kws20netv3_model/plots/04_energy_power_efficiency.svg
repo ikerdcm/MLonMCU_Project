@@ -19,12 +19,15 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827}
 <line x1="92.00" y1="230.75" x2="358.00" y2="230.75" class="grid"/>
 <line x1="92.00" y1="192.50" x2="358.00" y2="192.50" class="grid"/>
 <line x1="92.00" y1="154.25" x2="358.00" y2="154.25" class="grid"/>
-<rect x="110.00" y="135.96" width="106.00" height="133.04" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
-<text x="163.00" y="130.96" class="tick" text-anchor="middle">41.415</text>
-<text x="163.00" y="286.00" class="tick" text-anchor="middle">v0</text>
-<rect x="234.00" y="141.66" width="106.00" height="127.34" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
-<text x="287.00" y="136.66" class="tick" text-anchor="middle">39.638</text>
-<text x="287.00" y="286.00" class="tick" text-anchor="middle">v1</text>
+<text x="142.33" y="286.00" class="tick" text-anchor="middle">v0</text>
+<rect x="110.00" y="135.96" width="64.67" height="133.04" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
+<text x="142.33" y="130.96" class="tick" text-anchor="middle">41.415</text>
+<text x="225.00" y="286.00" class="tick" text-anchor="middle">v1</text>
+<rect x="192.67" y="141.66" width="64.67" height="127.34" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="225.00" y="136.66" class="tick" text-anchor="middle">39.638</text>
+<text x="307.67" y="286.00" class="tick" text-anchor="middle">cpu</text>
+<rect x="275.33" y="221.06" width="64.67" height="47.94" rx="3" fill="#c2410c" stroke="none" opacity="1.0"/>
+<text x="307.67" y="216.06" class="tick" text-anchor="middle">14.922</text>
 <text x="398.00" y="94.00" class="label" text-anchor="start">Power</text>
 <text x="398.00" y="111.00" class="small" text-anchor="start">W</text>
 <line x1="452.00" y1="116.00" x2="452.00" y2="269.00" class="axis"/>
@@ -32,62 +35,99 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827}
 <line x1="452.00" y1="230.75" x2="718.00" y2="230.75" class="grid"/>
 <line x1="452.00" y1="192.50" x2="718.00" y2="192.50" class="grid"/>
 <line x1="452.00" y1="154.25" x2="718.00" y2="154.25" class="grid"/>
-<rect x="470.00" y="135.96" width="106.00" height="133.04" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
-<text x="523.00" y="130.96" class="tick" text-anchor="middle">0.153236</text>
-<text x="523.00" y="286.00" class="tick" text-anchor="middle">v0</text>
-<rect x="594.00" y="141.66" width="106.00" height="127.34" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
-<text x="647.00" y="136.66" class="tick" text-anchor="middle">0.146662</text>
-<text x="647.00" y="286.00" class="tick" text-anchor="middle">v1</text>
+<text x="502.33" y="286.00" class="tick" text-anchor="middle">v0</text>
+<rect x="470.00" y="135.96" width="64.67" height="133.04" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
+<text x="502.33" y="130.96" class="tick" text-anchor="middle">0.153236</text>
+<text x="585.00" y="286.00" class="tick" text-anchor="middle">v1</text>
+<rect x="552.67" y="141.66" width="64.67" height="127.34" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="585.00" y="136.66" class="tick" text-anchor="middle">0.146662</text>
+<text x="667.67" y="286.00" class="tick" text-anchor="middle">cpu</text>
+<rect x="635.33" y="221.06" width="64.67" height="47.94" rx="3" fill="#c2410c" stroke="none" opacity="1.0"/>
+<text x="667.67" y="216.06" class="tick" text-anchor="middle">0.0552128</text>
 <text x="758.00" y="94.00" class="label" text-anchor="start">Energy/inference</text>
-<text x="758.00" y="111.00" class="small" text-anchor="start">uJ</text>
+<text x="758.00" y="111.00" class="small" text-anchor="start">uJ log</text>
 <line x1="812.00" y1="116.00" x2="812.00" y2="269.00" class="axis"/>
 <line x1="812.00" y1="269.00" x2="1078.00" y2="269.00" class="axis"/>
-<line x1="812.00" y1="230.75" x2="1078.00" y2="230.75" class="grid"/>
-<line x1="812.00" y1="192.50" x2="1078.00" y2="192.50" class="grid"/>
-<line x1="812.00" y1="154.25" x2="1078.00" y2="154.25" class="grid"/>
-<rect x="830.00" y="135.96" width="106.00" height="133.04" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
-<text x="883.00" y="130.96" class="tick" text-anchor="middle">283.39</text>
-<text x="883.00" y="286.00" class="tick" text-anchor="middle">v0</text>
-<rect x="954.00" y="151.19" width="106.00" height="117.81" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
-<text x="1007.00" y="146.19" class="tick" text-anchor="middle">250.94</text>
-<text x="1007.00" y="286.00" class="tick" text-anchor="middle">v1</text>
+<line x1="812.00" y1="257.65" x2="1078.00" y2="257.65" class="grid"/>
+<text x="808.00" y="261.65" class="tick" text-anchor="end">100</text>
+<line x1="812.00" y1="212.25" x2="1078.00" y2="212.25" class="grid"/>
+<text x="808.00" y="216.25" class="tick" text-anchor="end">1k</text>
+<line x1="812.00" y1="166.85" x2="1078.00" y2="166.85" class="grid"/>
+<text x="808.00" y="170.85" class="tick" text-anchor="end">10k</text>
+<line x1="812.00" y1="121.45" x2="1078.00" y2="121.45" class="grid"/>
+<text x="808.00" y="125.45" class="tick" text-anchor="end">100k</text>
+<text x="862.33" y="286.00" class="tick" text-anchor="middle">v0</text>
+<rect x="830.00" y="237.11" width="64.67" height="31.89" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
+<text x="862.33" y="232.11" class="tick" text-anchor="middle">283.39</text>
+<text x="945.00" y="286.00" class="tick" text-anchor="middle">v1</text>
+<rect x="912.67" y="239.51" width="64.67" height="29.49" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="945.00" y="234.51" class="tick" text-anchor="middle">250.94</text>
+<text x="1027.67" y="286.00" class="tick" text-anchor="middle">cpu</text>
+<rect x="995.33" y="135.30" width="64.67" height="133.70" rx="3" fill="#c2410c" stroke="none" opacity="1.0"/>
+<text x="1027.67" y="130.30" class="tick" text-anchor="middle">49,541.78</text>
 <text x="38.00" y="329.00" class="label" text-anchor="start">MAC/J</text>
-<text x="38.00" y="346.00" class="small" text-anchor="start">MAC/J</text>
+<text x="38.00" y="346.00" class="small" text-anchor="start">MAC/J log</text>
 <line x1="92.00" y1="351.00" x2="92.00" y2="504.00" class="axis"/>
 <line x1="92.00" y1="504.00" x2="358.00" y2="504.00" class="axis"/>
-<line x1="92.00" y1="465.75" x2="358.00" y2="465.75" class="grid"/>
-<line x1="92.00" y1="427.50" x2="358.00" y2="427.50" class="grid"/>
-<line x1="92.00" y1="389.25" x2="358.00" y2="389.25" class="grid"/>
-<rect x="110.00" y="370.96" width="106.00" height="133.04" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
-<text x="163.00" y="365.96" class="tick" text-anchor="middle">29,448,369,916</text>
-<text x="163.00" y="521.00" class="tick" text-anchor="middle">v0</text>
-<rect x="234.00" y="374.24" width="106.00" height="129.76" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
-<text x="287.00" y="369.24" class="tick" text-anchor="middle">28,721,395,187</text>
-<text x="287.00" y="521.00" class="tick" text-anchor="middle">v1</text>
+<line x1="92.00" y1="492.65" x2="358.00" y2="492.65" class="grid"/>
+<text x="88.00" y="496.65" class="tick" text-anchor="end">100000k</text>
+<line x1="92.00" y1="447.25" x2="358.00" y2="447.25" class="grid"/>
+<text x="88.00" y="451.25" class="tick" text-anchor="end">1000000k</text>
+<line x1="92.00" y1="401.85" x2="358.00" y2="401.85" class="grid"/>
+<text x="88.00" y="405.85" class="tick" text-anchor="end">10000000k</text>
+<line x1="92.00" y1="356.45" x2="358.00" y2="356.45" class="grid"/>
+<text x="88.00" y="360.45" class="tick" text-anchor="end">100000000k</text>
+<text x="142.33" y="521.00" class="tick" text-anchor="middle">v0</text>
+<rect x="110.00" y="380.55" width="64.67" height="123.45" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
+<text x="142.33" y="375.55" class="tick" text-anchor="middle">29,448,369,916</text>
+<text x="225.00" y="521.00" class="tick" text-anchor="middle">v1</text>
+<rect x="192.67" y="381.05" width="64.67" height="122.95" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="225.00" y="376.05" class="tick" text-anchor="middle">28,721,395,187</text>
+<text x="307.67" y="521.00" class="tick" text-anchor="middle">cpu</text>
+<rect x="275.33" y="482.37" width="64.67" height="21.63" rx="3" fill="#c2410c" stroke="none" opacity="1.0"/>
+<text x="307.67" y="477.37" class="tick" text-anchor="middle">168,450,619</text>
 <text x="398.00" y="329.00" class="label" text-anchor="start">MAC/s/W</text>
-<text x="398.00" y="346.00" class="small" text-anchor="start">MAC/s/W</text>
+<text x="398.00" y="346.00" class="small" text-anchor="start">MAC/s/W log</text>
 <line x1="452.00" y1="351.00" x2="452.00" y2="504.00" class="axis"/>
 <line x1="452.00" y1="504.00" x2="718.00" y2="504.00" class="axis"/>
-<line x1="452.00" y1="465.75" x2="718.00" y2="465.75" class="grid"/>
-<line x1="452.00" y1="427.50" x2="718.00" y2="427.50" class="grid"/>
-<line x1="452.00" y1="389.25" x2="718.00" y2="389.25" class="grid"/>
-<rect x="470.00" y="370.96" width="106.00" height="133.04" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
-<text x="523.00" y="365.96" class="tick" text-anchor="middle">29,448,369,916</text>
-<text x="523.00" y="521.00" class="tick" text-anchor="middle">v0</text>
-<rect x="594.00" y="374.24" width="106.00" height="129.76" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
-<text x="647.00" y="369.24" class="tick" text-anchor="middle">28,721,395,187</text>
-<text x="647.00" y="521.00" class="tick" text-anchor="middle">v1</text>
+<line x1="452.00" y1="492.65" x2="718.00" y2="492.65" class="grid"/>
+<text x="448.00" y="496.65" class="tick" text-anchor="end">100000k</text>
+<line x1="452.00" y1="447.25" x2="718.00" y2="447.25" class="grid"/>
+<text x="448.00" y="451.25" class="tick" text-anchor="end">1000000k</text>
+<line x1="452.00" y1="401.85" x2="718.00" y2="401.85" class="grid"/>
+<text x="448.00" y="405.85" class="tick" text-anchor="end">10000000k</text>
+<line x1="452.00" y1="356.45" x2="718.00" y2="356.45" class="grid"/>
+<text x="448.00" y="360.45" class="tick" text-anchor="end">100000000k</text>
+<text x="502.33" y="521.00" class="tick" text-anchor="middle">v0</text>
+<rect x="470.00" y="380.55" width="64.67" height="123.45" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
+<text x="502.33" y="375.55" class="tick" text-anchor="middle">29,448,369,916</text>
+<text x="585.00" y="521.00" class="tick" text-anchor="middle">v1</text>
+<rect x="552.67" y="381.05" width="64.67" height="122.95" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="585.00" y="376.05" class="tick" text-anchor="middle">28,721,395,187</text>
+<text x="667.67" y="521.00" class="tick" text-anchor="middle">cpu</text>
+<rect x="635.33" y="482.37" width="64.67" height="21.63" rx="3" fill="#c2410c" stroke="none" opacity="1.0"/>
+<text x="667.67" y="477.37" class="tick" text-anchor="middle">168,450,619</text>
 <text x="758.00" y="329.00" class="label" text-anchor="start">MAC/s</text>
-<text x="758.00" y="346.00" class="small" text-anchor="start">MAC/s</text>
+<text x="758.00" y="346.00" class="small" text-anchor="start">MAC/s log</text>
 <line x1="812.00" y1="351.00" x2="812.00" y2="504.00" class="axis"/>
 <line x1="812.00" y1="504.00" x2="1078.00" y2="504.00" class="axis"/>
-<line x1="812.00" y1="465.75" x2="1078.00" y2="465.75" class="grid"/>
-<line x1="812.00" y1="427.50" x2="1078.00" y2="427.50" class="grid"/>
-<line x1="812.00" y1="389.25" x2="1078.00" y2="389.25" class="grid"/>
-<rect x="830.00" y="370.96" width="106.00" height="133.04" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
-<text x="883.00" y="365.96" class="tick" text-anchor="middle">4,512,548,985</text>
-<text x="883.00" y="521.00" class="tick" text-anchor="middle">v0</text>
-<rect x="954.00" y="379.81" width="106.00" height="124.19" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
-<text x="1007.00" y="374.81" class="tick" text-anchor="middle">4,212,348,334</text>
-<text x="1007.00" y="521.00" class="tick" text-anchor="middle">v1</text>
+<line x1="812.00" y1="495.25" x2="1078.00" y2="495.25" class="grid"/>
+<text x="808.00" y="499.25" class="tick" text-anchor="end">1000k</text>
+<line x1="812.00" y1="460.24" x2="1078.00" y2="460.24" class="grid"/>
+<text x="808.00" y="464.24" class="tick" text-anchor="end">10000k</text>
+<line x1="812.00" y1="425.22" x2="1078.00" y2="425.22" class="grid"/>
+<text x="808.00" y="429.22" class="tick" text-anchor="end">100000k</text>
+<line x1="812.00" y1="390.21" x2="1078.00" y2="390.21" class="grid"/>
+<text x="808.00" y="394.21" class="tick" text-anchor="end">1000000k</text>
+<line x1="812.00" y1="355.20" x2="1078.00" y2="355.20" class="grid"/>
+<text x="808.00" y="359.20" class="tick" text-anchor="end">10000000k</text>
+<text x="862.33" y="521.00" class="tick" text-anchor="middle">v0</text>
+<rect x="830.00" y="367.30" width="64.67" height="136.70" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
+<text x="862.33" y="362.30" class="tick" text-anchor="middle">4,512,548,985</text>
+<text x="945.00" y="521.00" class="tick" text-anchor="middle">v1</text>
+<rect x="912.67" y="368.35" width="64.67" height="135.65" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="945.00" y="363.35" class="tick" text-anchor="middle">4,212,348,334</text>
+<text x="1027.67" y="521.00" class="tick" text-anchor="middle">cpu</text>
+<rect x="995.33" y="461.34" width="64.67" height="42.66" rx="3" fill="#c2410c" stroke="none" opacity="1.0"/>
+<text x="1027.67" y="456.34" class="tick" text-anchor="middle">9,300,633</text>
 </svg>

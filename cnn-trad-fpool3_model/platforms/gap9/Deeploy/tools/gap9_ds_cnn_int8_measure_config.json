@@ -1,0 +1,12 @@
+{
+  "runs": 20,
+  "clock_hz": 240000000.0,
+  "mac_ops": 3824768.0,
+  "variant_name": "ds_cnn_l_int8",
+  "deeploy_root": "/app/Deeploy",
+  "sdk_home": "/app/install/gap9-sdk",
+  "measurements_root": "/app/gap9_measurements",
+  "board": "GAP9_EVK",
+  "voltage_v": null,
+  "current_ma": null
+}

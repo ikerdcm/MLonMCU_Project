@@ -1,0 +1,39 @@
+model: /app/models/ds_cnn_l.onnx
+platform: gvsoc
+scheme: quant_ne16
+config:
+  adjust_order: true
+  fusions:
+  - scaled_match_group
+  graph_options:
+    scheme: SQ8
+    use_ne16: true
+    quantized_dimension: channel
+    narrow_weights: true
+    force_input_size: 8
+    force_output_size: 8
+    weight_bits: 8
+target_config:
+  settings:
+    l1_size: 128000
+    l2_size: 1350000
+    l3_size: 8000000
+    fc_freq: 370000000
+    cl_freq: 370000000
+    cluster_stack_size: 2048
+    cluster_slave_stack_size: 512
+    graph_monitor_cycles: true
+    graph_produce_node_names: true
+    graph_produce_operinfos: true
+    graph_dump_tensor: 0
+    l3_ram_device: AT_MEM_L3_DEFAULTRAM
+    l3_flash_device: AT_MEM_L3_MRAMFLASH
+    privileged_l3_flash_device: AT_MEM_L3_MRAMFLASH
+    privileged_l3_flash_size: 1500000
+    graph_const_exec_from_flash: true
+    graph_l1_promotion: 2
+    graph_size_opt: 2
+  io_settings:
+    input_1:
+      allocate: 0
+load_tflite_quant: false

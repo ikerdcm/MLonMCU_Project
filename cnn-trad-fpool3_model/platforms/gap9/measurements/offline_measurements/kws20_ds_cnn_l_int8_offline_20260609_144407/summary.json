@@ -1,0 +1,92 @@
+{
+  "timestamp": "2026-06-09T14:45:07.866536",
+  "mode": "offline",
+  "platform": "GAP9",
+  "board": "GAP9_EVK",
+  "variant_name": "ds_cnn_l_int8",
+  "config": "/app/Deeploy/tools/gap9_ds_cnn_int8_measure_config.json",
+  "binary": "/app/Deeploy/DeeployTest/TEST_GAP9/build_master/DSCNNL_INT8",
+  "clock_mhz": 240.0,
+  "clock_hz": 240000000.0,
+  "quantization": "INT8",
+  "counts": {
+    "num_inference_events": 20,
+    "n_runs_requested": 20,
+    "n_runs_failed": 0
+  },
+  "memory": {
+    "text_bytes": 47814,
+    "data_bytes": 29152,
+    "bss_bytes": 4500,
+    "dec_bytes": 81466,
+    "size_tool": "/app/install/llvm/bin/llvm-size"
+  },
+  "static_sram_usage": {
+    "static_sram_bytes": 33652,
+    "static_sram_kib": 32.86328125,
+    "data_bytes": 29152,
+    "bss_bytes": 4500,
+    "note": "GAP9 NOFLASH: data section contains compiled model weights; equivalent metric to MCU SRAM usage"
+  },
+  "l2_memory": {
+    "total_l2_bytes": 81466,
+    "total_l2_kib": 79.556640625,
+    "code_bytes": 47814,
+    "data_bytes": 29152,
+    "bss_bytes": 4500,
+    "source": "estimated from ELF sections (llvm-size)"
+  },
+  "cycles": {
+    "count": 20,
+    "min": 4113931.0,
+    "max": 4121483.0,
+    "avg": 4116705.4,
+    "median": 4116206.5,
+    "std": 2053.1172550923375,
+    "p95": 4119643.0
+  },
+  "cnn_latency_us": {
+    "count": 20,
+    "min": 17141.37916666667,
+    "max": 17172.845833333333,
+    "avg": 17152.939166666667,
+    "median": 17150.860416666666,
+    "std": 8.554655229551102,
+    "p95": 17165.179166666665
+  },
+  "latency_us": {
+    "count": 20,
+    "min": 17141.37916666667,
+    "max": 17172.845833333333,
+    "avg": 17152.939166666667,
+    "median": 17150.860416666666,
+    "std": 8.554655229551102,
+    "p95": 17165.179166666665
+  },
+  "cnn_latency_ms_avg": 17.152939166666666,
+  "latency_ms_avg": 17.152939166666666,
+  "labels": [
+    "down",
+    "go",
+    "left",
+    "no",
+    "off",
+    "on",
+    "right",
+    "stop",
+    "up",
+    "yes",
+    "silence",
+    "unknown"
+  ],
+  "pred_class_distribution": {
+    "left": 20
+  },
+  "inferences_per_second": 58.2990466113995,
+  "mac_ops_per_cycle": 0.9290846996241218,
+  "compute_estimate": {
+    "mac_ops_per_inference": 3824768.0,
+    "mac_ops_per_second": 222980327.90978923,
+    "gops": 0.22298032790978922
+  }
+}

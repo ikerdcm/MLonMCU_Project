@@ -1,0 +1,539 @@
+# Changelog
+This file contains the changelog for the Deeploy project. The changelog is divided into sections based on the version of the project. Each section contains a list of pull requests, features, changes, fixes, and removals that were made in that version.
+
+## Unreleased (Planned Release Target: v0.2.2)
+
+
+### List of Pull Requests
+- Add Microbenchmarking Infrastructure and CI Using GVSoC CSR [#162](https://github.com/pulp-platform/Deeploy/pull/162)
+- Fix CI Cache Generation [#176](https://github.com/pulp-platform/Deeploy/pull/176)
+- Fix Broken CI [#175](https://github.com/pulp-platform/Deeploy/pull/175)
+- Improve Docstring and Debugging [#160](https://github.com/pulp-platform/Deeploy/pull/160)
+- Add GAP9 Container Support [#163](https://github.com/pulp-platform/Deeploy/pull/163)
+- Extend Codeowners [#164](https://github.com/pulp-platform/Deeploy/pull/164)
+- Support for MaxPool1D and RQSConv1D for PULPOpen [#146](https://github.com/pulp-platform/Deeploy/pull/146)
+- Use Pre-Commit in CI [#159](https://github.com/pulp-platform/Deeploy/pull/159)
+- Deeploy-GAP9 Platform [#143](https://github.com/pulp-platform/Deeploy/pull/143)
+- Update CLI interface Across Project, Fix Tutorial, and Remove Legacy Test [#157](https://github.com/pulp-platform/Deeploy/pull/157)
+- Fix for python error when using python 3.12.11 [#189]( https://github.com/pulp-platform/Deeploy/pull/189)
+- Add support for Operators for Generic target needed in MAGIA [#193]( https://github.com/pulp-platform/Deeploy/pull/193)
+
+### Added
+- Add many missing docstrings
+- Add `__repr__()` function for `_ReferenceBuffer` class
+- GAP9 Container Support with ARM64 architecture support
+- `zsh` and `oh-my-zsh` plugin installation in containers
+- Shell Format pre-commit hook
+- Add integer MaxPool1D for Generic platform and RQSConv1D support for PULPOpen, with corresponding kernel tests.
+- Added GAP9 Platform Support: Deployer, Bindings, Templates, Tiler, DMA (L3Dma/MchanDma), target library, CI workflows
+- Per-layer microbenchmarking on PULPOpen via `--profileMicrobenchmark`: new `PULPMicrobenchmark` code-transformation pass + `perf_utils.h` helpers report cycles, instructions, stalls and cache misses per layer in `RunNetwork`
+- Add support for the Generic target for the following operators [Ceil](https://onnx.ai/onnx/operators/onnx__Ceil.html), [Floor](https://onnx.ai/onnx/operators/onnx__Floor.html), [Clip](https://onnx.ai/onnx/operators/onnx__Clip.html), [Sub](https://onnx.ai/onnx/operators/onnx__Sub.html), [Exp](https://onnx.ai/onnx/operators/onnx__Exp.html), [Sigmoid](https://onnx.ai/onnx/operators/onnx__Sigmoid.html), [Swish](https://onnx.ai/onnx/operators/onnx__Swish.html), [HardSigmoid](https://onnx.ai/onnx/operators/onnx__HardSigmoid.html), [HardSwish](https://onnx.ai/onnx/operators/onnx__HardSwish.html), [InstanceNormalization](https://onnx.ai/onnx/operators/onnx__InstanceNormalization.html), [GroupNormalization](https://onnx.ai/onnx/operators/onnx__GroupNormalization.html), [AveragePool](https://onnx.ai/onnx/operators/onnx__AveragePool.html), [GlobalAveragePool](https://onnx.ai/onnx/operators/onnx__GlobalAveragePool.html), [GlobalMaxPool](https://onnx.ai/onnx/operators/onnx__GlobalMaxPool.html).
+
+### Changed
+- Use by default `devel` container for GAP9 CI
+- Extend Readme platforms with GAP9 shields
+- Move `MemoryAwareClosureGeneration` pass to `MemoryLevelExtension`
+- Move `MemoryAwarePrint*` passes to `MemoryLevelExtension`
+- Make `sizeInBytes` a class property instead of a function
+- Move `AnnotateNeurekaWeightMemoryLevel` to `Neureka` specific folder
+- Cleaned up Docker flow to use a temporary build folder
+- Switch CI to use pre-commit for linting
+- Update `pulp-nnx` and `pulp-nn-mixed` submodules to their latest versions
+- PULP-NN moved to TargetLibraries third-party folder
+- Aligned CLI commands across the project
+- Added @runwangdl as a code owner
+
+### Fixed
+- Add missing `shell: bash` directive to CI cache generation steps to ensure correct shell execution
+- Fix wrong test case in GAP9 ccache workflow (`test_gap9_tiled_kernels_l2_singlebuffer` using `MatMul/Regular` instead of `Add/Large`)
+- Fix Docker flow to fetch `*.so` git lfs files
+- Downgrade `setuptools` to `81.0.0`
+- im2col buffer size in Conv1d template
+- Fix missing dependency in pre-commit-config
+- Fix test paths in Deeploy 101 tutorial
+- Fix tiling variable replacement corrupting static arrays by changing pointer update from value copy to address reassignment
+- Reduce RunNetwork stack usage by scoping per-layer variables with braces and moving tileIdxPtr allocation into per-layer execution blocks
+- Fix invalid escape sequence python error in DeeployTypes.py: appearing when using pytest to launch regressions
+
+### Removed
+- `testDMA.py` was an old test; we now have `test_dmas.py` instead.
+
+## Release v0.2.1 (2026-02-05) [#158](https://github.com/pulp-platform/Deeploy/pull/158)
+
+### List of Pull Requests
+- PyPi Package Deployment + Remove Banshee Dept [#154](https://github.com/pulp-platform/Deeploy/pull/154)
+- PyTest Migration [#144](https://github.com/pulp-platform/Deeploy/pull/144)
+- Update submodule `pulp-nn-mixed` [#145](https://github.com/pulp-platform/Deeploy/pull/145)
+- Improve Profiling [#138](https://github.com/pulp-platform/Deeploy/pull/138)
+- FP32 ReduceMean operator improvement [#137](https://github.com/pulp-platform/Deeploy/pull/137)
+- Support for RMSNorm (Pow and Sqrt operators) [#136](https://github.com/pulp-platform/Deeploy/pull/136)
+- Demo TinyViT compatibility with tiled Siracusa [#124](https://github.com/pulp-platform/Deeploy/pull/124)
+- TinyViT on non-tiled Siracusa [#117](https://github.com/pulp-platform/Deeploy/pull/117)
+- Support Fully Asynchronous DMAs [#114](https://github.com/pulp-platform/Deeploy/pull/114)
+- Disallow shape inference [#128](https://github.com/pulp-platform/Deeploy/pull/128)
+- Remove memory-aware node bindings [#123](https://github.com/pulp-platform/Deeploy/pull/123)
+- Fix missing const's layout transformation and refactor NCHWtoNHWC passes [#122](https://github.com/pulp-platform/Deeploy/pull/122)
+- Fix aliasing [#125](https://github.com/pulp-platform/Deeploy/pull/125)
+- Support for 1D Autoencoder [#98](https://github.com/pulp-platform/Deeploy/pull/98)
+- Refactor Logging for Improved Debugging [#115](https://github.com/pulp-platform/Deeploy/pull/115)
+- Add reuse-tool as an SPDX license header linter [#113](https://github.com/pulp-platform/Deeploy/pull/113)
+- Bug fixes, API Cleanup and Reduce Compiler Warning on PULP [#112](https://github.com/pulp-platform/Deeploy/pull/112)
+- Fix PULP GEMM `batch` serialization [#109](https://github.com/pulp-platform/Deeploy/pull/109)
+- Split CI Workflows by Platform and Task, Improve Formatting and Linting Reliability [#108](https://github.com/pulp-platform/Deeploy/pull/108)
+- Refactor tiling code generation [#105](https://github.com/pulp-platform/Deeploy/pull/105)
+- Change order of typeMatching entries [#68](https://github.com/pulp-platform/Deeploy/pull/68)
+- Node Mangling to avoid duplication [#93](https://github.com/pulp-platform/Deeploy/pull/93)
+- Prepare Post v0.2.0 Release [#104](https://github.com/pulp-platform/Deeploy/pull/104)
+- Use Docker digests instead of arch-specific tags [#106](https://github.com/pulp-platform/Deeploy/pull/106)
+- Fix `Unsqueeze` Op. when using ONNX opset 13 or higher (from attribute to input) [#119](https://github.com/pulp-platform/Deeploy/pull/119)
+- Fix bias hoisting in generic GEMM with no bias [#126](https://github.com/pulp-platform/Deeploy/pull/126)
+
+### Added
+- The `publish.yml` action to build a branch and push it to PyPi. The action is automatically triggered when a tag with the "v*" format is emitted.
+- I created a release of [Banshee](https://github.com/pulp-platform/banshee/releases/tag/v0.5.0-prebuilt) so we don't need to rebuild it over and over. The `Makefile` now pulls that release depending on the platform.
+- I bumped the onnx-graphsurgeon version such that we don't need to use NVIDIA's PyPi index anymore.
+- `_export_graph` assigns their export type to the tensors before export.
+- `pytest` and `pytest-xdist` as dependencies of Deeploy.
+- A `pytest.ini` for the global configuration of PyTest for the project.
+- `conftest.py` to define CLI args for PyTest for the whole project, it also defines a set of global fixtures and markers.
+- `pytestRunner.py` contains helper functions and fixtures for the whole project.
+- `test_platforms.py` lists the E2E tests and sorts them into marked categories (per platform and per kernel/model).
+- Each platform has a test config file where a list or a dict describes the tests.
+- Support for unknown number of data dimensions in the tiler
+- Parallelization support for the FP32 ReduceMean operator on PULPOpen
+- Extensive testing for the ReduceMean operator
+- Pass to remove ReduceMean operators that don't change data content, but only its shape
+- Support for RMSNorm operation via operator decomposition.
+- Added `Pow` (Power) and `Sqrt` (Square Root) operation support (Parsers, Layers, Bindings, Templates, and FP32 Kernels) for the Generic platform.
+- Support for input tiling for PULP FP regular and DW conv 2D.
+- CI tests for tiled Siracusa FP regular and DW conv 2D, with and without bias, for skip connections, and for the demo version of TinyViT.
+- Documentation for PULP FP regular and DW conv 2D and MatMul tile constraints.
+- PULP ReduceMean and Slice tile constraints.
+- PULP 2D FP DW conv Im2Col template and kernel, with bias support.
+- Bias support for PULP 2D FP regular conv Im2Col in template & kernel.
+- PULP FP DW conv 2D parser.
+- FP conv 2D (simple & DW), reshape & skip connection, and TinyViT demo tests to the non-tiled Siracusa CI pipeline.
+- FP bindings and mappings for PULP slice, DW conv 2D, and reduce mean operations.
+- FP PULP DW conv lowering optimization pass similar to the existent one for integer version.
+- RemoveEmptyConvBiasPass to the PULP optimizer.
+- Add manual type inference feature (CLI: `--input-type-map`/`--input-offset-map`) to resolve ambiguities when test inputs are not representative enough
+- Added a `testTypeInferenceDifferentTypes` test case to validate type inference for different input types
+- Added `_mangleNodeNames` function to avoid duplicate node mappings
+- Output Docker image digests per platform (`amd64`, `arm64`) after build, which is used to construct the multi-arch Docker manifest. This preventes registry clutter caused by unnecessary per-architecture Docker tags.
+- AsyncDma abstraction of DMA's
+- test runner per DMA and a script that tests all the DMA's
+- generic Single/DoubleBufferingTilingCodeGeneration classes
+- TilingVariableReplacementUpdate class that updates the variable replacement refs
+- TilingHoistingMixIn class that encapsulates all the hoisting helper functions of tiling
+- sorting of input memory allocations to allow references that live in the same memory level as the memory they are referencing
+- a function that tests the tiling solution for correctness which currently only tests buffer allocation for byte alignment
+- IntrospectiveCodeTransformation: `_indexPointer()`, `indexVars()`, `dereferenceVars()`. The `*Vars` functions index/dereference a list of variables (useful for tiling)
+- NetworkContext: `unravelReference()` that unravels a `_ReferenceBuffer` until the base buffer
+- NetworkContext: `is_object()` - helper function that determines whether the string represents a name of a local or global object
+- NetworkContext: `is_buffer()` - helper function that determines whether the string represents a name of a buffer
+- missing checks for environment variables
+- `_permuteHyperRectangle` helper function
+- Added CI badges to the README
+- Added YAML linting to CI
+- Added missing license headers and C header include guards
+- Extended the pre-commit hooks to remove trailing whitespace, check licenses, format and lint files
+- Reshape operator support for PULP (`ReshapeTemplate` in bindings)
+- Missing class attributes in `Closure.py`
+- reuse_skip_wrapper.py to manually skip files
+- Centralized logging with `DEFAULT_LOGGER`, replacing `print` statements
+- Debug logs for type checking/parsing; `__repr__` for core classes
+- Buffer utilities: `checkNumLevels` validation and `sizeInBytes` method
+- Per–memory-level usage tracking and worst-case reporting in `NetworkContext`
+- Memory/I/O summaries and input/output logging in deployers
+- RequantHelpers.py for Neureka's TileConstraints
+- Added assertion that all the graph tensors after lowering have a shape annotated
+- Added testFloatGEMMnobias
+- Profiling support and optional comments in generated DMA code for better traceability
+- Added new waiting-strategy logic with fine-grained `PerTensorWaitingStrategy`
+- PULPClusterEngine now accepts a `n_cores` parameter to set the number of cores used
+- annotateNCores method to PULPDeployer that adds an `n_cores` key to all PULPClusterEngine templates' operatorRepresentations
+- Calculate non-kernel overhead and show total time spent during profiling
+
+### Changed
+- Rename package name from `PULP-Deeploy` to `deeploy-pulp`.
+- Each CI workflow has been simplified to call the pytest suite with certain markers.
+- Structure of Tests subdir for improved ordering
+- Structure of .gitignore file for improved ordering
+- Decreased L1 maximal memory limit for CI pipeline tests where compatible thanks to the implementation of Conv2D input tiling support.
+- Reduced size of reshape & skip connection test, for non-tiled Siracusa memory compatibility.
+- Replaced platform-specific tags (`*-amd64`, `*-arm64`) with direct digest references in `Noelware/docker-manifest-action`.
+- mchan HAL is now reduced to bare-bones
+- refactor of the IntrospectiveCodeTransformation to work on the Mako template
+- refactor of memory allocation code transformation passes
+- _ReferenceBuffer accepts an optional `offset` argument to offset the reference
+- NetworkContext: `hoistReference` - accepts the actual buffer as reference instead of name, accepts shape, offset, and override_type arguments, and returns the actual buffer, not its name
+- `_mangleNodeRep` -> `_mangleOpRepr` - the canonical name we use is `OperatorRepresentation`. `NodeRep` and `ParseDict` are old iterations of the name.
+- rename of permutation functions to follow this convention: `permute` is an action that permutes something, `permutation` is a function that generates a permutation
+- `_permuteList` to just `_permute`
+- removed manual buffer name mangling since we do it in the ExecutionBlock generate() function, simplifies templates
+- we now check that buffer shapes/hyperrectangles/tiling ranks match which required changing a few `serializeTilingSolution` functions to preserve the same shape rank
+- big refactor of the code generation part of the TilingExtension and needed changes to PULPOpen and Snitch due to it
+- PULPClusterTilingSB and PULPClusterTilingDB now allow for transfers of any rank (dimensionality)
+- PULP's final output diff is now calculated as absolute error, instead of just subtraction
+- common code generation code between testMVP/generateNetwork/... was extracted into a single `generateTestNetwork` function
+- in some functions, instead of passing the name of a buffer, the actual buffer is just passed
+- tile function allows overriding the optimizer with external tilingSolution and memoryMap
+- refactor of the permutation functions for clarity
+- Split CI into multiple workflow files: one per platform, one for lint & license, one for general Deeploy tests, one for infrastructure, and two for Docker flows, improving maintainability and status reporting
+- Extended CI to check license in cMake and YAML files
+- Removed all trailing whitespace
+- Removed unnecessary includes from the PULP platform header list, such as `DeeployBasicMath.h`, for cleaner code generation
+- Changed types and added correct casts to fix many compiler warnings in the PULP target library
+- Use [reuse-tool](https://github.com/fsfe/reuse-tool) in pre-commit, CI, and Makefile for SPDX license header linting
+- Deployer workflow now uses `prepare(...)` instead of `generateFunction(...)`.
+- Removed `fromVariableBuffer`
+- Refactored `hoistConstant`
+- Refactored TransientBuffer's `__init__`
+- Refactor of the NCHWtoNHWC passes
+- Removed NodeMemoryLevelChecker, MemoryAwareNodeBinding
+- Removed _parseNode from MemoryNetworkDeployer since we don't need the annotations before typeChecking anymore
+- Removed Wmem variants of bindings and tile constraints from Neureka
+- Disabled ICCT_ITA_8 MemPool test because it was using a lowering that created shapeless tensors
+- Added missing shape annotation to the testTypeInferenceDifferentTypes
+- Refactored DMA code generation (`SnitchDma`, `Mchan`) to correctly overlap transfers and compute in double-buffering mode
+- changed `_mapNode` to `_selectEngine` which reduces the responsibility of that function to, as the name states, just engine selection
+- Print kernel profiling information for all memory levels
+
+### Fixed
+- Update `install.md` to remove rust mention and fix test command.
+- Update `README.md` to remove reference to NVIDIA's PyPi index.
+- `nvidia-pyindex` was broken as it now tries to build the wheel to respect the new policy on packages using `pyproject`. Instead of installing this package, we just add the `https://pypi.ngc.nvidia.com` channel to the pip config file.
+- Pin versions of broken dependencies of Banshee.
+- Fixed ReduceMean parallelization and tiling issues described in Issue [#134](https://github.com/pulp-platform/Deeploy/issues/134).
+- Fixed PULP FP32 regular and DW Conv2D, and MatMul tile constraints.
+- Fixed type casting for tiling code generation.
+- Fixed bug in buffer name identification in code generation for tests with L3 default memory level.
+- PULP GELU kernel to use tanh approximation.
+- Fixed bug for non-batched elements in the PULPOpen FP GEMM and matmul templates.
+- Added underscore to the beginning of closure names to avoid naming issues when they start with unsupported first characters (like numbers).
+- Data types in the PULPOpen FP add and mul templates.
+- Prevent node duplication for graphs generated via GraphSurgeon
+- Resolved issue with missing `id` in the `Build Cache for Docker` step, used in the `Inject build-cache` step.
+- Fix license CI check and prevent potential issues with `jq` installation
+- PULP Gemm `batch` variable serialization
+- Fixed multiple typos in variable and method names, such as changing `includeGobalReferences` to `includeGlobalReferences` and `dicardedMappers` to `discardedMappers`
+- Corrected method usage in `importDeeployState` to call `NetworkContext.importNetworkContext` instead of the incorrect method name
+- Correctly return `signProp` from `setupDeployer` instead of hardcoding the value to `False` in `testMVP.py`
+- Fixed `Unsqueeze` Op. when using ONNX opset 13 or higher (from attribute to input)
+- Fixed aliasing
+- Missing layout transformation of the const's (bias, mul, add, shift in Conv/RequantizedConv)
+- Keep mul/add rank of requantized Neureka tile constraints
+- Fix bias hoisting in generic GEMM with no bias
+- DMA synchronization bug causing reduced DB performance on memory-bound kernels.
+
+### Removed
+- Delete outdated and unused `.gitlab-ci.yml` file
+- dory_dma.c and dory_dma.h
+
+## Release v0.2.0 (2025-07-08) [#103](https://github.com/pulp-platform/Deeploy/pull/103)
+This release containing major architectural changes, new platform support, enhanced simulation workflows, floating-point kernel support, training infrastructure for CCT models, memory allocation strategies, and documentation improvements.
+
+### List of Pull Requests
+- Prepare v0.2.0 release [#102](https://github.com/pulp-platform/Deeploy/pull/102)
+- Add Luka as Code Owner [#101](https://github.com/pulp-platform/Deeploy/pull/101)
+- Fix CI, Docker Files, and Documentation Workflow [#100](https://github.com/pulp-platform/Deeploy/pull/100)
+- Chimera Platform Integration [#96](https://github.com/pulp-platform/Deeploy/pull/96)
+- Add Tutorial and Refactor README [#97](https://github.com/pulp-platform/Deeploy/pull/97)
+- Reduce Mean Float Template [#92](https://github.com/pulp-platform/Deeploy/pull/92)
+- Reshape Memory Freeing and Generic Float GEMM Fixes [#91](https://github.com/pulp-platform/Deeploy/pull/91)
+- Prepare for Release and Separate Dependencies [#90](https://github.com/pulp-platform/Deeploy/pull/90)
+- Fix input offsets calculation [#89](https://github.com/pulp-platform/Deeploy/pull/89)
+- Move PULP SDK to main branch/fork [#88](https://github.com/pulp-platform/Deeploy/pull/88)
+- Finite Lifetime for IO Tensors [#51](https://github.com/pulp-platform/Deeploy/pull/51)
+- Improved Memory Visualization and Multi-Layer Tiling Profiling [#56](https://github.com/pulp-platform/Deeploy/pull/56)
+- Fix Linting in CI and Reformat C Files [#86](https://github.com/pulp-platform/Deeploy/pull/86)
+- Fix Broken CMake Flow For pulp-sdk [#87](https://github.com/pulp-platform/Deeploy/pull/87)
+- Refactor Changelog For Release [#85](https://github.com/pulp-platform/Deeploy/pull/85)
+- ARM Docker Container and Minor Bug Fix [#84](https://github.com/pulp-platform/Deeploy/pull/84)
+- Added Kernel for Generic Float DW Conv2D [#63](https://github.com/pulp-platform/Deeploy/pull/63)
+- Autoselect Self-Hosted Runners if the Action is on Upstream [#81](https://github.com/pulp-platform/Deeploy/pull/81)
+- TEST_RECENT linking on MacOS [#78](https://github.com/pulp-platform/Deeploy/pull/78)
+- Add RV32IMF Picolibc support for Siracusa platform [#66](https://github.com/pulp-platform/Deeploy/pull/66)
+- Improve Documentation and VSCode Support [#76](https://github.com/pulp-platform/Deeploy/pull/76)
+- Debug Print Topology Pass and Code Transformation [#75](https://github.com/pulp-platform/Deeploy/pull/75)
+- Find all subdirectories of Deeploy when installing with pip install [#70](https://github.com/pulp-platform/Deeploy/pull/70)
+- Add milestone issue template [#71](https://github.com/pulp-platform/Deeploy/pull/71)
+- Bunch of fixes and changes [#58](https://github.com/pulp-platform/Deeploy/pull/58)
+- Add SoftHier platform [#65](https://github.com/pulp-platform/Deeploy/pull/65)
+- rv32imf_xpulpv2 ISA support for Siracusa platform [#64](https://github.com/pulp-platform/Deeploy/pull/64)
+- One LLVM To Compile Them All [#60](https://github.com/pulp-platform/Deeploy/pull/60)
+- One GVSoC to Simulate Them All [#59](https://github.com/pulp-platform/Deeploy/pull/59)
+- Add Support for CCT Last Layer Training with Embedding Dim 8-128 [#55](https://github.com/pulp-platform/Deeploy/pull/55)
+- Add CCT Classifier Training Support [#53](https://github.com/pulp-platform/Deeploy/pull/53)
+- L3 Bugs: DMA Struct Datatype and Maxpool Margin Error [#45](https://github.com/pulp-platform/Deeploy/pull/45)
+- DeepQuant Quantized Linear Support [#54](https://github.com/pulp-platform/Deeploy/pull/54)
+- Implemented Dequant Layer for Generic and Siracusa [#52](https://github.com/pulp-platform/Deeploy/pull/52)
+- Infinite Lifetime Buffers Considered in Tiling & Memory Allocation (+ Visualization) [#44](https://github.com/pulp-platform/Deeploy/pull/44)
+- Implemented Quant Layer for Generic and Siracusa [#49](https://github.com/pulp-platform/Deeploy/pull/49)
+- Increase maximal Mchan DMA transfer sizes from 64KiB to 128KiB [#47](https://github.com/pulp-platform/Deeploy/pull/47)
+- Add MiniMalloc and Decouple Memory Allocation and Tiling [#40](https://github.com/pulp-platform/Deeploy/pull/40)
+- Float CCT Bugs on L3 [#37](https://github.com/pulp-platform/Deeploy/pull/37)
+- Memory Allocation Strategies and Visualization [#36](https://github.com/pulp-platform/Deeploy/pull/36)
+- Add CODEOWNERS [#42](https://github.com/pulp-platform/Deeploy/pull/42)
+- Add Tiling Support to All CCT Kernels and Fix CCT Operators on Siracusa Platform for L2 [#35](https://github.com/pulp-platform/Deeploy/pull/35)
+- Add Fp gemm and Softmax for Snitch platform [#31](https://github.com/pulp-platform/Deeploy/pull/31)
+- Add Float Kernels for CCT [#29](https://github.com/pulp-platform/Deeploy/pull/29)
+- documentation deployment [#34](https://github.com/pulp-platform/Deeploy/pull/34)
+- main.c Float Cast Bugs [#28](https://github.com/pulp-platform/Deeploy/pull/28)
+- Add Float GEMM on PULP with Tiling [#26](https://github.com/pulp-platform/Deeploy/pull/26)
+- Add Float Support & Float GEMM for Generic [#25](https://github.com/pulp-platform/Deeploy/pull/25)
+- GVSOC support for the Snitch Cluster platform [#23](https://github.com/pulp-platform/Deeploy/pull/23)
+- Snitch Cluster Tiling Support [#22](https://github.com/pulp-platform/Deeploy/pull/22)
+- Snitch support integration [#14](https://github.com/pulp-platform/Deeploy/pull/14)
+- Update bibtex citation [#20](https://github.com/pulp-platform/Deeploy/pull/20)
+- the PR template location, bump min python to 3.10, change install command [#17](https://github.com/pulp-platform/Deeploy/pull/17)
+- Add pre-commit for python formatting [#15](https://github.com/pulp-platform/Deeploy/pull/15)
+- FP integration (v2) [#12](https://github.com/pulp-platform/Deeploy/pull/12)
+- shell for sequential tests of Generic, Cortex, and Mempool platforms [#11](https://github.com/pulp-platform/Deeploy/pull/11)
+- Add issue templates [#10](https://github.com/pulp-platform/Deeploy/pull/10)
+- Minor CI and Readme Improvements [#8](https://github.com/pulp-platform/Deeploy/pull/8)
+- Fix GHCR Link for Docker Build [#7](https://github.com/pulp-platform/Deeploy/pull/7)
+- neureka's ccache id [#6](https://github.com/pulp-platform/Deeploy/pull/6)
+- GitHub-based CI/CD Flow [#4](https://github.com/pulp-platform/Deeploy/pull/4)
+- Generic Softmax Kernel [#2](https://github.com/pulp-platform/Deeploy/pull/2)
+- Port GitLab CI [#1](https://github.com/pulp-platform/Deeploy/pull/1)
+
+
+### Added
+- BatchNorm kernel
+- ConvTranspose kernel
+- MaxPool1D kernel
+- Template for 1D Convolution
+- Support for float32 data type in the previous kernels
+- Float binding for Pad1D kernel
+- Test for Autoencoder1D in the CI pipeline
+- ChimeraDeployer, currently mainly a placeholder
+- Allocate templates for Chimera
+- ChimeraPlatform, using appropriate allocation templates and using the generic Parser + Binding for the Add node
+- Adder CI test for Chimera
+- Install flow for chimera-sdk via Makefile
+- DeeployChimeraMath library
+- Generic FP32 reduce mean bindings, parser, and template
+- New alias list parameter for buffer objects
+- New test, also included in the CI pipeline, for the reshape and skip connection situation
+- 'shape' parameter handling similar to the 'indices' parameter in the generic reshape template
+- Test the correcteness of the memory map generated by the tiler
+- Add attribute to `VariableBuffer` to distinguish I/Os
+- Add proper static memory allocation with finite lifetime for I/Os
+- The memory allocation visualization now displays the allocation for each level used
+- Tutorial section in the documentation
+- Guide on using the debug print topology pass and code transformation
+- VSCode configuration files for improved IDE support
+- Multi-branch GitHub Pages deployment support
+- Test for the `DebugPrintTopologyPass`.
+- Test for `PrintInputGeneration`, `PrintOutputGeneration`, `MemoryAwarePrintInputGeneration`, `MemoryAwarePrintOutputGeneration`
+- check for CMAKE variable and fallback to searching for cmake
+- tensor name mangling
+- identity operation removal
+- _unpack_const helper function to NodeParser to allow for node attributes that are direct Constant tensors or direct numpy values
+- load_file_to_local in dory_mem as a way to load values directly to a local memory (not ram). needed for copying values from flash to wmem needed for Neureka v2
+- Add the `documentation.yml` workflow to deploy doc pages.
+- Improved README with more detailed `Getting Started` section, a section listing related publications, and a list of supported platforms.
+- Schedule a CI run every 6 days at 2AM CET to refresh the cache (it expires after 7 days if unused).
+- Add the `FloatImmediate` `AbstractType`
+- Define fp64, fp32, fp16, and bf16
+- Add float binding for the Adder in the Generic platform
+- Add a FloatAdder test to the CI for Siracusa and Generic platforms
+- Extend `testType.py` with float tests
+- LIMITATION: Current LLVM compiler does not support bfp16 and fp16, these types are commented in the library header
+- cMake Flow for the Snitch Cluster
+- Added `snitch_cluster` to Makefile
+- New Snitch platform with testing application
+- Testrunner for tiled and untiled execution (`testRunner_snitch.py`, `testRunner_tiled_snitch.py`)
+- Minimal library with CycleCounter and utility function
+- Support for single-buffered tiling from L2.
+- Parsers, Templates, TypeCheckers, Layers, and TCF for the newly supported operators.
+- A code transformation pass to filter DMA cores or compute cores for an `ExecutionBlock`.
+- A code transformation pass to profile an `ExecutionBlock`.
+- Test for single kernels, both with and without tiling.
+- Adds the `--debug` flag to `cargo install` when installing Banshee to get the possibility of enabling the debug prints.
+- New tests for the `snitch_cluster` platform.
+- Add macros to `main.c` to disable printing and testing (convenient when running RTL simulations).
+- gvsoc in the Makefile and dockerfile
+- cmake flow for gvsoc
+- CI tests regarding Snitch run on GVSOC as well
+- Float Support for Constbuffer
+- Simple Float GEMM on Generic and PULP
+- FP GEMM to CI
+- FP GEMM Tiling on PULP
+- Add one new #define OUTPUTTYPE to testoutput.h
+- Float Template, binding and parser, test for Conv2D, LayerNorm, Div, Relu, Softmax, MaxPool, Matmul, Transpose, Gelu, Mul, Reshape, Gather, Squeeze, Padding
+- CCT model test to Generic Target
+- Math Lib link on Generic Target
+- New templates for GEMM and Softmax.
+- Added GEMM and Softmax to TargetLibraries, including case for GEMM with a transposed B matrix.
+- Added new CI tests for GEMM and Softmax.
+- Float Bindings, Tilers of CCT kernels for Pulp Target
+- Float Convolution, MaxPool Parser, Template, Kernel with HWC layout and padding integrated
+- Added tiling constraints for conv gather and layernorm and exisitng constraints for other kernels
+- profileuntiled arg
+- CCT onnx tests with img size of 16 and 32
+- CODEOWNERS file to control who is responsible for reviewing future PRs.
+- A visualization of the memory allocation solution generated by Deeploy at each level of memory. I use Plotpy to generate a static `html` file and save it to the `DeeployState` directory.
+- An initialization strategy for the variable in the tiling to randomize the variables related to the permutation matrix.
+- New interface to `testRunner_tiled_siracusa` to control the generation of the memory allocation visualization, the memory allocation strategy, and the search strategy.
+- Export a new docker container with `plotpy` as dependency.
+- Added multiple CCT settings for testing.
+- Added CCT L3 test to CI to ensure correctness for img size of 16 and 32.
+- Added NaN check for deeploytest diff to improve result validation.
+-  Installation and compilation flow for MiniMalloc through Makefile.
+- Adapt the docker to install MiniMalloc and declare necessary symbols.
+- Add the `constraintTileBuffersWithOverlappingLifetime` method to the memory scheduler to add the necessary memory constraint when we decouple memory allocation and tiling.
+- Add the `minimalloc` method to the `Tiler` class. MiniMalloc comes as a precompiled cpp library using CSV for I/O. Hence, this method converts Deeploy's memory map to MiniMalloc's CSV representation, calls a subprocess to run MiniMalloc, reads the output CSV, and translates it back to Deeploy's memory map.
+- Add MiniMalloc to the memory allocation strategies and add a new argument to the test runner to control the L2 size.
+- New `Quant` operation to handle quantization pattern in ONNX models
+- Implementation for both Generic and Siracusa targets in the Deeploy framework
+- Custom `QuantPatternPass` class to replace matched patterns with a single `Quant` operator
+- Parser implementation in `Parsers.py` to extract quantization parameters
+- C template implementation in `QuantTemplate.py` for efficient quantization
+- Type checker implementation in `TypeCheckers.py` to handle bit-width and signedness
+- New `Dequant` operation to handle dequantization pattern in ONNX models
+- Implementation for both Generic and Siracusa targets in the Deeploy framework
+- Custom `DequantPatternPass` class to replace matched patterns with a single `Dequant` operator
+- Parser implementation in `Parsers.py` to extract dequantization parameters
+- C template implementation in `DequantTemplate.py` for efficient dequantization
+- Type checker implementation in `TypeCheckers.py` to handle bit-width and signedness
+- New Test Cases: Added and passed tests for 16×16 64 and 16×16 128 configurations to validate correctness.
+- New `_sanitizeGraphNames` function to sanitize the names of the nodes and tensors of the graph
+- Implementation for both Generic and Siracusa targets in the Deeploy framework
+- Modified the binding of dequant in `Bindings.py` to handle int32 after GEMM operation
+- New test cases: testTrainCCT/CCT_GEMM_Weight_Bias_1_16_16_8, testFloatReduceSum, testFloatSoftmaxGrad, testFloatSoftmaxCrossEntropy, testFloatSoftmaxCrossEntropyGrad
+- New kernels: SoftmaxCrossEntropy, SoftmaxCrossEntropyGrad, SoftmaxGrad, ReduceSum
+- Refinements in operator parsers and computeShape logic for: Softmax, Mul, Reducesum
+- New `_sanitizeGraphNames` function to sanitize the names of the nodes and tensors of the graph
+- Implementation for both Generic and Siracusa targets in the Deeploy framework
+- Modified the binding of dequant in `Bindings.py` to handle int32 after GEMM operation
+- Support for SoftmaxCrossEntropyLoss and SoftmaxCrossEntropyLossGrad with tiling.
+- Implementation of SGD updates for CCT training.
+- Test for one iteration of CCT last-layer training with dimensions from 8 to 128.
+- All Banshee dependencies now have a frozen version. This improves maintainability as some packages get yanked for the old versions of Rust.
+- Increase the L2 buffer size for loading files from Flash to RAM. This speeds up the simulation setup time.
+- Align the GVSoC simulation command and build command for the new version.
+- Bump new version of GVSoC and PULP-SDK
+- Build flow and its Docker integration for LLVM 15 tagged `15.0.0-snitch-0.1.0'
+- Picolibc build flow for v32im, v32ima, rv32imc and rv32imafd. Previously, it was only for rv32imc.
+- LLVM Compiler RT for rv32im, rv32ima, and rv32imafd.
+- Appropriate linking of picolibc and compiler RT.
+- Build and install a flow for XTensor, XTL, and XSIMD. These libraries are used in some GVSoC models, and they used to live in the PULP SDK, as a header-only library. Keeping only the library headers in the PULP SDK makes it hard to bump new versions.
+- Adds RV32IMF Picolib to the toolchain
+- Generic float DW Conv2D kernel and bindings.
+- Bias handling and computation for regular and DW Conv2D.
+- Empty bias handling for generic regular and DW Conv2D.
+- Tests for Conv2D regular and DW, with and without bias (and included them in the CI pipeline).
+- `BuildDockerToolchain.yml` to build Toolchain Docker container
+- `BuildDockerDeeploy.yml` to build Deeploy Docker container
+- Add support for `linux/arm64` containers
+- Added caching to speed up container builds
+- Makefile to simplify local container build
+- Add helper script to generate a baseline changelog.
+- SoftHier Deeploy Targets, including Deployer, Platform, and Templates
+- SoftHier cmake compilation flow
+- SoftHier CI task
+- Parallel implementations of the following operators on Siracusa: Matmul, Softmax, Gelu, Conv, Layernorm, Maxpool, Add, Mul,and Relu
+- Gelu with Sigmoid implementation
+- ComputeOp support for multiple float kernels: Maxpool, Relu, and Mul
+- `dev-requirements.txt` tracking the dependencies of the build system, linting, documentation, and QOL.
+
+### Changed
+- FloatConvTemplate file
+- Platform.py file
+- Bump the CMake version to 3.24 as required for the chimera-sdk
+- Bump GVSoC's version and add chimera simulation target
+- Rename the generic source util to utils to avoid name collision with chimera-sdk
+- Moved PULP SDK from Victor-Jung/pulp-sdk branch deeploy to pulp-platform/pulp-sdk branch main.
+- Memory arena buffers are now declared at the beginning of the `InitNetwork` function
+- Tiling profiling is now an ON/OFF version where you get the I/O DMA time for each DMA call
+- The profiling strings are const static, such that they are stored in .rodata
+- Adapt the select docker image stage to also select a runner depending on ` github.repository`
+- Adapt the jobs and reusable workflows to use the selected runner.
+- Updated `README.md` description to use a persistent development container
+- Symlinking of the latest build and source files into `TEST_RECENT`
+- Disabled `CMAKE_VERBOSE_MAKEFILE` by default for cleaner builds.
+- Refactored` IntrospectiveCodeTransformationMixIn` to allow extracting dynamic references to global variables
+- duplicateConstants now also duplicates constant nodes
+- check float output define in DeeployTest Generic platform
+- kernel_shape now inferred from weight shape if not present as per ONNX spec
+- USE_NEUREKA moved into TargetLibraries where it's closer to pulp-nnx
+- hex dumping logic for pulp platforms in prep for neureka v2 where I need to save weights to flash and move them during runtime to wmem
+- add_gvsoc_emulation macro now requires an additional target argument and abstracted adding flags to gvsoc through the GVSOC_EXTRA_FLAGS variable
+- Updated `README.md` with direct link to the documentation page.
+- Update the Banshee's commit to include a recent PR.
+- Add the possibility of changing the simulator when using the snitch-tiled test runner.
+- Add the RTL library to the snitch_cluster build process in the Makefile, required for GVSOC simulation
+- float infinity macro #define inf
+- Signprop depend on float check and platform
+- Adapted snitch Bindings and Platform files.
+- Removed unused `TilerAwareDeployer` class.
+- Regenerated CCT ONNX files without "output" & "input" in their names to avoid triggering the dumphex parser bug.
+- Regenerated CCT ONNX file with 3 branches for attention, transforming the attention computation graph into three branches.
+- Changed code generation for Hex output to properly handle float values.
+- Enhanced layernorm operator to support three outputs (layernormout, mean, std) for compatibility with training-related layernormgrad in the future.
+- Modified the outputs of LayerNorm and SoftmaxCrossEntropyLoss nodes to a single output for better tiling compatibility.
+- Added SGD parameter updates to the CCT training graph.
+- Officially depreciate Banshee as a simulator for Snitch Cluster in the CI. Maintaining this is a burden and unnecessary, as GVSoC is now the standard simulator. Additionally, newer versions of the Snitch runtime don't support Banshee anymore.
+- Bump XTensor's version to `0.25.0` to fix a bug with Intel's SSE.
+- Update snitch cluster patch to link to picolibc and add explicit target.
+- Update README to include Snitch in the Getting Started and the D&T Journal.
+- The ISA for the Siracusa platform has been updated from rv32imc_zfinx_xpulpv2 to rv32imf_xpulpv2.
+- All floating-point comparison tasks in deeploytest.c are now offloaded to Cluster 0 for execution.
+- Split the original build flow into two container
+- Refactor changelog for better readability
+- Reformatted all C files
+- Prepare `pyproject.toml` for a proper pip package release.
+- Packages listed in `dev-requirements.txt` are installed in the final stage of the Deeploy container.
+
+### Fixed
+- DW Conv2D kernel header to avoid warnings
+- FP casting in GELU kernel to avoid warnings
+- Buffer deallocation to only happen when all its aliases are not live anymore (the data stored there is not needed anymore, not even by other nodes)
+- GEMM Generic float template to iterate through terms only when they actually contain multiple matrices
+- Fix the PULP Deployer where outputs were unecessary loaded in L3
+- Fix the lifetime computation of aliased buffers
+- Removed unsupported `-MMD` compiler flag in LLVM-based toolchains.
+- Fix `DebugPrint` topology pass
+- Fix `PrintInput` code transformations to work with global variables
+- RequantShift when log2d is 0
+- missing math.h headers
+- clang on mac doesn't support `-Wl,--gc-sections` flag, moved it into each target and for host it's checking now for host system
+- `--ffast-math` caused numerical errors on generic so moved into each target and removed from that one since I'm imagining it as the _debug_ target
+- Gather kernel on generic target
+- Update the link of the Docker container used to run the CI with the Docker published by this repo instead of my fork.
+- Add a retry on timeout step for large network tests. This is a temporary fix to address the sporadic freeze happening at the compilation stage, see [this issue](https://github.com/pulp-platform/Deeploy/issues/9).
+- Float bug on Testslice, CMSIS TestUtil, DivInterger
+- AbstractDatayType Float Bugs
+- Change main.c to use OUTPUTTYPE instead of float
+- MaxPool Padding Extract Pass for float and interger
+- Testinput, testoutput, weight type casted from double to float warning
+- Relaxed the error threshold between expected and actual values in deeploytest.
+- CycleMeasure Pass for Siracusa Untiled Profilling
+- GEMM Tiling Constraints transA and `transB' not supported
+- MatMul layer Multi-Dimensional Input Issue
+- Add Layer for Broadcasted Bias
+- Resolved an issue where concatenation of float32 with f caused inf errors during code generation
+- Fixed a bug in the MemoryScheduler where the CP problem was solved more time that it was needed.
+- Updated printinput nodetemplate for float handling.
+- Fix `testMVP.py` to get a proper should fail test.
+- Maxpool Tile Calculation Error: The last dimension padding was incorrectly calculated due to L3 wraptiling solution. This has been fixed by updating serializeTilingSolution of Maxpool to avoid incorrect padding of Maxpool and prevent potential DMA 3D transfer issues of Maxpool.
+- DMA 1D Copy Assertion Issue: Updated the DMA length datatype from uint16 to uint32 to avoid assertion failures when dealing with large block transfers.
+- Deeploy subdirectories installed when installing Deeploy with pip install
+- Fix linking TEST_RECENT on MacOS
+- Fixed broken VSCode launch configuration
+- Fixed broken `pulp-sdk` hash
+- Fix issue with building `banshee` on `linux/arm
+- Removed `i3c` related files from the `pulp-sdk` CMake flow
+- Fixed C-code linting stage in CI
+- Input offset height and width calculation for tiled PULPOpen convolution kernels
+
+### Removed
+- Removed commented code from generic allocation templates
+- Remove the link to the precompiled LLVM 12 in the `testRunner` for Snitch and in the CI.
+- Remove the sourcing of the cursed PULP SDK script.
+- Commented IPython breakpoints.
+
+## Release v0.1.0 (2024-08-08)
+This release contains the first version of Deeploy, which includes the initial implementation of the Deeploy framework, support for various platforms, and basic functionality for deploying deep learning models on PULP-based systems.

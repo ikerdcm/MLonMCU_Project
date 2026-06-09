@@ -15,44 +15,48 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827}
 <line x1="92.00" y1="82.00" x2="92.00" y2="450.00" class="axis"/>
 <line x1="92.00" y1="450.00" x2="760.00" y2="450.00" class="axis"/>
 <line x1="92.00" y1="450.00" x2="92.00" y2="455.00" class="axis"/>
-<text x="92.00" y="472.00" class="tick" text-anchor="middle">0.2 mJ</text>
+<text x="92.00" y="472.00" class="tick" text-anchor="middle">-5.7 mJ</text>
 <line x1="92.00" y1="82.00" x2="92.00" y2="450.00" class="grid"/>
 <line x1="259.00" y1="450.00" x2="259.00" y2="455.00" class="axis"/>
-<text x="259.00" y="472.00" class="tick" text-anchor="middle">0.3 mJ</text>
+<text x="259.00" y="472.00" class="tick" text-anchor="middle">9.6 mJ</text>
 <line x1="259.00" y1="82.00" x2="259.00" y2="450.00" class="grid"/>
 <line x1="426.00" y1="450.00" x2="426.00" y2="455.00" class="axis"/>
-<text x="426.00" y="472.00" class="tick" text-anchor="middle">0.3 mJ</text>
+<text x="426.00" y="472.00" class="tick" text-anchor="middle">24.9 mJ</text>
 <line x1="426.00" y1="82.00" x2="426.00" y2="450.00" class="grid"/>
 <line x1="593.00" y1="450.00" x2="593.00" y2="455.00" class="axis"/>
-<text x="593.00" y="472.00" class="tick" text-anchor="middle">0.3 mJ</text>
+<text x="593.00" y="472.00" class="tick" text-anchor="middle">40.2 mJ</text>
 <line x1="593.00" y1="82.00" x2="593.00" y2="450.00" class="grid"/>
 <line x1="760.00" y1="450.00" x2="760.00" y2="455.00" class="axis"/>
-<text x="760.00" y="472.00" class="tick" text-anchor="middle">0.3 mJ</text>
+<text x="760.00" y="472.00" class="tick" text-anchor="middle">55.5 mJ</text>
 <line x1="760.00" y1="82.00" x2="760.00" y2="450.00" class="grid"/>
 <line x1="87.00" y1="450.00" x2="92.00" y2="450.00" class="axis"/>
-<text x="82.00" y="454.00" class="tick" text-anchor="end">534.6/s</text>
+<text x="82.00" y="454.00" class="tick" text-anchor="end">-80.6/s</text>
 <line x1="92.00" y1="450.00" x2="760.00" y2="450.00" class="grid"/>
 <line x1="87.00" y1="358.00" x2="92.00" y2="358.00" class="axis"/>
-<text x="82.00" y="362.00" class="tick" text-anchor="end">548.6/s</text>
+<text x="82.00" y="362.00" class="tick" text-anchor="end">106.1/s</text>
 <line x1="92.00" y1="358.00" x2="760.00" y2="358.00" class="grid"/>
 <line x1="87.00" y1="266.00" x2="92.00" y2="266.00" class="axis"/>
-<text x="82.00" y="270.00" class="tick" text-anchor="end">562.6/s</text>
+<text x="82.00" y="270.00" class="tick" text-anchor="end">292.8/s</text>
 <line x1="92.00" y1="266.00" x2="760.00" y2="266.00" class="grid"/>
 <line x1="87.00" y1="174.00" x2="92.00" y2="174.00" class="axis"/>
-<text x="82.00" y="178.00" class="tick" text-anchor="end">576.6/s</text>
+<text x="82.00" y="178.00" class="tick" text-anchor="end">479.5/s</text>
 <line x1="92.00" y1="174.00" x2="760.00" y2="174.00" class="grid"/>
 <line x1="87.00" y1="82.00" x2="92.00" y2="82.00" class="axis"/>
-<text x="82.00" y="86.00" class="tick" text-anchor="end">590.6/s</text>
+<text x="82.00" y="86.00" class="tick" text-anchor="end">666.1/s</text>
 <line x1="92.00" y1="82.00" x2="760.00" y2="82.00" class="grid"/>
 <text x="426.00" y="512.00" class="label" text-anchor="middle">Energy per inference</text>
 <text x="24.00" y="266.00" class="label" text-anchor="middle" transform="rotate(-90 24.00 266.00)">Throughput</text>
 <text x="756.00" y="62.00" class="small" text-anchor="end">Bubble size: Static SRAM</text>
-<circle cx="695.35" cy="409.75" r="10.00" fill="#475569" fill-opacity="0.80" stroke="#111827" stroke-width="1"/>
-<circle cx="156.65" cy="122.25" r="31.00" fill="#0f766e" fill-opacity="0.80" stroke="#111827" stroke-width="1"/>
-<line x1="688.15" y1="409.75" x2="680.35" y2="408.75" stroke="#475569" stroke-width="1.1"/>
-<text x="675.35" y="413.75" class="label" text-anchor="end">v0 baseline</text>
-<text x="675.35" y="428.75" class="tick" text-anchor="end">38 KiB</text>
-<line x1="178.97" y1="122.25" x2="192.65" y2="121.25" stroke="#0f766e" stroke-width="1.1"/>
-<text x="197.65" y="126.25" class="label" text-anchor="start">v1 w90 pruned</text>
-<text x="197.65" y="141.25" class="tick" text-anchor="start">38 KiB</text>
+<circle cx="157.00" cy="143.80" r="10.00" fill="#475569" fill-opacity="0.80" stroke="#111827" stroke-width="1"/>
+<circle cx="156.65" cy="122.25" r="10.13" fill="#0f766e" fill-opacity="0.80" stroke="#111827" stroke-width="1"/>
+<circle cx="695.35" cy="409.75" r="31.00" fill="#c2410c" fill-opacity="0.80" stroke="#111827" stroke-width="1"/>
+<line x1="164.20" y1="143.80" x2="172.00" y2="159.25" stroke="#475569" stroke-width="1.1"/>
+<text x="177.00" y="164.25" class="label" text-anchor="start">v0 baseline</text>
+<text x="177.00" y="179.25" class="tick" text-anchor="start">38 KiB</text>
+<line x1="163.94" y1="122.25" x2="171.78" y2="121.25" stroke="#0f766e" stroke-width="1.1"/>
+<text x="176.78" y="126.25" class="label" text-anchor="start">v1 w90 pruned</text>
+<text x="176.78" y="141.25" class="tick" text-anchor="start">38 KiB</text>
+<line x1="673.03" y1="409.75" x2="659.35" y2="408.75" stroke="#c2410c" stroke-width="1.1"/>
+<text x="654.35" y="413.75" class="label" text-anchor="end">int8 cpu</text>
+<text x="654.35" y="428.75" class="tick" text-anchor="end">67 KiB</text>
 </svg>

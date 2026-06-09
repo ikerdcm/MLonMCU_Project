@@ -1,0 +1,62 @@
+{
+  "timestamp": "2026-06-09T09:55:40.311223",
+  "platform": "GAP9",
+  "variant_name": "ds_cnn_l_float32",
+  "config": "/app/Deeploy/tools/gap9_ds_cnn_measure_config.json",
+  "binary": "/app/Deeploy/DeeployTest/TEST_GAP9/build_master/DSCNNL",
+  "clock_hz": 240000000.0,
+  "clock_mhz": 240.0,
+  "n_runs_requested": 20,
+  "n_runs_successful": 20,
+  "n_runs_failed": 0,
+  "labels": [
+    "down",
+    "go",
+    "left",
+    "no",
+    "off",
+    "on",
+    "right",
+    "stop",
+    "up",
+    "yes",
+    "silence",
+    "unknown"
+  ],
+  "cycles": {
+    "count": 20,
+    "min": 28021523.0,
+    "max": 28054060.0,
+    "avg": 28033960.55,
+    "median": 28034790.0,
+    "std": 10079.91843886698,
+    "p95": 28047208.0
+  },
+  "latency_us": {
+    "count": 20,
+    "min": 116756.34583333333,
+    "max": 116891.91666666667,
+    "avg": 116808.16895833332,
+    "median": 116811.625,
+    "std": 41.99966016194488,
+    "p95": 116863.36666666667
+  },
+  "latency_ms_avg": 116.80816895833333,
+  "pred_class_distribution": {
+    "left": 20
+  },
+  "elf_size": {
+    "text_bytes": 47594,
+    "data_bytes": 132784,
+    "bss_bytes": 4512,
+    "dec_bytes": 184890,
+    "size_tool": "/app/install/llvm/bin/llvm-size"
+  },
+  "inferences_per_second": 8.561045078591295,
+  "mac_ops_per_cycle": 0.13643338026313945,
+  "compute_estimate": {
+    "mac_ops_per_inference": 3824768.0,
+    "mac_ops_per_second": 32744011.263153467,
+    "gops": 0.03274401126315347
+  }
+}

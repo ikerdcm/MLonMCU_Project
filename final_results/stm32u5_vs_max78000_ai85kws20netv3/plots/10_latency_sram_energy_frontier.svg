@@ -32,41 +32,45 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827}
 <text x="780.00" y="482.00" class="tick" text-anchor="middle">262 KiB</text>
 <line x1="780.00" y1="82.00" x2="780.00" y2="460.00" class="grid"/>
 <line x1="87.00" y1="460.00" x2="92.00" y2="460.00" class="axis"/>
-<text x="82.00" y="464.00" class="tick" text-anchor="end">-53.7 ms</text>
+<text x="82.00" y="464.00" class="tick" text-anchor="end">-123.7 ms</text>
 <line x1="92.00" y1="460.00" x2="780.00" y2="460.00" class="grid"/>
 <line x1="87.00" y1="365.50" x2="92.00" y2="365.50" class="axis"/>
-<text x="82.00" y="369.50" class="tick" text-anchor="end">72.9 ms</text>
+<text x="82.00" y="369.50" class="tick" text-anchor="end">162.9 ms</text>
 <line x1="92.00" y1="365.50" x2="780.00" y2="365.50" class="grid"/>
 <line x1="87.00" y1="271.00" x2="92.00" y2="271.00" class="axis"/>
-<text x="82.00" y="275.00" class="tick" text-anchor="end">199.5 ms</text>
+<text x="82.00" y="275.00" class="tick" text-anchor="end">449.5 ms</text>
 <line x1="92.00" y1="271.00" x2="780.00" y2="271.00" class="grid"/>
 <line x1="87.00" y1="176.50" x2="92.00" y2="176.50" class="axis"/>
-<text x="82.00" y="180.50" class="tick" text-anchor="end">326.0 ms</text>
+<text x="82.00" y="180.50" class="tick" text-anchor="end">736.1 ms</text>
 <line x1="92.00" y1="176.50" x2="780.00" y2="176.50" class="grid"/>
 <line x1="87.00" y1="82.00" x2="92.00" y2="82.00" class="axis"/>
-<text x="82.00" y="86.00" class="tick" text-anchor="end">452.6 ms</text>
+<text x="82.00" y="86.00" class="tick" text-anchor="end">1022.7 ms</text>
 <line x1="92.00" y1="82.00" x2="780.00" y2="82.00" class="grid"/>
 <text x="436.00" y="536.00" class="label" text-anchor="middle">Static SRAM</text>
 <text x="24.00" y="271.00" class="label" text-anchor="middle" transform="rotate(-90 24.00 271.00)">CNN latency</text>
 <text x="776.00" y="62.00" class="small" text-anchor="end">Bubble size: Energy/inf</text>
-<circle cx="713.42" cy="123.34" r="31.00" fill="#1d4ed8" fill-opacity="0.80" stroke="#111827" stroke-width="1"/>
-<circle cx="554.88" cy="290.14" r="18.43" fill="#0891b2" fill-opacity="0.80" stroke="#111827" stroke-width="1"/>
-<circle cx="543.80" cy="305.76" r="17.57" fill="#0e7490" fill-opacity="0.80" stroke="#111827" stroke-width="1"/>
-<circle cx="158.58" cy="418.55" r="10.02" fill="#b45309" fill-opacity="0.80" stroke="#111827" stroke-width="1"/>
+<circle cx="713.42" cy="288.23" r="23.27" fill="#1d4ed8" fill-opacity="0.80" stroke="#111827" stroke-width="1"/>
+<circle cx="554.88" cy="361.90" r="15.33" fill="#0891b2" fill-opacity="0.80" stroke="#111827" stroke-width="1"/>
+<circle cx="543.80" cy="368.80" r="14.78" fill="#0e7490" fill-opacity="0.80" stroke="#111827" stroke-width="1"/>
+<circle cx="158.58" cy="418.61" r="10.01" fill="#b45309" fill-opacity="0.80" stroke="#111827" stroke-width="1"/>
 <circle cx="159.08" cy="418.66" r="10.00" fill="#d97706" fill-opacity="0.80" stroke="#111827" stroke-width="1"/>
-<line x1="691.10" y1="123.34" x2="677.42" y2="97.00" stroke="#1d4ed8" stroke-width="1.1"/>
-<text x="672.42" y="102.00" class="label" text-anchor="end">U5 v0 float32</text>
-<text x="672.42" y="117.00" class="tick" text-anchor="end">31395 µJ</text>
-<line x1="568.15" y1="290.14" x2="578.31" y2="263.80" stroke="#0891b2" stroke-width="1.1"/>
-<text x="583.31" y="268.80" class="label" text-anchor="start">U5 v1 INT8</text>
-<text x="583.31" y="283.80" class="tick" text-anchor="start">12752 µJ</text>
-<line x1="556.45" y1="305.76" x2="566.37" y2="301.80" stroke="#0e7490" stroke-width="1.1"/>
-<text x="571.37" y="306.80" class="label" text-anchor="start">U5 v2 pruned</text>
-<text x="571.37" y="321.80" class="tick" text-anchor="start">11476 µJ</text>
-<line x1="165.80" y1="418.55" x2="173.60" y2="392.21" stroke="#b45309" stroke-width="1.1"/>
-<text x="178.60" y="397.21" class="label" text-anchor="start">MAX78000 v0</text>
-<text x="178.60" y="412.21" class="tick" text-anchor="start">283 µJ</text>
-<line x1="166.28" y1="418.66" x2="174.08" y2="430.21" stroke="#d97706" stroke-width="1.1"/>
-<text x="179.08" y="435.21" class="label" text-anchor="start">MAX78000 v1</text>
-<text x="179.08" y="450.21" class="tick" text-anchor="start">251 µJ</text>
+<circle cx="238.87" cy="123.34" r="31.00" fill="#c2410c" fill-opacity="0.80" stroke="#111827" stroke-width="1"/>
+<line x1="730.17" y1="288.23" x2="741.69" y2="261.89" stroke="#1d4ed8" stroke-width="1.1"/>
+<text x="746.69" y="266.89" class="label" text-anchor="start">U5 v0 float32</text>
+<text x="746.69" y="281.89" class="tick" text-anchor="start">31395 µJ</text>
+<line x1="565.91" y1="361.90" x2="575.20" y2="335.55" stroke="#0891b2" stroke-width="1.1"/>
+<text x="580.20" y="340.55" class="label" text-anchor="start">U5 v1 INT8</text>
+<text x="580.20" y="355.55" class="tick" text-anchor="start">12752 µJ</text>
+<line x1="554.45" y1="368.80" x2="563.59" y2="373.55" stroke="#0e7490" stroke-width="1.1"/>
+<text x="568.59" y="378.55" class="label" text-anchor="start">U5 v2 pruned</text>
+<text x="568.59" y="393.55" class="tick" text-anchor="start">11476 µJ</text>
+<line x1="165.79" y1="418.61" x2="173.59" y2="411.55" stroke="#b45309" stroke-width="1.1"/>
+<text x="178.59" y="416.55" class="label" text-anchor="start">MAX78000 v0</text>
+<text x="178.59" y="431.55" class="tick" text-anchor="start">283 µJ</text>
+<line x1="166.28" y1="418.66" x2="174.08" y2="449.55" stroke="#d97706" stroke-width="1.1"/>
+<text x="179.08" y="454.55" class="label" text-anchor="start">MAX78000 v1</text>
+<text x="179.08" y="469.55" class="tick" text-anchor="start">251 µJ</text>
+<line x1="261.19" y1="123.34" x2="274.87" y2="97.00" stroke="#c2410c" stroke-width="1.1"/>
+<text x="279.87" y="102.00" class="label" text-anchor="start">MAX78000 cpu</text>
+<text x="279.87" y="117.00" class="tick" text-anchor="start">49542 µJ</text>
 </svg>

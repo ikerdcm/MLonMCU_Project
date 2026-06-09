@@ -206,6 +206,37 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
+# GAP9 / Deeploy build artifacts and generated files
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/build/
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/dist/
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/install/
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/compile_commands.json
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/toolchain/**/*/
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/.pyusbip/
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/.cache/
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/CHANGELOG_GEN.md
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/CLAUDE.md
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/**/*.egg*
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/**/*.pkl
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/**/*.data
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/node_modules/
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/docs/_autosummary/
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/docs/_build/
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/**/*.html
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/**/*.csv
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/DeeployTest/TestFiles/
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/DeeployTest/Tests/**/*.txt
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/DeeployTest/**/BUILD/
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/DeeployTest/TEST_*/
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/DeeployTest/deeployStates*/
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/DeeployTest/DeeployState*/
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/DeeployTest/testUtils/graphDebug.py
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/DeeployTest/Tests/**/pactIntegerizationProto/
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/DeeployTest/Tests/**/quantlib/
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/DeeployTest/Tests/**/*.py
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/DeeployTest/Tests/**/*.json
+cnn-trad-fpool3_model/platforms/gap9/Deeploy/DeeployTest/out.txt
+
 # Embedded build outputs
 **/Debug/
 **/Release/

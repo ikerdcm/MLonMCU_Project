@@ -67,6 +67,16 @@ VARIANTS = [
         "pwr_dir":  ROOT / "Experiments/PWR Consumption/MAX78000/ai85kws20netv3_model_v1/online/on_peak_analysis",
         "xcube_project": None,
     },
+    {
+        "id":       "mx_v0_0",
+        "label":    "MAX78000 cpu",
+        "short":    "MX-cpu",
+        "platform": "MAX78000",
+        "color":    "#c2410c",
+        "path":     ROOT / "Experiments/General Profiling/MAX78000/ai85kws20netv3_model_v0_0/online/on.json",
+        "pwr_dir":  ROOT / "Experiments/PWR Consumption/MAX78000/ai85kws20netv3_model_v0_0/five_offline_peak_analysis",
+        "xcube_project": None,
+    },
 ]
 
 KEY_METRICS = [
@@ -101,9 +111,11 @@ RADAR_METRICS = [
 ]
 
 CROSS_PLATFORM_COMPARISONS = [
-    ("mx_v0_vs_u5_v0", "mx_v0", "u5_v0"),
-    ("mx_v1_vs_u5_v1", "mx_v1", "u5_v1"),
-    ("mx_v1_vs_u5_v2", "mx_v1", "u5_v2"),
+    ("mx_v0_vs_u5_v0",  "mx_v0",   "u5_v0"),
+    ("mx_v1_vs_u5_v1",  "mx_v1",   "u5_v1"),
+    ("mx_v1_vs_u5_v2",  "mx_v1",   "u5_v2"),
+    ("mx_cpu_vs_u5_v0", "mx_v0_0", "u5_v0"),
+    ("mx_cpu_vs_u5_v1", "mx_v0_0", "u5_v1"),
 ]
 
 def ensure_dirs():
@@ -357,7 +369,7 @@ def bar_grid(metrics, rows, path, title, subtitle, cols=3, log_scale=False):
     body.append(rect(lx, ly - 12, 12, 12, "#1d4ed8", rx=2))
     body.append(text(lx + 18, ly, "STM32U5 (U5-v0/v1/v2)", "small"))
     body.append(rect(lx + 220, ly - 12, 12, 12, "#b45309", rx=2))
-    body.append(text(lx + 238, ly, "MAX78000 (MX-v0/v1)", "small"))
+    body.append(text(lx + 238, ly, "MAX78000 (MX-v0/v1/cpu)", "small"))
     save_svg(path, width, height, body)
 
 
@@ -476,7 +488,7 @@ def log_metric_overview(rows):
     ymax = 10 ** math.ceil(math.log10(max(all_values)))
     body = title_block(
         "Online Metric Overview — Log Scale (Cross-Platform)",
-        "Raw values with mixed units; x-axis: U5-v0, U5-v1, U5-v2, MX-v0, MX-v1.",
+        "Raw values with mixed units; x-axis: U5-v0, U5-v1, U5-v2, MX-v0, MX-v1, MX-cpu.",
     )
     for power in range(int(math.log10(ymin)), int(math.log10(ymax)) + 1):
         value = 10 ** power
@@ -665,34 +677,56 @@ def improvement_bar_plot(rows_delta, comparison_key, file_name, title, subtitle)
     valid = [row for row in rows_delta if row.get(comparison_key) is not None]
     if not valid: return
     max_abs = max(abs(row[comparison_key]) for row in valid) or 1.0
+    use_log = max_abs > 200
+    log_max = math.log10(max_abs + 1) if use_log else 1.0
+    half_span = (1030 - 380) * 0.48
     width, left, right, top, row_h = 1120, 380, 1030, 92, 30
     zero_x = left + (right - left) * 0.5
     height = top + len(valid) * row_h + 76
     body = title_block(title, subtitle)
     body.append(line(zero_x, top - 12, zero_x, top + len(valid) * row_h, color="#334155", width=1.3))
-    for tick in [-max_abs, -max_abs / 2, 0, max_abs / 2, max_abs]:
-        x = zero_x + tick / max_abs * (right - left) * 0.48
-        body.append(line(x, top - 8, x, top + len(valid) * row_h, "grid"))
-        body.append(text(x, top - 18, f"{tick:+.0f}%", "tick", "middle"))
+    if use_log:
+        for tv in [-100000, -10000, -1000, -100, -10, 10, 100, 1000, 10000, 100000]:
+            if abs(tv) > max_abs * 1.05: continue
+            log_pos = math.copysign(math.log10(abs(tv) + 1), tv) / log_max
+            x = zero_x + log_pos * half_span
+            body.append(line(x, top - 8, x, top + len(valid) * row_h, "grid"))
+            label = f"{tv:+,}%" if abs(tv) < 1000 else f"{tv // 1000:+d}k%"
+            body.append(text(x, top - 18, label, "tick", "middle"))
+    else:
+        for tick in [-max_abs, -max_abs / 2, 0, max_abs / 2, max_abs]:
+            x = zero_x + tick / max_abs * half_span
+            body.append(line(x, top - 8, x, top + len(valid) * row_h, "grid"))
+            body.append(text(x, top - 18, f"{tick:+.0f}%", "tick", "middle"))
     for row_idx, row in enumerate(valid):
         y = top + row_idx * row_h
         value = row[comparison_key]
         body.append(text(32, y + 18, row["metric"], "label"))
         body.append(text(270, y + 18, row["direction"], "small", "end"))
-        bar_w = abs(value) / max_abs * (right - left) * 0.48
+        if use_log:
+            bar_w = math.log10(abs(value) + 1) / log_max * half_span
+            color_strength = math.log10(abs(value) + 1) / log_max
+        else:
+            bar_w = abs(value) / max_abs * half_span
+            color_strength = abs(value) / max_abs
+        fill = improvement_fill(math.copysign(color_strength, value), 1.0)
         x = zero_x if value >= 0 else zero_x - bar_w
-        body.append(rect(x, y + 5, bar_w, 18, improvement_fill(value, max_abs), stroke="#ffffff", rx=3))
+        body.append(rect(x, y + 5, bar_w, 18, fill, stroke="#ffffff", rx=3))
         label_x = x + bar_w + 8 if value >= 0 else x - 8
         anchor = "start" if value >= 0 else "end"
-        body.append(text(label_x, y + 19, pct(value), "label", anchor))
-    body.append(text(left, height - 30, "right of zero = MAX78000 better; left = STM32U5 better", "subtitle"))
+        label_str = f"+{value:,.0f}%" if value >= 1000 else pct(value)
+        body.append(text(label_x, y + 19, label_str, "label", anchor))
+    footer = "right of zero = MAX78000 better; left = STM32U5 better"
+    if use_log: footer += " (log₁₀ scale)"
+    body.append(text(left, height - 30, footer, "subtitle"))
     save_svg(PLOTS / file_name, width, height, body)
 
 def improvement_heatmap(rows_delta):
     comparisons = [(c + "_improvement_pct", n + " vs " + b) for c, n, b in CROSS_PLATFORM_COMPARISONS]
     values = [abs(row[key]) for row in rows_delta for key, _ in comparisons if row.get(key) is not None]
     max_abs = max(values) if values else 1.0
-    width, left, top, row_h, cell_w = 1060, 285, 90, 30, 205
+    left, top, row_h, cell_w = 285, 90, 30, 180
+    width = max(1060, left + len(comparisons) * cell_w + 40)
     height = top + len(rows_delta) * row_h + 86
     body = title_block(
         "Cross-Platform Improvement Heatmap",
@@ -731,6 +765,18 @@ def improvement_plots(rows_delta):
         "19_mx_v1_vs_u5_v2_improvement_bars.svg",
         "MAX78000 v1 vs STM32U5 v2 — Best vs Best",
         "Best MAX78000 (v1 INT8 HW) vs best STM32U5 (v2 pruned INT8).",
+    )
+    improvement_bar_plot(
+        rows_delta, "mx_cpu_vs_u5_v0_improvement_pct",
+        "20_mx_cpu_vs_u5_v0_improvement_bars.svg",
+        "MAX78000 int8 cpu vs STM32U5 v0 — CPU Baseline Comparison",
+        "Both platforms without CNN HW acceleration; shows raw CPU performance difference.",
+    )
+    improvement_bar_plot(
+        rows_delta, "mx_cpu_vs_u5_v1_improvement_pct",
+        "21_mx_cpu_vs_u5_v1_improvement_bars.svg",
+        "MAX78000 int8 cpu vs STM32U5 v1 — INT8 CPU Comparison",
+        "Both INT8 software-only inference; no hardware acceleration on either platform.",
     )
 
 
@@ -822,16 +868,18 @@ def power_tables(reports):
                   f"{row['avg_peak_energy_total_uj']/1000:.3f} mJ | {row['avg_peak_energy_uj']:.2f} µJ |")
     (TABLES / "power_peak_summary.md").write_text("\n".join(md) + "\n")
 
-def power_window_overlay(reports, windows_by_variant, selection_by_variant, file_name, title, subtitle):
+def power_window_overlay(reports, windows_by_variant, selection_by_variant, file_name, title, subtitle, variants_filter=None):
     width, height = 1120, 680
     left, right, top, bottom = 92, 920, 92, 540
-    idle_preroll_ms = 25.0
+    active_variants = variants_filter if variants_filter is not None else VARIANTS
     selected = [(v, selection_by_variant.get(v["id"]),
                  windows_by_variant.get(v["id"], {}).get(selection_by_variant.get(v["id"])))
-                for v in VARIANTS
+                for v in active_variants
                 if windows_by_variant.get(v["id"], {}).get(selection_by_variant.get(v["id"])) and
                    windows_by_variant.get(v["id"], {}).get(selection_by_variant.get(v["id"]))["points"]]
     if not selected: return
+    max_dur = max(w["duration_ms"] for _, _, w in selected)
+    idle_preroll_ms = max(2.0, min(25.0, max_dur * 0.03))
     x_values = [p[0] for _, _, w in selected for p in w["points"] if p[0] >= -idle_preroll_ms]
     y_values = [p[1] for _, _, w in selected for p in w["points"]]
     if not x_values or not y_values: return
@@ -917,6 +965,28 @@ def power_analysis():
         "24_power_peak03_inference_window_overlay.svg",
         "Power Trace Overlay: Peak 3 — Cross-Platform",
         "Same peak index from all variants, aligned to detected inference start.")
+    long_group  = [v for v in VARIANTS if v["id"] in {"u5_v0", "u5_v1", "u5_v2", "mx_v0_0"}]
+    short_group = [v for v in VARIANTS if v["id"] in {"mx_v0", "mx_v1"}]
+    power_window_overlay(reports, windows, representative,
+        "30_power_long_inference_overlay.svg",
+        "Power Trace: Long Inference Group — STM32U5 & MAX78000 CPU",
+        "STM32U5 (Float32, INT8, Pruned+INT8) and MAX78000 CPU-only; representative peaks.",
+        variants_filter=long_group)
+    power_window_overlay(reports, windows, representative,
+        "31_power_short_inference_overlay.svg",
+        "Power Trace: Short Inference Group — MAX78000 CNN Accelerator",
+        "MAX78000 hardware CNN accelerator variants only (INT8, Pruned+INT8); representative peaks.",
+        variants_filter=short_group)
+    power_window_overlay(reports, windows, {v["id"]: 3 for v in VARIANTS},
+        "32_power_long_peak03_overlay.svg",
+        "Power Trace (Peak 3): Long Inference Group — STM32U5 & MAX78000 CPU",
+        "STM32U5 and MAX78000 CPU-only run; peak 3 per variant.",
+        variants_filter=long_group)
+    power_window_overlay(reports, windows, {v["id"]: 3 for v in VARIANTS},
+        "33_power_short_peak03_overlay.svg",
+        "Power Trace (Peak 3): Short Inference Group — MAX78000 CNN Accelerator",
+        "MAX78000 hardware CNN accelerator variants only; peak 3 per variant.",
+        variants_filter=short_group)
     power_average_bars(reports)
 
 
@@ -1005,7 +1075,7 @@ def write_dashboard():
         ".dot{width:14px;height:14px;border-radius:3px;display:inline-block}",
         "</style></head><body><main>",
         "<h1>STM32U5 vs MAX78000 — ai85kws20netv3</h1>",
-        "<p class=\"sub\">Cross-platform online inference comparison. STM32U5: v0 float32, v1 INT8, v2 pruned INT8. MAX78000: v0 float32 SW, v1 INT8 CNN accelerator.</p>",
+        "<p class=\"sub\">Cross-platform online inference comparison. STM32U5: v0 float32, v1 INT8, v2 pruned INT8. MAX78000: v0 CNN accelerator, v1 pruned CNN accelerator, cpu INT8 software-only.</p>",
         "<div class=\"legend\">",
         *[f'<span class="chip"><span class="dot" style="background:{v["color"]}"></span>{html.escape(v["label"])}</span>'
           for v in VARIANTS],

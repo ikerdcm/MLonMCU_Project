@@ -19,12 +19,15 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827}
 <line x1="92.00" y1="230.75" x2="358.00" y2="230.75" class="grid"/>
 <line x1="92.00" y1="192.50" x2="358.00" y2="192.50" class="grid"/>
 <line x1="92.00" y1="154.25" x2="358.00" y2="154.25" class="grid"/>
-<rect x="110.00" y="135.96" width="106.00" height="133.04" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
-<text x="163.00" y="130.96" class="tick" text-anchor="middle">390,288</text>
-<text x="163.00" y="286.00" class="tick" text-anchor="middle">v0</text>
-<rect x="234.00" y="144.22" width="106.00" height="124.78" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
-<text x="287.00" y="139.22" class="tick" text-anchor="middle">366,040</text>
-<text x="287.00" y="286.00" class="tick" text-anchor="middle">v1</text>
+<text x="142.33" y="286.00" class="tick" text-anchor="middle">v0</text>
+<rect x="110.00" y="141.54" width="64.67" height="127.46" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
+<text x="142.33" y="136.54" class="tick" text-anchor="middle">390,288</text>
+<text x="225.00" y="286.00" class="tick" text-anchor="middle">v1</text>
+<rect x="192.67" y="149.46" width="64.67" height="119.54" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="225.00" y="144.46" class="tick" text-anchor="middle">366,040</text>
+<text x="307.67" y="286.00" class="tick" text-anchor="middle">cpu</text>
+<rect x="275.33" y="135.96" width="64.67" height="133.04" rx="3" fill="#c2410c" stroke="none" opacity="1.0"/>
+<text x="307.67" y="130.96" class="tick" text-anchor="middle">407,392</text>
 <text x="398.00" y="94.00" class="label" text-anchor="start">Data</text>
 <text x="398.00" y="111.00" class="small" text-anchor="start">B</text>
 <line x1="452.00" y1="116.00" x2="452.00" y2="269.00" class="axis"/>
@@ -32,12 +35,15 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827}
 <line x1="452.00" y1="230.75" x2="718.00" y2="230.75" class="grid"/>
 <line x1="452.00" y1="192.50" x2="718.00" y2="192.50" class="grid"/>
 <line x1="452.00" y1="154.25" x2="718.00" y2="154.25" class="grid"/>
-<rect x="470.00" y="135.96" width="106.00" height="133.04" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
-<text x="523.00" y="130.96" class="tick" text-anchor="middle">2,604</text>
-<text x="523.00" y="286.00" class="tick" text-anchor="middle">v0</text>
-<rect x="594.00" y="135.96" width="106.00" height="133.04" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
-<text x="647.00" y="130.96" class="tick" text-anchor="middle">2,604</text>
-<text x="647.00" y="286.00" class="tick" text-anchor="middle">v1</text>
+<text x="502.33" y="286.00" class="tick" text-anchor="middle">v0</text>
+<rect x="470.00" y="136.16" width="64.67" height="132.84" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
+<text x="502.33" y="131.16" class="tick" text-anchor="middle">2,604</text>
+<text x="585.00" y="286.00" class="tick" text-anchor="middle">v1</text>
+<rect x="552.67" y="136.16" width="64.67" height="132.84" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="585.00" y="131.16" class="tick" text-anchor="middle">2,604</text>
+<text x="667.67" y="286.00" class="tick" text-anchor="middle">cpu</text>
+<rect x="635.33" y="135.96" width="64.67" height="133.04" rx="3" fill="#c2410c" stroke="none" opacity="1.0"/>
+<text x="667.67" y="130.96" class="tick" text-anchor="middle">2,608</text>
 <text x="758.00" y="94.00" class="label" text-anchor="start">BSS</text>
 <text x="758.00" y="111.00" class="small" text-anchor="start">B</text>
 <line x1="812.00" y1="116.00" x2="812.00" y2="269.00" class="axis"/>
@@ -45,12 +51,15 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827}
 <line x1="812.00" y1="230.75" x2="1078.00" y2="230.75" class="grid"/>
 <line x1="812.00" y1="192.50" x2="1078.00" y2="192.50" class="grid"/>
 <line x1="812.00" y1="154.25" x2="1078.00" y2="154.25" class="grid"/>
-<rect x="830.00" y="136.63" width="106.00" height="132.37" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
-<text x="883.00" y="131.63" class="tick" text-anchor="middle">35,956</text>
-<text x="883.00" y="286.00" class="tick" text-anchor="middle">v0</text>
-<rect x="954.00" y="135.96" width="106.00" height="133.04" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
-<text x="1007.00" y="130.96" class="tick" text-anchor="middle">36,140</text>
-<text x="1007.00" y="286.00" class="tick" text-anchor="middle">v1</text>
+<text x="862.33" y="286.00" class="tick" text-anchor="middle">v0</text>
+<rect x="830.00" y="196.14" width="64.67" height="72.86" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
+<text x="862.33" y="191.14" class="tick" text-anchor="middle">35,956</text>
+<text x="945.00" y="286.00" class="tick" text-anchor="middle">v1</text>
+<rect x="912.67" y="195.76" width="64.67" height="73.24" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="945.00" y="190.76" class="tick" text-anchor="middle">36,140</text>
+<text x="1027.67" y="286.00" class="tick" text-anchor="middle">cpu</text>
+<rect x="995.33" y="135.96" width="64.67" height="133.04" rx="3" fill="#c2410c" stroke="none" opacity="1.0"/>
+<text x="1027.67" y="130.96" class="tick" text-anchor="middle">65,652</text>
 <text x="38.00" y="329.00" class="label" text-anchor="start">Static SRAM</text>
 <text x="38.00" y="346.00" class="small" text-anchor="start">B</text>
 <line x1="92.00" y1="351.00" x2="92.00" y2="504.00" class="axis"/>
@@ -58,12 +67,15 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827}
 <line x1="92.00" y1="465.75" x2="358.00" y2="465.75" class="grid"/>
 <line x1="92.00" y1="427.50" x2="358.00" y2="427.50" class="grid"/>
 <line x1="92.00" y1="389.25" x2="358.00" y2="389.25" class="grid"/>
-<rect x="110.00" y="371.59" width="106.00" height="132.41" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
-<text x="163.00" y="366.59" class="tick" text-anchor="middle">38,560</text>
-<text x="163.00" y="521.00" class="tick" text-anchor="middle">v0</text>
-<rect x="234.00" y="370.96" width="106.00" height="133.04" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
-<text x="287.00" y="365.96" class="tick" text-anchor="middle">38,744</text>
-<text x="287.00" y="521.00" class="tick" text-anchor="middle">v1</text>
+<text x="142.33" y="521.00" class="tick" text-anchor="middle">v0</text>
+<rect x="110.00" y="428.84" width="64.67" height="75.16" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
+<text x="142.33" y="423.84" class="tick" text-anchor="middle">38,560</text>
+<text x="225.00" y="521.00" class="tick" text-anchor="middle">v1</text>
+<rect x="192.67" y="428.49" width="64.67" height="75.51" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="225.00" y="423.49" class="tick" text-anchor="middle">38,744</text>
+<text x="307.67" y="521.00" class="tick" text-anchor="middle">cpu</text>
+<rect x="275.33" y="370.96" width="64.67" height="133.04" rx="3" fill="#c2410c" stroke="none" opacity="1.0"/>
+<text x="307.67" y="365.96" class="tick" text-anchor="middle">68,260</text>
 <text x="398.00" y="329.00" class="label" text-anchor="start">ELF size</text>
 <text x="398.00" y="346.00" class="small" text-anchor="start">B</text>
 <line x1="452.00" y1="351.00" x2="452.00" y2="504.00" class="axis"/>
@@ -71,12 +83,15 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827}
 <line x1="452.00" y1="465.75" x2="718.00" y2="465.75" class="grid"/>
 <line x1="452.00" y1="427.50" x2="718.00" y2="427.50" class="grid"/>
 <line x1="452.00" y1="389.25" x2="718.00" y2="389.25" class="grid"/>
-<rect x="470.00" y="370.96" width="106.00" height="133.04" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
-<text x="523.00" y="365.96" class="tick" text-anchor="middle">2,327,128</text>
-<text x="523.00" y="521.00" class="tick" text-anchor="middle">v0</text>
-<rect x="594.00" y="375.09" width="106.00" height="128.91" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
-<text x="647.00" y="370.09" class="tick" text-anchor="middle">2,254,856</text>
-<text x="647.00" y="521.00" class="tick" text-anchor="middle">v1</text>
+<text x="502.33" y="521.00" class="tick" text-anchor="middle">v0</text>
+<rect x="470.00" y="370.96" width="64.67" height="133.04" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
+<text x="502.33" y="365.96" class="tick" text-anchor="middle">2,327,128</text>
+<text x="585.00" y="521.00" class="tick" text-anchor="middle">v1</text>
+<rect x="552.67" y="375.09" width="64.67" height="128.91" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="585.00" y="370.09" class="tick" text-anchor="middle">2,254,856</text>
+<text x="667.67" y="521.00" class="tick" text-anchor="middle">cpu</text>
+<rect x="635.33" y="403.13" width="64.67" height="100.87" rx="3" fill="#c2410c" stroke="none" opacity="1.0"/>
+<text x="667.67" y="398.13" class="tick" text-anchor="middle">1,764,288</text>
 <text x="758.00" y="329.00" class="label" text-anchor="start">Firmware dec</text>
 <text x="758.00" y="346.00" class="small" text-anchor="start">B</text>
 <line x1="812.00" y1="351.00" x2="812.00" y2="504.00" class="axis"/>
@@ -84,10 +99,13 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827}
 <line x1="812.00" y1="465.75" x2="1078.00" y2="465.75" class="grid"/>
 <line x1="812.00" y1="427.50" x2="1078.00" y2="427.50" class="grid"/>
 <line x1="812.00" y1="389.25" x2="1078.00" y2="389.25" class="grid"/>
-<rect x="830.00" y="370.96" width="106.00" height="133.04" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
-<text x="883.00" y="365.96" class="tick" text-anchor="middle">428,848</text>
-<text x="883.00" y="521.00" class="tick" text-anchor="middle">v0</text>
-<rect x="954.00" y="378.42" width="106.00" height="125.58" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
-<text x="1007.00" y="373.42" class="tick" text-anchor="middle">404,784</text>
-<text x="1007.00" y="521.00" class="tick" text-anchor="middle">v1</text>
+<text x="862.33" y="521.00" class="tick" text-anchor="middle">v0</text>
+<rect x="830.00" y="384.05" width="64.67" height="119.95" rx="3" fill="#475569" stroke="none" opacity="1.0"/>
+<text x="862.33" y="379.05" class="tick" text-anchor="middle">428,848</text>
+<text x="945.00" y="521.00" class="tick" text-anchor="middle">v1</text>
+<rect x="912.67" y="390.78" width="64.67" height="113.22" rx="3" fill="#0f766e" stroke="none" opacity="1.0"/>
+<text x="945.00" y="385.78" class="tick" text-anchor="middle">404,784</text>
+<text x="1027.67" y="521.00" class="tick" text-anchor="middle">cpu</text>
+<rect x="995.33" y="370.96" width="64.67" height="133.04" rx="3" fill="#c2410c" stroke="none" opacity="1.0"/>
+<text x="1027.67" y="365.96" class="tick" text-anchor="middle">475,652</text>
 </svg>

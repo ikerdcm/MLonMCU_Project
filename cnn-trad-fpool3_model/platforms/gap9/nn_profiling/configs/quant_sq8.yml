@@ -1,0 +1,26 @@
+# Quantization config — SQ8 (Scaled Quantization 8-bit)
+#
+# Usage: python nn_profiler.py model.onnx --config configs/quant_sq8.yml
+
+# Whether to call G.adjust_order() (True for ONNX/NCHW models)
+adjust_order: true
+
+# Fusions to apply (list of match group names)
+# Default: ["scaled_match_group"]
+fusions:
+  - scaled_match_group
+
+# Graph-wide quantization options (passed to quantization_options())
+graph_options:
+  scheme: SQ8
+  quantized_dimension: channel
+  narrow_weights: true
+  allow_asymmetric_out: true
+
+# Per-node quantization overrides (optional)
+# Keys are node names as they appear in the graph.
+# node_options:
+#   conv1:
+#     weight_bits: 4
+#   dense_output:
+#     force_output_size: 16

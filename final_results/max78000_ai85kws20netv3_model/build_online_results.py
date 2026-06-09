@@ -28,10 +28,20 @@ VARIANTS = [
         "color": "#0f766e",
         "path": ROOT / "Experiments/General Profiling/MAX78000/ai85kws20netv3_model_v1/online/on.json",
     },
+    {
+        "id": "v0_0",
+        "label": "int8 cpu",
+        "short": "cpu",
+        "color": "#c2410c",
+        "path": ROOT / "Experiments/General Profiling/MAX78000/ai85kws20netv3_model_v0_0/online/on.json",
+        "power_dir": ROOT / "Experiments/PWR Consumption/MAX78000/ai85kws20netv3_model_v0_0/five_offline_peak_analysis",
+    },
 ]
 
 COMPARISONS = [
     ("v1_vs_v0", "v1", "v0", "v1 vs v0"),
+    ("v0_vs_cpu", "v0", "v0_0", "v0 vs cpu"),
+    ("v1_vs_cpu", "v1", "v0_0", "v1 vs cpu"),
 ]
 
 KEY_METRICS = [
@@ -70,6 +80,9 @@ RADAR_METRICS = [
 
 
 def power_analysis_dir(variant_id):
+    for v in VARIANTS:
+        if v["id"] == variant_id and "power_dir" in v:
+            return v["power_dir"]
     return ROOT / "Experiments" / "PWR Consumption" / "MAX78000" / f"ai85kws20netv3_model_{variant_id}" / "online" / "on_peak_analysis"
 
 
@@ -330,35 +343,57 @@ def bar_grid(metrics, rows, path, title, subtitle, cols=3):
         chart_h = panel_h - 82
         values = [rows[v["id"]].get(key) for v in VARIANTS]
         present = [v for v in values if v is not None]
+        pos_vals = [v for v in present if v is not None and v > 0]
+        use_log = len(pos_vals) >= 2 and max(pos_vals) / min(pos_vals) > 30
 
         body.append(text(x0, y0 + 10, label, "label"))
-        body.append(text(x0, y0 + 27, unit, "small"))
+        body.append(text(x0, y0 + 27, (unit + " log") if use_log else unit, "small"))
         if not present:
             body.append(text(chart_x, chart_y + chart_h / 2, "n/a", "subtitle", "middle"))
             continue
 
-        ymax = max(present) * 1.15
-        if ymax <= 0:
-            ymax = 1.0
         body.append(line(chart_x, chart_y, chart_x, chart_y + chart_h))
         body.append(line(chart_x, chart_y + chart_h, chart_x + chart_w, chart_y + chart_h))
-        for tick in range(1, 4):
-            ty = chart_y + chart_h - chart_h * tick / 4
-            body.append(line(chart_x, ty, chart_x + chart_w, ty, "grid"))
+
+        if use_log:
+            log_floor = math.floor(math.log10(min(pos_vals)))
+            log_ceil = math.ceil(math.log10(max(pos_vals)))
+            log_min = log_floor - 0.25
+            log_max = log_ceil + 0.12
+            span = log_max - log_min
+            for power in range(log_floor, log_ceil + 1):
+                ty = chart_y + chart_h - (power - log_min) / span * chart_h
+                if chart_y <= ty <= chart_y + chart_h:
+                    body.append(line(chart_x, ty, chart_x + chart_w, ty, "grid"))
+                    tick_val = 10 ** power
+                    tick_label = (f"{tick_val // 1000}k" if tick_val >= 1000 else str(tick_val))
+                    body.append(text(chart_x - 4, ty + 4, tick_label, "tick", "end"))
+        else:
+            ymax = max(present) * 1.15
+            if ymax <= 0:
+                ymax = 1.0
+            for tick in range(1, 4):
+                ty = chart_y + chart_h - chart_h * tick / 4
+                body.append(line(chart_x, ty, chart_x + chart_w, ty, "grid"))
+
         gap = 18
         bar_w = (chart_w - gap * (len(VARIANTS) + 1)) / len(VARIANTS)
         for i, variant in enumerate(VARIANTS):
             value = values[i]
             bx = chart_x + gap + i * (bar_w + gap)
+            body.append(text(bx + bar_w / 2, chart_y + chart_h + 17, variant["short"], "tick", "middle"))
             if value is None:
                 body.append(rect(bx, chart_y + chart_h - 4, bar_w, 4, "#cbd5e1"))
-                body.append(text(bx + bar_w / 2, chart_y + chart_h + 17, variant["short"], "tick", "middle"))
                 continue
-            bh = chart_h * value / ymax
+            if use_log and value > 0:
+                bh = max(2.0, (math.log10(value) - log_min) / span * chart_h)
+            elif use_log:
+                bh = 2.0
+            else:
+                bh = max(2.0, chart_h * value / ymax)
             by = chart_y + chart_h - bh
             body.append(rect(bx, by, bar_w, bh, variant["color"], rx=3))
             body.append(text(bx + bar_w / 2, by - 5, fmt_value(value, unit), "tick", "middle"))
-            body.append(text(bx + bar_w / 2, chart_y + chart_h + 17, variant["short"], "tick", "middle"))
     save_svg(path, width, height, body)
 
 
@@ -735,11 +770,11 @@ def improvement_heatmap(rows_delta):
         if row.get(key) is not None
     ]
     max_abs = max(values) if values else 1.0
-    width = 720
     left = 285
     top = 90
     row_h = 30
     cell_w = 260
+    width = max(720, left + len(comparisons) * cell_w + 40)
     height = top + len(rows_delta) * row_h + 86
     body = title_block(
         "Relative Improvement Heatmap",
@@ -764,6 +799,9 @@ def improvement_heatmap(rows_delta):
 def improvement_bar_plot(rows_delta, comparison_key, file_name, title, subtitle):
     valid = [row for row in rows_delta if row.get(comparison_key) is not None]
     max_abs = max(abs(row[comparison_key]) for row in valid) if valid else 1.0
+    use_log = max_abs > 200
+    log_max = math.log10(max_abs + 1) if use_log else 1.0
+    half_span = (1030 - 380) * 0.48
     width = 1120
     left = 380
     right = 1030
@@ -773,25 +811,45 @@ def improvement_bar_plot(rows_delta, comparison_key, file_name, title, subtitle)
     zero_x = left + (right - left) * 0.5
     body = title_block(title, subtitle)
     body.append(line(zero_x, top - 12, zero_x, top + len(valid) * row_h, color="#334155", width=1.3))
-    for tick in [-max_abs, -max_abs / 2, 0, max_abs / 2, max_abs]:
-        x = zero_x + tick / max_abs * (right - left) * 0.48
-        body.append(line(x, top - 8, x, top + len(valid) * row_h, "grid"))
-        body.append(text(x, top - 18, f"{tick:+.0f}%", "tick", "middle"))
+    if use_log:
+        for tv in [-100000, -10000, -1000, -100, -10, 10, 100, 1000, 10000, 100000]:
+            if abs(tv) > max_abs * 1.05:
+                continue
+            log_pos = math.copysign(math.log10(abs(tv) + 1), tv) / log_max
+            x = zero_x + log_pos * half_span
+            body.append(line(x, top - 8, x, top + len(valid) * row_h, "grid"))
+            label = f"{tv:+,}%" if abs(tv) < 1000 else f"{tv // 1000:+d}k%"
+            body.append(text(x, top - 18, label, "tick", "middle"))
+    else:
+        for tick in [-max_abs, -max_abs / 2, 0, max_abs / 2, max_abs]:
+            x = zero_x + tick / max_abs * half_span
+            body.append(line(x, top - 8, x, top + len(valid) * row_h, "grid"))
+            body.append(text(x, top - 18, f"{tick:+.0f}%", "tick", "middle"))
     for row_idx, row in enumerate(valid):
         y = top + row_idx * row_h
         value = row[comparison_key]
         body.append(text(32, y + 18, row["metric"], "label"))
         body.append(text(270, y + 18, row["direction"], "small", "end"))
-        bar_w = abs(value) / max_abs * (right - left) * 0.48
+        if use_log:
+            bar_w = math.log10(abs(value) + 1) / log_max * half_span
+            color_strength = math.log10(abs(value) + 1) / log_max
+        else:
+            bar_w = abs(value) / max_abs * half_span
+            color_strength = abs(value) / max_abs
+        fill = improvement_fill(math.copysign(color_strength, value), 1.0)
         if value >= 0:
             x = zero_x
         else:
             x = zero_x - bar_w
-        body.append(rect(x, y + 5, bar_w, 18, improvement_fill(value, max_abs), stroke="#ffffff", rx=3))
+        body.append(rect(x, y + 5, bar_w, 18, fill, stroke="#ffffff", rx=3))
         label_x = x + bar_w + 8 if value >= 0 else x - 8
         anchor = "start" if value >= 0 else "end"
-        body.append(text(label_x, y + 19, pct(value), "label", anchor))
-    body.append(text(left, height - 30, "right of zero = improvement; left of zero = regression", "subtitle"))
+        label_str = (f"+{value:,.0f}%" if value >= 1000 else pct(value))
+        body.append(text(label_x, y + 19, label_str, "label", anchor))
+    footer = "right of zero = improvement; left of zero = regression"
+    if use_log:
+        footer += " (log₁₀ scale)"
+    body.append(text(left, height - 30, footer, "subtitle"))
     save_svg(PLOTS / file_name, width, height, body)
 
 
@@ -810,28 +868,37 @@ def stepwise_improvement_plot(rows_delta):
     rows = [row for row in rows_delta if row["metric"] in selected]
     comparisons = [
         ("v1_vs_v0_improvement_pct", "v1-v0", "#0f766e"),
+        ("v0_vs_cpu_improvement_pct", "v0-cpu", "#475569"),
+        ("v1_vs_cpu_improvement_pct", "v1-cpu", "#0284c7"),
     ]
     rows = [row for row in rows if any(row.get(key) is not None for key, _, _ in comparisons)]
-    max_abs = max(
-        abs(row[key])
-        for row in rows
-        for key, _, _ in comparisons
-        if row.get(key) is not None
-    )
-    width, height = 1240, 720
-    left, right, top, bottom = 92, 1130, 108, 520
+    if not rows:
+        return
+    all_abs = [abs(row[key]) for row in rows for key, _, _ in comparisons if row.get(key) is not None]
+    max_abs = max(all_abs) if all_abs else 1.0
+    log_max = math.log10(max_abs + 1)
+
+    def bar_h(v):
+        return math.log10(abs(v) + 1) / log_max * (bottom - top)
+
+    width, height = 1280, 740
+    left, right, top, bottom = 92, 1170, 108, 520
     body = title_block(
         "Stepwise Relative Improvements",
-        "Selected deployment metrics; positive bars are better after direction normalization.",
+        "Log₁₀ scale; all comparisons; positive = better after direction normalization.",
     )
     body.append(line(left, bottom, right, bottom))
     body.append(line(left, top, left, bottom))
-    for tick in range(1, 5):
-        y = bottom - tick * (bottom - top) / 4
+    for tv in [1, 10, 100, 1000, 10000, 100000]:
+        if tv > max_abs * 1.05:
+            break
+        y = bottom - math.log10(tv + 1) / log_max * (bottom - top)
         body.append(line(left, y, right, y, "grid"))
-        body.append(text(left - 10, y + 4, f"{max_abs * tick / 4:.0f}%", "tick", "end"))
+        label = f"+{tv:,}%" if tv < 1000 else f"+{tv // 1000}k%"
+        body.append(text(left - 10, y + 4, label, "tick", "end"))
     group_w = (right - left) / len(rows)
-    bar_w = 18
+    bar_w = 16
+    n_comp = len(comparisons)
     for idx, row in enumerate(rows):
         cx = left + group_w * idx + group_w / 2
         body.append(text(cx, bottom + 58, row["metric"], "tick", "middle", rotate=-32))
@@ -839,19 +906,21 @@ def stepwise_improvement_plot(rows_delta):
             value = row.get(key)
             if value is None:
                 continue
-            bh = abs(value) / max_abs * (bottom - top)
-            x = cx - bar_w * 1.7 + comp_idx * (bar_w + 4)
+            bh = bar_h(value)
+            x = cx - bar_w * n_comp / 2 + comp_idx * (bar_w + 3)
             y = bottom - bh if value >= 0 else bottom
             fill = color if value >= 0 else "#b91c1c"
-            body.append(rect(x, y, bar_w, bh, fill, rx=2))
+            body.append(rect(x, y, bar_w, max(bh, 1.0), fill, rx=2))
             if value >= 0:
-                label_y = max(top + 12, y - 6 - (comp_idx % 2) * 5)
+                label_y = max(top + 12, y - 5 - (comp_idx % 2) * 8)
+                label_str = f"+{value:,.0f}%" if abs(value) >= 1000 else pct(value)
             else:
-                label_y = bottom + 18 + comp_idx * 12
-            body.append(text(x + bar_w / 2, label_y, pct(value), "tick", "middle"))
-    lx, ly = 910, 82
+                label_y = bottom + 14 + comp_idx * 11
+                label_str = pct(value)
+            body.append(text(x + bar_w / 2, label_y, label_str, "tick", "middle"))
+    lx, ly = 880, 82
     for i, (_, label, color) in enumerate(comparisons):
-        x = lx + i * 78
+        x = lx + i * 105
         body.append(rect(x, ly - 12, 14, 14, color, rx=2))
         body.append(text(x + 20, ly, label, "label"))
     save_svg(PLOTS / "20_stepwise_relative_improvements.svg", width, height, body)
@@ -916,7 +985,21 @@ def improvement_plots(rows_delta):
         "v1_vs_v0_improvement_pct",
         "17_v1_vs_v0_relative_improvement_bars.svg",
         "Relative Improvement: v1 vs v0",
-        "Effect of the MAX78000 w90 pruned deployment against the baseline.",
+        "Pruned CNN accelerator vs baseline CNN accelerator.",
+    )
+    improvement_bar_plot(
+        rows_delta,
+        "v0_vs_cpu_improvement_pct",
+        "17b_v0_vs_cpu_relative_improvement_bars.svg",
+        "Relative Improvement: v0 (accelerator) vs int8 cpu",
+        "CNN hardware accelerator baseline vs CPU-only INT8 — the hardware advantage.",
+    )
+    improvement_bar_plot(
+        rows_delta,
+        "v1_vs_cpu_improvement_pct",
+        "17c_v1_vs_cpu_relative_improvement_bars.svg",
+        "Relative Improvement: v1 (pruned accelerator) vs int8 cpu",
+        "Pruned CNN hardware accelerator vs CPU-only INT8 — combined pruning and hardware advantage.",
     )
     stepwise_improvement_plot(rows_delta)
     improvement_profile_plot(
@@ -1082,12 +1165,13 @@ def scale(value, lo, hi, a, b):
     return a + (value - lo) / (hi - lo) * (b - a)
 
 
-def power_window_overlay(reports, windows_by_variant, selection_by_variant, file_name, title, subtitle):
+def power_window_overlay(reports, windows_by_variant, selection_by_variant, file_name, title, subtitle, variants_filter=None):
     width, height = 1120, 660
     left, right, top, bottom = 92, 920, 92, 520
     idle_preroll_ms = 2.0
+    active_variants = variants_filter or VARIANTS
     selected = []
-    for variant in VARIANTS:
+    for variant in active_variants:
         peak_number = selection_by_variant.get(variant["id"])
         window = windows_by_variant.get(variant["id"], {}).get(peak_number)
         if window and window["points"]:
@@ -1150,18 +1234,20 @@ def power_window_overlay(reports, windows_by_variant, selection_by_variant, file
     save_svg(PLOTS / file_name, width, height, body)
 
 
-def power_six_peak_grid(reports, windows_by_variant):
+def power_six_peak_grid(reports, windows_by_variant, file_name="25_power_six_peak_window_grid.svg", title="Power Windows: Six Inference Peaks", subtitle=None, variants_filter=None):
+    active_variants = variants_filter or VARIANTS
+    if subtitle is None:
+        labels = "/".join(v["short"] for v in active_variants)
+        subtitle = f"Each panel overlays {labels} for the same peak index; traces are aligned to detected inference start."
     width, height = 1280, 840
     cols = 3
     panel_w, panel_h = 390, 245
     left_margin, top_margin = 55, 92
-    body = title_block(
-        "Power Windows: Six Inference Peaks",
-        "Each panel overlays v0/v1 for the same peak index; traces are aligned to detected inference start.",
-    )
+    body = title_block(title, subtitle)
     all_points = [
         point
-        for variant_windows in windows_by_variant.values()
+        for vid, variant_windows in windows_by_variant.items()
+        if any(v["id"] == vid for v in active_variants)
         for window in variant_windows.values()
         for point in window["points"]
     ]
@@ -1178,7 +1264,7 @@ def power_six_peak_grid(reports, windows_by_variant):
         top, bottom = y0 + 32, y0 + panel_h - 46
         x_max_raw = max(
             windows_by_variant[variant["id"]][peak_number]["duration_ms"]
-            for variant in VARIANTS
+            for variant in active_variants
             if peak_number in windows_by_variant.get(variant["id"], {})
         )
         x_pad = max(2.0, min(20.0, x_max_raw * 1.2))
@@ -1190,7 +1276,7 @@ def power_six_peak_grid(reports, windows_by_variant):
         for tick in range(1, 4):
             y = bottom - tick * (bottom - top) / 4
             body.append(line(left, y, right, y, "grid"))
-        for variant in VARIANTS:
+        for variant in active_variants:
             window = windows_by_variant.get(variant["id"], {}).get(peak_number)
             if not window:
                 continue
@@ -1209,11 +1295,11 @@ def power_six_peak_grid(reports, windows_by_variant):
         body.append(text(left - 8, top + 4, f"{ymax:.1f}", "tick", "end"))
         body.append(text(left - 8, bottom + 4, f"{ymin:.1f}", "tick", "end"))
     lx, ly = 940, 58
-    for i, variant in enumerate(VARIANTS):
+    for i, variant in enumerate(active_variants):
         x = lx + i * 100
         body.append(rect(x, ly - 12, 14, 14, variant["color"], rx=2))
         body.append(text(x + 20, ly, variant["short"], "label"))
-    save_svg(PLOTS / "25_power_six_peak_window_grid.svg", width, height, body)
+    save_svg(PLOTS / file_name, width, height, body)
 
 
 def power_average_bars(reports):
@@ -1339,9 +1425,10 @@ def edge_panel(body, selected, x_transform, x_range, y_range, x0, y0, panel_w, p
         body.append(text(label_x, label_y, f"{variant['short']} p{peak_number}", "label"))
 
 
-def power_edge_zoom_overlay(windows_by_variant, selection_by_variant, file_name, title, subtitle):
+def power_edge_zoom_overlay(windows_by_variant, selection_by_variant, file_name, title, subtitle, variants_filter=None):
+    active_variants = variants_filter or VARIANTS
     selected = []
-    for variant in VARIANTS:
+    for variant in active_variants:
         peak_number = selection_by_variant.get(variant["id"])
         window = windows_by_variant.get(variant["id"], {}).get(peak_number)
         if window and window["points"]:
@@ -1394,7 +1481,7 @@ def power_edge_zoom_overlay(windows_by_variant, selection_by_variant, file_name,
     )
     body.append(text(610, height - 38, "Current in mA; x-axis is local time around each detected edge.", "subtitle", "middle"))
     lx, ly = 42, height - 36
-    for i, variant in enumerate(VARIANTS):
+    for i, variant in enumerate(active_variants):
         x = lx + i * 128
         body.append(rect(x, ly - 12, 14, 14, variant["color"], rx=2))
         body.append(text(x + 20, ly, variant["label"], "label"))
@@ -1435,6 +1522,13 @@ def power_analysis_plots_and_tables():
         "Same peak index from both traces, aligned to detected inference start.",
     )
     power_six_peak_grid(reports, windows_by_variant)
+    accel_variants = [v for v in VARIANTS if v["id"] in ("v0", "v1")]
+    power_six_peak_grid(
+        reports, windows_by_variant,
+        file_name="25b_power_accel_six_peak_window_grid.svg",
+        title="Power Windows: Six Inference Peaks (Accelerator Only)",
+        variants_filter=accel_variants,
+    )
     power_average_bars(reports)
     power_energy_duration_scatter(reports)
     power_edge_zoom_overlay(
@@ -1450,6 +1544,40 @@ def power_analysis_plots_and_tables():
         "29_power_peak03_edge_zoom_overlay.svg",
         "Power Edge Zoom: Peak 3",
         "Same peak index for all variants; rising edge and falling edge are aligned independently.",
+    )
+    power_window_overlay(
+        reports,
+        windows_by_variant,
+        representative_selection,
+        "30_power_accel_representative_window_overlay.svg",
+        "Power Trace Overlay: Accelerator Only — Representative Window",
+        "v0 and v1 (CNN hardware accelerator) only; CPU variant excluded to show fine-scale differences.",
+        variants_filter=accel_variants,
+    )
+    power_window_overlay(
+        reports,
+        windows_by_variant,
+        {variant["id"]: 3 for variant in accel_variants},
+        "31_power_accel_peak03_window_overlay.svg",
+        "Power Trace Overlay: Accelerator Only — Peak 3",
+        "v0 and v1 (CNN hardware accelerator) only; CPU variant excluded to show fine-scale differences.",
+        variants_filter=accel_variants,
+    )
+    power_edge_zoom_overlay(
+        windows_by_variant,
+        representative_selection,
+        "32_power_accel_representative_edge_zoom.svg",
+        "Power Edge Zoom: Accelerator Only — Representative Windows",
+        "v0 and v1 rising and falling edges with tighter zoom scale (no CPU variant).",
+        variants_filter=accel_variants,
+    )
+    power_edge_zoom_overlay(
+        windows_by_variant,
+        {variant["id"]: 3 for variant in accel_variants},
+        "33_power_accel_peak03_edge_zoom.svg",
+        "Power Edge Zoom: Accelerator Only — Peak 3",
+        "v0 and v1 peak 3 edges with tighter zoom scale (no CPU variant).",
+        variants_filter=accel_variants,
     )
 
 
@@ -1515,18 +1643,19 @@ def write_readme(rows):
         "# MAX78000 ai85kws20netv3 Online Results",
         "",
         "Source data: online `on.json` files from `Experiments/General Profiling/MAX78000`.",
-        "Power data: online `on_peak_analysis` folders from `Experiments/PWR Consumption/MAX78000`.",
+        "Power data: peak analysis folders from `Experiments/PWR Consumption/MAX78000`.",
         "",
         "Variants:",
-        "- `v0`: baseline MAX78000 deployment",
-        "- `v1`: w90 pruned MAX78000 deployment",
+        "- `v0`: baseline MAX78000 deployment (CNN hardware accelerator)",
+        "- `v1`: w90 pruned MAX78000 deployment (CNN hardware accelerator)",
+        "- `cpu`: INT8 CPU-only deployment (no CNN hardware accelerator)",
         "",
         "Key online findings:",
-        f"- CNN latency: v0 `{v('v0','cnn_latency_ms_avg'):.3f} ms`, v1 `{v('v1','cnn_latency_ms_avg'):.3f} ms`.",
-        f"- Static SRAM: v0 `{v('v0','static_sram_usage.static_sram_bytes')/1024:.1f} KiB`, v1 `{v('v1','static_sram_usage.static_sram_bytes')/1024:.1f} KiB`.",
-        f"- Energy per inference estimate: v0 `{v('v0','energy_estimate.energy_per_inference_uj'):.1f} uJ`, v1 `{v('v1','energy_estimate.energy_per_inference_uj'):.1f} uJ`.",
+        f"- CNN latency: v0 `{v('v0','cnn_latency_ms_avg'):.3f} ms`, v1 `{v('v1','cnn_latency_ms_avg'):.3f} ms`, cpu `{v('v0_0','cnn_latency_ms_avg'):.3f} ms`.",
+        f"- Static SRAM: v0 `{v('v0','static_sram_usage.static_sram_bytes')/1024:.1f} KiB`, v1 `{v('v1','static_sram_usage.static_sram_bytes')/1024:.1f} KiB`, cpu `{v('v0_0','static_sram_usage.static_sram_bytes')/1024:.1f} KiB`.",
+        f"- Energy per inference: v0 `{v('v0','energy_estimate.energy_per_inference_uj'):.1f} uJ`, v1 `{v('v1','energy_estimate.energy_per_inference_uj'):.1f} uJ`, cpu `{v('v0_0','energy_estimate.energy_per_inference_uj'):.1f} uJ`.",
         f"- v1 vs v0 latency improvement: `{(v('v0','cnn_latency_ms_avg') - v('v1','cnn_latency_ms_avg')) / v('v0','cnn_latency_ms_avg') * 100:.2f}%`.",
-        f"- v1 vs v0 energy improvement: `{(v('v0','energy_estimate.energy_per_inference_uj') - v('v1','energy_estimate.energy_per_inference_uj')) / v('v0','energy_estimate.energy_per_inference_uj') * 100:.2f}%`.",
+        f"- cpu vs v0 latency factor: `{v('v0_0','cnn_latency_ms_avg') / v('v0','cnn_latency_ms_avg'):.0f}x` slower (no hardware accelerator).",
         "",
         "Generated tables are in `tables/`; generated SVG plots are in `plots/`.",
         "",
@@ -1583,7 +1712,7 @@ def write_dashboard():
         "</head>",
         "<body><main>",
         "<h1>MAX78000 ai85kws20netv3 Online Results</h1>",
-        "<p>Online-only comparison of MAX78000 v0 and v1 result summaries.</p>",
+        "<p>Comparison of MAX78000 v0, v1 (CNN accelerator) and int8 cpu (CPU-only) result summaries.</p>",
         "<section><h2>Key Metrics</h2>",
         md_table_to_html(key_table),
         "</section>",

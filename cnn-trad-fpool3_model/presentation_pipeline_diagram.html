@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>KWS cross-MCU pipeline — AI85KWS &amp; DS-CNN</title>
+<style>
+  :root{
+    --done:#1b7f3b; --done-bg:#e6f5ec;
+    --plan:#b8860b; --plan-bg:#fbf3df;
+    --block:#b3261e; --block-bg:#fbe7e6;
+    --root:#1f3a93; --root-bg:#e7ecfb;
+    --ink:#1d1d1f; --muted:#6b6b70;
+  }
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       color:var(--ink);margin:0;padding:28px 32px;background:#fafafa}
+  h1{font-size:22px;margin:0 0 2px}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 18px}
+  h2{font-size:15px;margin:26px 0 12px;padding-bottom:5px;border-bottom:2px solid #e3e3e6;
+     letter-spacing:.02em;text-transform:uppercase;color:#444}
+  .row{display:flex;align-items:center;gap:0;flex-wrap:wrap;margin:10px 0}
+  .lane{display:flex;align-items:center;gap:0;flex-wrap:wrap}
+  .root{min-width:120px;padding:14px 16px;border-radius:12px;border:2px solid var(--root);
+        background:var(--root-bg);font-weight:700;font-size:16px;text-align:center;margin-right:18px}
+  .branches{display:flex;flex-direction:column;gap:14px}
+  .node{position:relative;min-width:150px;max-width:185px;padding:9px 12px;border-radius:10px;
+        border:1.6px solid #ccc;background:#fff;font-size:12.5px;line-height:1.32}
+  .node .hd{font-weight:700;font-size:13px;margin-bottom:2px}
+  .node .bit{font-weight:700}
+  .node .met{color:var(--muted);font-size:11.5px;margin-top:3px}
+  .arrow{color:#9a9aa0;font-size:20px;padding:0 9px;align-self:center;user-select:none}
+  .arrow.plan{color:var(--plan)}
+  .mcu-tag{font-size:10.5px;font-weight:700;color:#888;letter-spacing:.06em;
+           writing-mode:vertical-rl;transform:rotate(180deg);text-align:center;margin-right:10px;text-transform:uppercase}
+  .done{border-color:var(--done);background:var(--done-bg)}
+  .done .hd{color:var(--done)}
+  .plan{border-color:var(--plan);background:var(--plan-bg);border-style:dashed}
+  .plan .hd{color:var(--plan)}
+  .block{border-color:var(--block);background:var(--block-bg)}
+  .block .hd{color:var(--block)}
+  .star{color:#c9971b}
+  .same{display:inline-block;margin-top:4px;font-size:10px;font-weight:700;color:#1f3a93;
+        background:#e7ecfb;border-radius:5px;padding:1px 5px;letter-spacing:.02em}
+  .diff{display:inline-block;margin-top:4px;font-size:10px;font-weight:700;color:#8a4b00;
+        background:#fbf3df;border-radius:5px;padding:1px 5px;letter-spacing:.02em}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin:14px 0 4px;font-size:12px;color:#444}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .chip{width:14px;height:14px;border-radius:4px;border:1.6px solid #ccc;display:inline-block}
+  .notes{margin-top:18px;font-size:12.5px;color:#444;background:#fff;border:1px solid #e3e3e6;
+         border-radius:10px;padding:12px 16px;max-width:980px}
+  .notes li{margin:4px 0}
+  .lane-wrap{display:flex;align-items:center;margin:6px 0}
+  /* nested multi-branch stage (Coral v2 prune / v3 distill) */
+  .stage{border:1.4px dashed #8aa0d0;border-radius:10px;padding:7px 8px 8px;background:#f4f7fe}
+  .stage-hd{font-size:11px;font-weight:700;color:#1f3a93;margin:0 2px 6px;letter-spacing:.02em}
+  .branch{min-width:140px;max-width:175px;padding:6px 9px;border-radius:8px;border:1.4px solid var(--done);
+          background:var(--done-bg);font-size:11.5px;line-height:1.28;margin:4px 0}
+  .branch .bh{font-weight:700;font-size:12px;color:var(--done)}
+  .branch .bm{color:var(--muted);font-size:11px}
+  .branch.winner{border-width:2.2px;box-shadow:0 0 0 2px #c9971b33}
+  .branch.weak{border-color:#9a9aa0;background:#f3f3f4}
+  .branch.weak .bh{color:#555}
+</style>
+</head>
+<body>
+
+<h1>KWS cross-MCU deployment pipeline</h1>
+<p class="sub">Two model families × per-MCU precision/optimization ladders · drafted 2026-06-08 · metrics = CNN inference latency · host model-acc (n=4890)</p>
+
+<div class="legend">
+  <span><i class="chip done"></i> done / measured</span>
+  <span><i class="chip plan"></i> planned (in progress)</span>
+  <span><i class="chip block"></i> not possible (toolchain limit)</span>
+  <span><span class="star">★</span> best model on that board</span>
+</div>
+
+<!-- ===================== AI85KWS ===================== -->
+<h2>AI85KWS &nbsp;—&nbsp; completed (colleague)</h2>
+
+<div class="lane-wrap">
+  <div class="root">AI85KWS</div>
+  <div class="branches">
+
+    <!-- U5 -->
+    <div class="lane">
+      <div class="mcu-tag">U5</div>
+      <div class="node done"><div class="hd">v0 · fp32</div><span class="bit">32-bit</span> · CPU</div>
+      <div class="arrow">→</div>
+      <div class="node done"><div class="hd">v1 · int8</div><span class="bit">8-bit</span> · CPU</div>
+      <div class="arrow">→</div>
+      <div class="node done"><div class="hd">v2 · prune</div><span class="bit">8-bit</span> · pruned · CPU</div>
+    </div>
+
+    <!-- MAX -->
+    <div class="lane">
+      <div class="mcu-tag">MAX</div>
+      <div class="node done"><div class="hd">v0 · fp32</div><span class="bit">8-bit</span> · CPU</div>
+      <div class="arrow">→</div>
+      <div class="node done"><div class="hd">v1 · accel</div><span class="bit">8-bit</span> · accel</div>
+      <div class="arrow">→</div>
+      <div class="node done"><div class="hd">v2 · prune</div><span class="bit">8-bit</span> · accel · pruned</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===================== DS-CNN ===================== -->
+<h2>DS-CNN-L &nbsp;—&nbsp; this work (Iker)</h2>
+
+<div class="lane-wrap">
+  <div class="root">DS-CNN</div>
+  <div class="branches">
+
+    <!-- U5 -->
+    <div class="lane">
+      <div class="mcu-tag">U5</div>
+      <div class="node done"><div class="hd">v0 · fp32-cpu</div><span class="bit">32-bit</span> · CMSIS-NN<div class="met">224 ms · 92.4%</div><span class="same">≡ shared DS-CNN-L</span></div>
+      <div class="arrow">→</div>
+      <div class="node done"><div class="hd">v1 · int8-cpu</div><span class="bit">8-bit</span> · CMSIS-NN<div class="met">64 ms · 92.0%</div></div>
+      <div class="arrow">→</div>
+      <div class="node block"><div class="hd">4-bit ✗</div>X-CUBE-AI is<br/>int8-only<div class="met">verified 06-07</div></div>
+    </div>
+
+    <!-- MAX -->
+    <div class="lane">
+      <div class="mcu-tag">MAX</div>
+      <div class="node done"><div class="hd">v0 · fp32-cpu</div><span class="bit">32-bit</span> · CPU<div class="met">2048 ms · 92.4%</div><span class="same">≡ shared DS-CNN-L (DW-sep, float)</span></div>
+      <div class="arrow">→</div>
+      <div class="node done"><div class="hd">v1 · int8-accel</div><span class="bit">8-bit</span> · CNN accel<div class="met">0.16 ms · 92.0%</div><span class="diff">≠ DS-CNN · <code>kws12mfcc</code>: conv1d port (6 layers, 1.34M MAC, same MFCC + 12 kw)</span></div>
+      <div class="arrow plan">⇢</div>
+      <div class="node plan"><div class="hd">4-bit ⧖</div>ai8x QAT<br/>(1/2/4/8-bit)<div class="met">planned</div></div>
+    </div>
+
+    <!-- Coral -->
+    <div class="lane">
+      <div class="mcu-tag">Coral</div>
+      <div class="node done"><div class="hd">v0 · fp32-cpu</div><span class="bit">32-bit</span> · M7 CPU<div class="met">417 ms · 92.4%</div><span class="same">≡ shared DS-CNN-L</span></div>
+      <div class="arrow">→</div>
+      <div class="node done"><div class="hd">v1 · int8-accel</div><span class="bit">8-bit</span> · Edge-TPU<div class="met">2.27 ms · 92.0%</div></div>
+      <div class="arrow">→</div>
+      <!-- v2: three prune branches -->
+      <div class="stage">
+        <div class="stage-hd">v2 · int8-prune — 3 branches</div>
+        <div class="branch winner"><div class="bh">f64b4 · 4-blk, 64f ★</div><div class="bm">1.88 ms · 89.7% — winner</div></div>
+        <div class="branch weak"><div class="bh">f32b6 · 6-blk, 32f</div><div class="bm">2.25 ms · 76.7%</div></div>
+        <div class="branch weak"><div class="bh">f32b4 · 4-blk, 32f</div><div class="bm">1.82 ms · 65.1%</div></div>
+      </div>
+      <div class="arrow">→</div>
+      <!-- v3: distillation recovery -->
+      <div class="stage">
+        <div class="stage-hd">v3 · prune+distill (KD)</div>
+        <div class="branch winner"><div class="bh">f64b4 + KD ★</div><div class="bm">1.88 ms · 90.8% — best Coral</div></div>
+        <div class="branch"><div class="bh">f32b4 + KD</div><div class="bm">1.82 ms · 76.5% (+11.4 rescue)</div></div>
+      </div>
+    </div>
+
+    <!-- GAP9 -->
+    <div class="lane">
+      <div class="mcu-tag">GAP9</div>
+      <div class="node plan"><div class="hd">v0 ⧖</div>NE16 accel<br/>(RISC-V cluster)<div class="met">to implement</div></div>
+      <div class="arrow plan">⇢</div>
+      <div class="node plan"><div class="hd">int8 / 4-bit ⧖</div>NE16 native<br/>sub-8-bit<div class="met">these days</div></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="notes">
+  <strong>Notes</strong>
+  <ul>
+    <li><strong>MAX has two models — check the version.</strong> <strong>v0 (fp32-cpu) IS the shared DS-CNN-L</strong> — a hand-coded float32 port (<code>ds_cnn_inference.c</code>: CONV0 → depthwise <code>groups=64</code> + pointwise 1×1 ×6 → AvgPool → Dense, 3.94 M MACs) on the Cortex-M4, no accelerator (hence 2048 ms). <strong>v1 (int8-accel) is a DIFFERENT network</strong> — the CNN accelerator can't run the depthwise-separable graph, so it deploys <code>kws12mfcc</code>: 6× standard <strong>conv1d</strong> (1.34 M MACs), keeping the DS-CNN's own MFCC front-end (10×49) and 12 keywords but no depthwise. <strong>NB:</strong> this is <em>not</em> the <code>ai85kws20net</code> model — that's a separate, bigger net (<code>kws20_v3</code>: 9 layers, 8.4 M MACs, 128×128 input, 21 classes) in the other folder, unrelated to the DS-CNN branch. So the same-model cross-board comparison is the <strong>v0 (fp32) row</strong> (Coral = U5 = MAX-v0); the 0.16 ms accelerator number is "best KWS this HW can do".</li>
+    <li><strong>Coral v1 calibration before/after</strong> — original deploy used random INT8 calibration → 23.6% (host artifact, works on-device); recalibrated on real MFCC → 92.0%. Kept both for the comparison.</li>
+    <li><strong>Bit-width axis is cross-MCU</strong> — 32-bit: Coral/U5 CPU · 8-bit: Coral Edge-TPU + U5 CMSIS-NN + MAX accel · 4-bit: only MAX78000 (ai8x) and GAP9 (NE16) can do it natively; U5 and Coral top out at int8.</li>
+    <li><strong>Coral key finding</strong> — Edge-TPU latency is block-count-bound, not filter-bound (every 4-block ≈ 1.8 ms, every 6-block ≈ 2.27 ms) → prune = drop blocks, keep filters. Winner = f64b4 distilled, 1.88 ms @ 90.8%.</li>
+    <li><strong>GAP9</strong> — to be added this week; NE16 accelerator supports int8 and sub-8-bit, so it can also carry the 4-bit story alongside MAX78000.</li>
+  </ul>
+</div>
+
+</body>
+</html>

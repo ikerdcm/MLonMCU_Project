@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_subdirectory(elf_loader)
-add_subdirectory(mfg_test)
-add_subdirectory(multicore_model_cascade)
-add_subdirectory(rack_test)
-add_subdirectory(usb_drive)
 add_subdirectory(kws_coral)
 add_subdirectory(kws_live)
 add_subdirectory(kws_bench)
 add_subdirectory(single_inference)
+add_subdirectory(kws_bench_cpu)   # fp32-cpu offline (no Edge TPU)
+add_subdirectory(kws_live_cpu)    # fp32-cpu online  (no Edge TPU)
+add_subdirectory(kws_eval)        # on-device accuracy (device-in-the-loop, v2 int8)
+add_subdirectory(kws_eval_cpu)    # on-device accuracy, fp32-cpu (M7, no Edge TPU)

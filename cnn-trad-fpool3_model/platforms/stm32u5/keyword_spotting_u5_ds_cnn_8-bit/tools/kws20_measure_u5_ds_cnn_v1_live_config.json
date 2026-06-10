@@ -1,0 +1,17 @@
+{
+  "mode": "live",
+  "project": "/Users/iker/Projects/ETHZ/Q2/ML on MCUs/MLonMCU_Project_Test/MLonMCU_Project/cnn-trad-fpool3_model/platforms/stm32u5/keyword_spotting_u5_ds_cnn_v1",
+  "elf": "/Users/iker/Projects/ETHZ/Q2/ML on MCUs/MLonMCU_Project_Test/MLonMCU_Project/cnn-trad-fpool3_model/platforms/stm32u5/keyword_spotting_u5_ds_cnn_v1/Debug/keyword_spotting_u5_ds_cnn_v1.elf",
+  "build_log": null,
+  "port": "/dev/tty.usbmodem113103",
+  "baud": 115200,
+  "clock_mhz": 160.0,
+  "mac_ops": 3937717.0,
+  "sample_rate": 16000.0,
+  "sample_count": 16000.0,
+  "voltage": 3.28,
+  "current_ma": 23.35,
+  "timeout": 120.0,
+  "no_build": true,
+  "min_inferences": 10
+}

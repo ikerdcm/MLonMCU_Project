@@ -28,7 +28,7 @@ import tensorflow as tf
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR   = os.path.normpath(os.path.join(SCRIPT_DIR, "../../../models"))
-TRAIN_DIR   = os.path.normpath(os.path.join(SCRIPT_DIR, "../../training"))
+TRAIN_DIR   = os.path.normpath(os.path.join(SCRIPT_DIR, "../../../training"))
 
 SAVED_MODEL = os.path.join(TRAIN_DIR, "trained_models/kws_ref_model")
 OUT_STATIC  = os.path.join(MODEL_DIR, "ds_cnn_l_static.tflite")

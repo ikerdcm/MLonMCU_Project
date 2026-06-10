@@ -1,0 +1,1 @@
+v1 = int8-cpu     # INT8, CMSIS-NN (X-CUBE-AI)

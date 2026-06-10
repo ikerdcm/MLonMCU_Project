@@ -11,5 +11,6 @@
   "build_dir": "/tmp/nn_profiler_ne16_power",
   "measurements_root": "/app/gap9_measurements",
   "board": "GAP9_EVK",
-  "sleep_us": 2500000
+  "sleep_us": 2500000,
+  "supply_voltage_v": 1.8
 }

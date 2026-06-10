@@ -1,0 +1,52 @@
+{
+  "timestamp": "2026-06-10T12:56:20.193995",
+  "variant": "ds_cnn_l_ne16_int8_power",
+  "board": "GAP9_EVK",
+  "clock_hz": 240000000.0,
+  "mac_ops": 3832460.0,
+  "runs": 2,
+  "sleep_us": 2500000,
+  "python_predicted_class": 2,
+  "stats": {
+    "count": 1,
+    "min_cycles": 188990,
+    "max_cycles": 188990,
+    "mean_cycles": 188990,
+    "median_cycles": 188990,
+    "std_cycles": 0.0,
+    "p95_cycles": 188990,
+    "mean_latency_ms": 0.7874583333333334,
+    "mean_macs_per_cycle": 20.27863908143288
+  },
+  "memory": {
+    "Graph Max Alive Size": 20500,
+    "Shared L1": {
+      "given": 121856,
+      "used": 20500
+    },
+    "L2": {
+      "given": 1350000,
+      "used": 37248
+    },
+    "L2 Static Memory Usage": 37248,
+    "L2 Dyn Memory Usage": 0,
+    "DefaultRam": {
+      "given": 8000000,
+      "used": 0
+    },
+    "eMRAM": {
+      "given": 67108864,
+      "used": 37248
+    },
+    "Total Flash Used at runtime": 37248,
+    "L3 Memory bandwidth for 1 graph run": 0,
+    "L2 Memory bandwidth for 1 graph run": 245914,
+    "Sum of all Kernels arguments size": 245914,
+    "Tiling Bandwith overhead": 1.0,
+    "Sum of baseline bandwidth": 245370,
+    "Percentage of baseline BW for L2": 100.222,
+    "Percentage of baseline BW for L3": 0.0,
+    "Sum of all Kernels operations": 3832460,
+    "Total amount of flash coefficients": 37248
+  }
+}

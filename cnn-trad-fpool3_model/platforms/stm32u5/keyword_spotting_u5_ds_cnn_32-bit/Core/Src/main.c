@@ -104,7 +104,9 @@ int main(void)
   MX_ICACHE_Init();
   MX_X_CUBE_AI_Init();
   /* USER CODE BEGIN 2 */
-#if KWS20_CFG_APP_MODE == KWS20_CFG_APP_MODE_MIC2_POLL
+#if defined(KWS20_CFG_ENABLE_EVAL) && KWS20_CFG_ENABLE_EVAL
+  kws20_eval_run_once();   /* device-in-the-loop accuracy eval; never returns */
+#elif KWS20_CFG_APP_MODE == KWS20_CFG_APP_MODE_MIC2_POLL
   mic2_poll_run_forever();
 #elif KWS20_CFG_APP_MODE == KWS20_CFG_APP_MODE_AUDIO_HW_PROBE
   audio_hw_probe_run_once();

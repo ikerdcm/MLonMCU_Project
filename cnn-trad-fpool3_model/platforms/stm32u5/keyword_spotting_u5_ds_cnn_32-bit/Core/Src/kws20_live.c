@@ -6,6 +6,7 @@
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "main.h"
@@ -606,18 +607,6 @@ static void run_inference(ai_handle network,
             n += snprintf(sb + n, sizeof(sb) - n, "%s%d", i ? ";" : "", v);
         }
         printf("%s\r\n", sb);
-
-        /* MFCC the model saw (49 frames × 10 bins) for the dashboard spectrogram.
-           Input elems are ai_float here (32-bit build) → round to int for transport. */
-        {
-            static char mb[3072];
-            int m = snprintf(mb, sizeof(mb), "BENCH,event=mfcc,run=%lu,w=10,h=49,d=",
-                             (unsigned long)run_index);
-            for (uint32_t i = 0; i < (uint32_t)AI_NETWORK_IN_1_SIZE; i++)
-                m += snprintf(mb + m, sizeof(mb) - m, "%s%d",
-                              i ? ";" : "", (int)lrintf((float)ai_input_data[i]));
-            printf("%s\r\n", mb);
-        }
     }
 #endif
 
@@ -699,6 +688,84 @@ int kws20_live_audio_error_callback(uint32_t instance)
 
     live_dma_error_count++;
     return 1;
+}
+
+/* Device-in-the-loop accuracy eval: host streams 16 kHz int16 clips over the
+   console UART (huart1); we run the SAME frontend + ai_network_run the live path
+   uses and report pred + cnn_us for the host to tally (testbench.py). Reuses the
+   live network/buffers/frontend; argmax on raw output (affine-invariant). */
+void kws20_eval_run_once(void)
+{
+    extern UART_HandleTypeDef huart1;
+    ai_handle network = AI_HANDLE_NULL;
+    ai_handle act_addr[] = { activations };
+    ai_error err = ai_network_create_and_init(&network, act_addr, NULL);
+    uint32_t hclk_hz = HAL_RCC_GetHCLKFreq();
+    char hdr[64];
+
+    if (err.type != AI_ERROR_NONE) {
+        printf("ai_network_create_and_init failed: type=%d code=%d\r\n", err.type, err.code);
+        return;
+    }
+    ai_buffer *ai_input = ai_network_inputs_get(network, NULL);
+    ai_buffer *ai_output = ai_network_outputs_get(network, NULL);
+    if ((ai_input == NULL) || (ai_output == NULL)) {
+        printf("ai_network_inputs_get / outputs_get failed\r\n");
+        ai_network_destroy(network);
+        return;
+    }
+    live_dwt_init();
+
+    printf("BENCH,event=eval_ready,classes=12,window=%u\r\n",
+           (unsigned)DS_CNN_AUDIO_WINDOW_SAMPLES);
+
+    for (;;) {
+        /* read ASCII header line "EVAL <idx> <nsamples>" */
+        int hi = 0;
+        for (;;) {
+            uint8_t c;
+            if (HAL_UART_Receive(&huart1, &c, 1, HAL_MAX_DELAY) != HAL_OK) continue;
+            if (c == '\n') break;
+            if (c == '\r') continue;
+            if (hi < (int)sizeof(hdr) - 1) hdr[hi++] = (char)c;
+        }
+        hdr[hi] = '\0';
+        if (strncmp(hdr, "EVAL ", 5) != 0) continue;
+        char *q = hdr + 5;
+        unsigned long idx = strtoul(q, &q, 10);
+        unsigned long n   = strtoul(q, &q, 10);
+        if (n != DS_CNN_AUDIO_WINDOW_SAMPLES) {
+            printf("BENCH,event=eval_error,idx=%lu,reason=nsamples\r\n", idx);
+            continue;
+        }
+
+        /* receive n int16 little-endian straight into live_audio_pcm (LE MCU) */
+        HAL_UART_Receive(&huart1, (uint8_t *)live_audio_pcm,
+                         (uint16_t)(DS_CNN_AUDIO_WINDOW_SAMPLES * 2u), HAL_MAX_DELAY);
+
+        memset(ai_output_data, 0, sizeof(ai_output_data));
+        fill_input_from_live_audio();
+        memcpy(ai_input[0].data, ai_input_data, AI_NETWORK_IN_1_SIZE_BYTES);
+
+        DWT->CYCCNT = 0;
+        uint32_t c0 = DWT->CYCCNT;
+        ai_i32 batch = ai_network_run(network, ai_input, ai_output);
+        uint32_t cycles = DWT->CYCCNT - c0;
+        if (batch != 1) {
+            printf("BENCH,event=eval_error,idx=%lu,reason=run\r\n", idx);
+            continue;
+        }
+        memcpy(ai_output_data, ai_output[0].data, AI_NETWORK_OUT_1_SIZE_BYTES);
+
+        uint32_t best = 0;
+        for (uint32_t k = 1; k < DS_CNN_OUTPUT_SIZE; k++)
+            if (ai_output_data[k] > ai_output_data[best]) best = k;
+
+        uint32_t cnn_us = (hclk_hz > 0u)
+            ? (uint32_t)(((uint64_t)cycles * 1000000ULL) / hclk_hz) : 0u;
+        printf("BENCH,event=eval,idx=%lu,pred_idx=%lu,cnn_us=%lu\r\n",
+               idx, (unsigned long)best, (unsigned long)cnn_us);
+    }
 }
 
 void kws20_live_run_once(void)

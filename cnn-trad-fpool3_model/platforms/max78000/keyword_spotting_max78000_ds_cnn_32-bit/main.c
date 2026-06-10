@@ -17,6 +17,7 @@
 #include "kws20_test.h"
 #include "kws20_measure.h"
 #include "kws20_live.h"
+#include "kws20_eval.h"
 
 #define CON_BAUD 115200
 
@@ -62,7 +63,9 @@ int main(void)
     printf("HCLK = %lu Hz\r\n", (unsigned long)SystemCoreClock);
     printf("==============================\r\n");
 
-#if KWS20_CFG_ENABLE_MEASURE
+#if defined(KWS20_CFG_ENABLE_EVAL) && KWS20_CFG_ENABLE_EVAL
+    kws20_eval_run_once();   /* device-in-the-loop accuracy eval; never returns */
+#elif KWS20_CFG_ENABLE_MEASURE
 #if KWS20_CFG_MEASURE_LIVE
     kws20_live_run_once();   /* never returns */
 #else

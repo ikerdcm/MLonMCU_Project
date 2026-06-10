@@ -8,6 +8,7 @@
 #include "kws20_mode_config.h"
 #include "cnn_inference.h"
 #include "cnn.h"
+#include "ds_cnn_test_input_left.h"
 
 #include "mxc_device.h"
 #include "tmr.h"
@@ -80,7 +81,11 @@ void kws20_measure_run_once(void)
     printf("CNN accelerator, INT8\r\n");
     printf("==============================\r\n");
 
-    memset(measure_input, 0, sizeof(measure_input));
+    /* Feed the real "left" reference MFCC (expected idx 2) instead of zeros, so
+       the offline bench exercises a true keyword prediction — like the other
+       boards' benches — not just latency on a null input. Latency is
+       value-independent on the accelerator, so the timing is unchanged. */
+    memcpy(measure_input, ds_cnn_test_input_left, sizeof(measure_input));
 
     printf("BENCH,event=model_info,mode=offline"
            ",hclk_hz=%lu"

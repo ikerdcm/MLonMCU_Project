@@ -23,8 +23,12 @@ int ds_cnn_frontend_compute(const int16_t *audio,
     float windowed[DS_CNN_FRONTEND_FRAME_SIZE];
     float spectrum[DS_CNN_FRONTEND_FFT_BINS];
     float mel[DS_CNN_FRONTEND_MEL_BINS];
-    float norm_scale = 1.0f;
-    int16_t max_sample = 0;
+    /* Input scale: int16 -> [-1,1] via /32768, matching the training pipeline
+       (kws12_mfcc.py). The previous per-clip peak normalization (1/max_sample)
+       scaled every clip up to peak ~1.0 — far louder than training — so the
+       log-energy term (MFCC coeff 0) landed near 0 instead of the trained ~-1,
+       corrupting that input channel and biasing live predictions. */
+    const float norm_scale = 1.0f / 32768.0f;
 
     if (audio == NULL || out == NULL) {
         return 0;
@@ -34,15 +38,6 @@ int ds_cnn_frontend_compute(const int16_t *audio,
     }
     if (out_count < DS_CNN_FRONTEND_OUTPUT_ELEMS) {
         return 0;
-    }
-
-    for (uint32_t i = 0; i < DS_CNN_FRONTEND_AUDIO_SAMPLES; i++) {
-        if (audio[i] > max_sample) {
-            max_sample = audio[i];
-        }
-    }
-    if (max_sample > 0) {
-        norm_scale = 1.0f / (float)max_sample;
     }
 
     for (uint32_t frame = 0; frame < DS_CNN_FRONTEND_SPECTROGRAM_FRAMES; frame++) {

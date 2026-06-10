@@ -12,20 +12,27 @@
 #   live    → mic + BENCH output      offline → fixed test tensor + BENCH output
 #   Coral:    --coral-model int8 (default): live=kws_live      offline=kws_bench      (Edge TPU)
 #             --coral-model fp32         : live=kws_live_cpu  offline=kws_bench_cpu  (M7 CPU, no TPU)
+#   MAX:      --max-model v1 (default): 8-bit ai8x accel    v0: 32-bit float CPU port
+#             (also kws20_demo / kws20_demo_w90 — the separate ai85kws20netv3 models)
+#   STM:      --stm32-model v1 (default): 8-bit int8 CMSIS  v0: 32-bit fp32 (X-CUBE-AI)
 #   MAX/STM:  ENABLE_MEASURE=1, MEASURE_LIVE=1 (live) / 0 (offline)
 set -uo pipefail
 
 PLATFORMS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CORAL_DIR="$PLATFORMS_DIR/coral"
-MAX_DIR="$PLATFORMS_DIR/max78000/keyword_spotting_max78000_ds_cnn_8-bit_with-acc"
-STM_DIR="$PLATFORMS_DIR/stm32u5/keyword_spotting_u5_ds_cnn_8-bit"
+# Per-board v0 (32-bit / fp32-cpu) and v1 (8-bit) firmware folders (ledger configs).
+MAX_DIR_V0="$PLATFORMS_DIR/max78000/keyword_spotting_max78000_ds_cnn_32-bit"
+MAX_DIR_V1="$PLATFORMS_DIR/max78000/keyword_spotting_max78000_ds_cnn_8-bit_with-acc"
+STM_DIR_V0="$PLATFORMS_DIR/stm32u5/keyword_spotting_u5_ds_cnn_32-bit"
+STM_DIR_V1="$PLATFORMS_DIR/stm32u5/keyword_spotting_u5_ds_cnn_8-bit"
 AI85_MAX_DIR="$PLATFORMS_DIR/../../ai85kws20netv3_model/platforms/max78000"  # kws20_demo models
 
 MODE="live"
 ONLY="coral,max,stm32"
 PARALLEL=1
 REPORT="keywords"   # keywords | unknown | silence | both (applies to all 3 boards)
-MAX_MODEL="dscnn"   # dscnn | kws20_demo | kws20_demo_w90 (which model to flash on MAX)
+MAX_MODEL="v1"      # v1 (8-bit accel) | v0 (32-bit float) | kws20_demo | kws20_demo_w90
+STM32_MODEL="v1"    # v1 (8-bit int8) | v0 (32-bit fp32) — which STM32U5 firmware to flash
 CORAL_MODEL="int8"  # int8 (Edge TPU) | fp32 (M7 CPU, no TPU) — which Coral firmware to flash
 
 while [[ $# -gt 0 ]]; do
@@ -34,6 +41,7 @@ while [[ $# -gt 0 ]]; do
     --only)        ONLY="$2"; shift 2 ;;
     --report)      REPORT="$2"; shift 2 ;;
     --max-model)   MAX_MODEL="$2"; shift 2 ;;
+    --stm32-model) STM32_MODEL="$2"; shift 2 ;;
     --coral-model) CORAL_MODEL="$2"; shift 2 ;;
     --sequential)  PARALLEL=0; shift ;;
     -h|--help)     grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
@@ -41,8 +49,16 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# Normalize legacy "dscnn" alias (old default) → v1.
+[[ "$MAX_MODEL" == "dscnn" ]] && MAX_MODEL="v1"
+[[ "$STM32_MODEL" == "dscnn" ]] && STM32_MODEL="v1"
+
 [[ "$MODE" == "live" || "$MODE" == "offline" ]] || { echo "Invalid --mode '$MODE'" >&2; exit 1; }
 [[ "$CORAL_MODEL" == "int8" || "$CORAL_MODEL" == "fp32" ]] || { echo "Invalid --coral-model '$CORAL_MODEL' (int8|fp32)" >&2; exit 1; }
+[[ "$STM32_MODEL" == "v0" || "$STM32_MODEL" == "v1" ]] || { echo "Invalid --stm32-model '$STM32_MODEL' (v0|v1)" >&2; exit 1; }
+case "$MAX_MODEL" in v0|v1|kws20_demo|kws20_demo_w90) ;; *) echo "Invalid --max-model '$MAX_MODEL' (v0|v1|kws20_demo|kws20_demo_w90)" >&2; exit 1 ;; esac
+# Active STM32U5 firmware folder for this run (used by set_report + flash_stm32).
+[[ "$STM32_MODEL" == "v0" ]] && STM_DIR="$STM_DIR_V0" || STM_DIR="$STM_DIR_V1"
 [[ "$MODE" == "live" ]] && MEASURE_LIVE=1 || MEASURE_LIVE=0
 
 # Report-class gating — which non-keyword classes the firmware reports, applied
@@ -60,6 +76,9 @@ set_report() {  # $1 = source file containing the #define KWS_REPORT_* lines
     -e "s/^#define KWS_REPORT_SILENCE .*/#define KWS_REPORT_SILENCE $RS/" \
     "$1" && rm -f "$1.bak"
 }
+# Active DS-CNN MAX folder for report gating (v0 32-bit has no KWS_REPORT_* defines
+# → its set_report is a harmless no-op; kws20_demo* use their own source, untouched).
+[[ "$MAX_MODEL" == "v0" ]] && MAX_DIR="$MAX_DIR_V0" || MAX_DIR="$MAX_DIR_V1"
 set_report "$CORAL_DIR/apps/kws_live/kws_live.cc"
 set_report "$CORAL_DIR/apps/kws_live_cpu/kws_live_cpu.cc"   # fp32-cpu live variant
 set_report "$MAX_DIR/kws20_live.c"
@@ -86,10 +105,15 @@ flash_coral() {
 
 flash_max() {
   case "$MAX_MODEL" in
-    dscnn)
-      set_measure_mode "$MAX_DIR/kws20_mode_config.h" || return 1
-      cd "$MAX_DIR" || return 1
+    v1)   # 8-bit ai8x INT8 accelerator (int8-accel)
+      set_measure_mode "$MAX_DIR_V1/kws20_mode_config.h" || return 1
+      cd "$MAX_DIR_V1" || return 1
       ./tools/build_flash_max78000_ds_cnn_v1.sh
+      ;;
+    v0)   # 32-bit hand-coded float CPU port (fp32-cpu)
+      set_measure_mode "$MAX_DIR_V0/kws20_mode_config.h" || return 1
+      cd "$MAX_DIR_V0" || return 1
+      ./tools/build_flash_max78000_ds_cnn.sh
       ;;
     kws20_demo)
       set_measure_mode "$AI85_MAX_DIR/kws20_demo/kws20_mode_config.h" || return 1
@@ -104,6 +128,8 @@ flash_max() {
 }
 
 flash_stm32() {
+  # $STM_DIR resolved to the v0 (32-bit) or v1 (8-bit) folder above; both expose
+  # the same tools/build_flash.sh --mode interface.
   "$STM_DIR/tools/build_flash.sh" --mode "$MODE"
 }
 
@@ -118,7 +144,7 @@ run_one() {  # $1 = mcu name
 }
 
 IFS=',' read -ra MCUS <<< "$ONLY"
-echo "=== flash_all: mode=$MODE, targets=${MCUS[*]}, coral-model=$CORAL_MODEL, max-model=$MAX_MODEL, parallel=$PARALLEL ==="
+echo "=== flash_all: mode=$MODE, targets=${MCUS[*]}, coral-model=$CORAL_MODEL, max-model=$MAX_MODEL, stm32-model=$STM32_MODEL, parallel=$PARALLEL ==="
 
 pids=()
 for mcu in "${MCUS[@]}"; do

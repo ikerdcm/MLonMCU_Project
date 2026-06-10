@@ -19,6 +19,7 @@
 #include "kws20_test.h"
 #include "kws20_measure.h"
 #include "kws20_live.h"
+#include "kws20_eval.h"
 
 /* Required by cnn.h (CNN ISR uses this to store inference time in µs) */
 volatile uint32_t cnn_time;
@@ -66,7 +67,9 @@ int main(void)
     cnn_load_bias();
     cnn_configure();
 
-#if KWS20_CFG_ENABLE_MEASURE
+#if defined(KWS20_CFG_ENABLE_EVAL) && KWS20_CFG_ENABLE_EVAL
+    kws20_eval_run_once();   /* device-in-the-loop accuracy eval; never returns */
+#elif KWS20_CFG_ENABLE_MEASURE
 #if KWS20_CFG_MEASURE_LIVE
     kws20_live_run_once();   /* never returns */
 #else

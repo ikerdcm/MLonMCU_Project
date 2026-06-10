@@ -29,6 +29,11 @@
 #define KWS20_CFG_LIVE_MEASURE_MINIMAL_OUTPUT 1
 #define KWS20_CFG_MEASURE_RUNS 50
 
+/* Device-in-the-loop accuracy eval mode (overrides measure/live when 1).
+ * Host streams test audio over huart1; board runs frontend+model and returns
+ * predictions + cnn_us. See testbench.py. */
+#define KWS20_CFG_ENABLE_EVAL    1
+
 /* --- Offline power-measurement mode (PPK2) --------------------------------
  * KWS20_CFG_POWER_MODE = 1: the offline path runs exactly POWER_RUNS inferences
  * at a fixed PERIOD_MS, after a one-time SETTLE_MS idle, so the trace contains

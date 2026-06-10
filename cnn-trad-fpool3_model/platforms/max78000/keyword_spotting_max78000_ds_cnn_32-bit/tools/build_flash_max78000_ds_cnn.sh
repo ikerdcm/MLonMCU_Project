@@ -52,18 +52,16 @@ if [[ ! -f "$CONFIG_PATH" ]]; then
   exit 1
 fi
 
-PROJECT="$(cfg_get project)"
 BOARD="$(cfg_get board)"
 MAXIM_PATH="$(cfg_get maxim_path)"
 OPENOCD_ROOT="$(cfg_get openocd_root)"
 
+# Project dir = parent of this tools/ directory, derived from the script's own
+# location so it works in any worktree regardless of an absolute "project" path
+# baked into the config from another checkout (the JSON's "project" is ignored).
+PROJECT="$(cd "$SCRIPT_DIR/.." && pwd)"
 BOARD="${BOARD:-FTHR_RevA}"
 ELF="${PROJECT}/build/max78000.elf"
-
-if [[ -z "$PROJECT" ]]; then
-  echo "Config value 'project' is required." >&2
-  exit 1
-fi
 
 # ── Build ──────────────────────────────────────────────────────────────────────
 if [[ $DO_BUILD -eq 1 ]]; then
@@ -80,21 +78,27 @@ fi
 
 # ── Flash ──────────────────────────────────────────────────────────────────────
 if [[ $DO_FLASH -eq 1 ]]; then
-  OPENOCD_BIN="${OPENOCD_ROOT}/bin/Linux_x86_64/openocd"
-
-  if [[ ! -x "$OPENOCD_BIN" ]]; then
-    echo "openocd not found or not executable: $OPENOCD_BIN" >&2
-    exit 1
+  # Prefer the macOS openocd shipped with the config's openocd_root, then fall
+  # back to one on PATH (mirrors the 8-bit/v1 script for cross-platform use).
+  OPENOCD_BIN=""
+  if [[ -n "${OPENOCD_ROOT}" ]]; then
+    OPENOCD_BIN="${OPENOCD_ROOT}/bin/Darwin_arm64/openocd"
+  fi
+  if [[ -z "$OPENOCD_BIN" || ! -x "$OPENOCD_BIN" ]]; then
+    OPENOCD_BIN="$(command -v openocd || true)"
   fi
 
-  if [[ ! -f "$ELF" ]]; then
-    echo "ELF not found: $ELF  (run with --build-only first?)" >&2
-    exit 1
+  [[ -z "$OPENOCD_BIN" || ! -x "$OPENOCD_BIN" ]] && { echo "openocd not found (set openocd_root or add openocd to PATH)" >&2; exit 1; }
+  [[ ! -f "$ELF" ]]         && { echo "ELF not found: $ELF  (run with --build-only first?)" >&2; exit 1; }
+
+  OPENOCD_ARGS=()
+  if [[ -n "${OPENOCD_ROOT}" ]]; then
+    OPENOCD_ARGS+=("-s" "${OPENOCD_ROOT}")
   fi
 
   echo "[FLASH] elf=${ELF}"
   "$OPENOCD_BIN" \
-    -s "$OPENOCD_ROOT" \
+    "${OPENOCD_ARGS[@]}" \
     -f interface/cmsis-dap.cfg \
     -f max78000.cfg \
     -c "transport select swd; program ${ELF} verify reset exit"

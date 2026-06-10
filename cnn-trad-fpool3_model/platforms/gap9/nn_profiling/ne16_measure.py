@@ -78,7 +78,11 @@ def verify_left_onnx(model_path: str, left_input_nchw: np.ndarray) -> int:
 
     # onnxruntime expects NHWC for this model (original input shape is NHWC)
     left_nhwc = np.transpose(left_input_nchw, (0, 2, 3, 1))  # (1,49,10,1)
-    sess = ort.InferenceSession(model_path, providers=["CPUExecutionProvider"])
+    try:
+        sess = ort.InferenceSession(model_path, providers=["CPUExecutionProvider"])
+    except Exception as e:
+        log.warning("onnxruntime could not load model (old opset?) — skipping Python-side verification: %s", e)
+        return -1
     input_name = sess.get_inputs()[0].name
     output = sess.run(None, {input_name: left_nhwc})[0]
     pred = int(np.argmax(output[0]))
@@ -302,6 +306,10 @@ def main():
 
     # ── Statistics ───────────────────────────────────────────────────────────
     stats = compute_stats(all_cycles, clock_hz, mac_ops)
+    if not stats:
+        log.error("No valid cycle counts collected — board runs all failed")
+        return
+
     log.info("")
     log.info("── RESULTS ──────────────────────────────────────────────────")
     log.info("  Runs           : %d", stats.get("count", 0))

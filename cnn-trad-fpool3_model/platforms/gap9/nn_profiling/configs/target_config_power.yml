@@ -1,0 +1,50 @@
+# Target config — Board, Power Measurement via GPIO trigger
+#
+# gpio_meas: 67  →  AT test harness toggles GPIO_A67 (PAD_067) HIGH during inference.
+#   PAD_067 = MikroE RIGHT socket, PWM pin  (clearly labeled on the board)
+#   Connect that pin to PPK2 SYNC/TRIGGER input.
+#   PPK2 then marks the exact inference window → select it to get avg current + energy.
+#
+# NNTool maps gpio_meas integer N → -DGPIO_MEAS_PIN=PI_GPIO_AN in CMakeLists.
+# Using true would default to 89 (WAKEUP_SPI2_CS0, not on a labeled connector).
+#
+# Usage:
+#   python nn_profiler.py /app/models/ds_cnn_l.onnx \
+#     --config configs/quant_ne16.yml \
+#     --target-config configs/target_config_power.yml \
+#     --platform board \
+#     --exp-label ne16_int8_power
+
+settings:
+  l1_size: 128000
+  l2_size: 1350000
+  l3_size: 8000000
+
+  fc_freq: 240000000
+  cl_freq: 240000000
+
+  cluster_stack_size: 2048
+  cluster_slave_stack_size: 512
+
+  graph_monitor_cycles: true
+  graph_produce_node_names: true
+  graph_produce_operinfos: true
+
+  graph_dump_tensor: 0
+
+  l3_ram_device: AT_MEM_L3_DEFAULTRAM
+  l3_flash_device: AT_MEM_L3_MRAMFLASH
+
+  privileged_l3_flash_device: AT_MEM_L3_MRAMFLASH
+  privileged_l3_flash_size: 1500000
+
+  graph_const_exec_from_flash: true
+  graph_l1_promotion: 2
+  graph_size_opt: 2
+
+execute_on_target_kwargs:
+  gpio_meas: 67
+
+io_settings:
+  input_1:
+    allocate: 0

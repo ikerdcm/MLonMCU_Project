@@ -8,3 +8,8 @@ Device-in-the-loop, one common GSC **test** audio set per board (`testbench.py`)
 | 2026-06-10 17:30 | max | fp32-cpu | v0 | 144 | 92.4 | 93.75 | 1988.121 | 1988.147 | 208.8 | 99.7 | results/max_v0 |
 | 2026-06-10 18:45 | u5 | int8-cpu | v1 | 144 | 92.0 | 91.67 | 64.091 | 64.096 | 150.5 | 82.8 | results/u5_v1 |
 | 2026-06-10 18:57 | u5 | fp32-cpu | v0 | 144 | 92.4 | 93.75 | 224.542 | 224.543 | 220.8 | 125.8 | results/u5_v0 |
+
+
+
+
+kreux

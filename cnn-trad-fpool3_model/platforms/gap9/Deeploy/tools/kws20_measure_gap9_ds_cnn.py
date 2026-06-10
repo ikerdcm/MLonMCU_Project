@@ -39,10 +39,11 @@ LABELS = [
 
 # Semihost adds an optional "[cluster, core]" prefix to every printf line.
 _SH = r'(?:\[\d+[,\s]+\d+\]\s*)?'
-RE_CYCLES = re.compile(_SH + r'Runtime:\s*(\d+)\s*cycles',           re.I)
-RE_ERRORS = re.compile(_SH + r'Errors:\s*(\d+)\s+out\s+of\s+(\d+)', re.I)
-RE_PRED   = re.compile(_SH + r'Predicted\s+class:\s*(\d+)\s*'
-                              r'\(confidence\s+([0-9.eE+\-]+)\)',     re.I)
+RE_CYCLES   = re.compile(_SH + r'Runtime:\s*(\d+)\s*cycles',              re.I)
+RE_WALLTIME = re.compile(_SH + r'Wall\s+time:\s*(\d+)\s*us',             re.I)
+RE_ERRORS   = re.compile(_SH + r'Errors:\s*(\d+)\s+out\s+of\s+(\d+)',    re.I)
+RE_PRED     = re.compile(_SH + r'Predicted\s+class:\s*(\d+)\s*'
+                                r'\(confidence\s+([0-9.eE+\-]+)\)',        re.I)
 RE_L2MEM  = re.compile(
     r'(L2[\w_]*):\s+([\d.]+)\s+(KB|B)\s+([\d.]+)\s+(KB|MB)\s+([\d.]+)%')
 
@@ -165,8 +166,13 @@ def run_inference(gapy_cmd, env, run_idx, log_dir):
     if not m:
         return None  # no "Runtime:" found — treat as failed run
 
-    cycles  = int(m.group(1))
+    cycles   = int(m.group(1))
+    wall_us  = None
     errors_n = tested_n = pred_class = pred_conf = None
+
+    m = RE_WALLTIME.search(raw)
+    if m:
+        wall_us = int(m.group(1))
 
     m = RE_ERRORS.search(raw)
     if m:
@@ -178,7 +184,7 @@ def run_inference(gapy_cmd, env, run_idx, log_dir):
         pred_class = int(m.group(1))
         pred_conf  = float(m.group(2))
 
-    return cycles, errors_n, tested_n, pred_class, pred_conf
+    return cycles, wall_us, errors_n, tested_n, pred_class, pred_conf
 
 
 # ── Main ───────────────────────────────────────────────────────────────────────
@@ -290,6 +296,7 @@ def main():
     rows              = []
     cycle_values      = []
     latency_us_values = []
+    wall_us_values    = []
     error_runs        = 0
     pred_class_counts = {}
 
@@ -304,31 +311,35 @@ def main():
             error_runs += 1
             continue
 
-        cycles, errors_n, tested_n, pred_class, pred_conf = result
+        cycles, wall_us, errors_n, tested_n, pred_class, pred_conf = result
         lat_us = cycles / args.clock_hz * 1e6
         lat_ms = lat_us / 1000.0
         label  = LABELS[pred_class] if pred_class is not None and pred_class < len(LABELS) else "?"
-        err_str = f"{errors_n}/{tested_n}" if errors_n is not None else "?"
+        err_str  = f"{errors_n}/{tested_n}" if errors_n is not None else "?"
         conf_str = f"{pred_conf:.4f}" if pred_conf is not None else "?"
+        wall_str = f"{wall_us/1000:.1f}ms" if wall_us is not None else "n/a"
 
-        print(f"{cycles:>12,} cy  {lat_ms:6.1f} ms  "
+        print(f"{cycles:>12,} cy  {lat_ms:6.1f} ms  wall={wall_str}  "
               f"err={err_str}  class={pred_class}({label})  conf={conf_str}")
 
         cycle_values.append(cycles)
         latency_us_values.append(lat_us)
+        if wall_us is not None:
+            wall_us_values.append(wall_us)
         if pred_class is not None:
             pred_class_counts[pred_class] = pred_class_counts.get(pred_class, 0) + 1
 
         rows.append({
-            "run":        run_idx,
-            "cycles":     cycles,
-            "latency_us": round(lat_us, 2),
-            "latency_ms": round(lat_ms, 3),
-            "errors":     errors_n,
-            "tested":     tested_n,
-            "pred_class": pred_class,
-            "pred_label": label,
-            "pred_conf":  round(pred_conf, 4) if pred_conf is not None else None,
+            "run":         run_idx,
+            "cycles":      cycles,
+            "latency_us":  round(lat_us, 2),
+            "latency_ms":  round(lat_ms, 3),
+            "wall_time_us": wall_us,
+            "errors":      errors_n,
+            "tested":      tested_n,
+            "pred_class":  pred_class,
+            "pred_label":  label,
+            "pred_conf":   round(pred_conf, 4) if pred_conf is not None else None,
         })
 
     # ── Summary ────────────────────────────────────────────────────────────────
@@ -336,8 +347,16 @@ def main():
     print(f"\n[GAP9 Measure] {n_ok}/{args.runs} runs succeeded  "
           f"({error_runs} failed/timeout)")
 
-    cycle_stats = stats(cycle_values)
-    lat_stats   = stats(latency_us_values)
+    cycle_stats    = stats(cycle_values)
+    lat_stats      = stats(latency_us_values)
+    wall_us_stats  = stats(wall_us_values) if wall_us_values else None
+
+    if wall_us_stats and lat_stats:
+        ratio = wall_us_stats["avg"] / lat_stats["avg"]
+        if abs(ratio - 1.0) > 0.05:
+            print(f"[GAP9 Measure] WARNING: wall_time avg ({wall_us_stats['avg']:.0f} us) "
+                  f"differs from cycle-based latency avg ({lat_stats['avg']:.0f} us) "
+                  f"by {abs(ratio-1)*100:.1f}% — check pi_freq_set / clock assumption")
 
     # ── Memory sections (equivalent to MAX78000 "memory" key) ─────────────────
     # On GAP9 NOFLASH mode: text = code in L2, data = compiled weights in L2,
@@ -389,6 +408,7 @@ def main():
         "latency_us":         lat_stats,          # GAP9 alias
         "cnn_latency_ms_avg": (lat_stats["avg"] / 1000.0) if lat_stats else None,
         "latency_ms_avg":     (lat_stats["avg"] / 1000.0) if lat_stats else None,
+        "wall_time_us":       wall_us_stats,      # pi_time_get_us() cross-check
         "labels":             LABELS,
         "pred_class_distribution": {
             (LABELS[k] if k < len(LABELS) else str(k)): v

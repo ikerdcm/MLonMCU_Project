@@ -151,7 +151,7 @@ class McuPanel(QGroupBox):
         return self.cb_mcu.currentData()
 
     def model_token(self) -> str:
-        return MODELS.get(self.mcu_key(), {}).get(self.cb_model.currentText(), "dscnn")
+        return MODELS.get(self.mcu_key(), {}).get(self.cb_model.currentText(), "v1")
 
     # ── UI ──────────────────────────────────────────────────────────────
     def _build_ui(self) -> None:
@@ -846,10 +846,12 @@ class MonitorWindow(QWidget):
                 p._disconnect()
         report = REPORT_MODES[self.flash_report.currentText()]
         max_model = next((p.model_token() for p in self.panels
-                          if p.mcu_key() == "max78000"), "dscnn")
+                          if p.mcu_key() == "max78000"), "v1")
         coral_model = next((p.model_token() for p in self.panels
                             if p.mcu_key() == "coral"), "int8")
-        cmd = flash_command(mode, mcu, report, max_model, coral_model)
+        stm32_model = next((p.model_token() for p in self.panels
+                            if p.mcu_key() == "stm32u5"), "v1")
+        cmd = flash_command(mode, mcu, report, max_model, coral_model, stm32_model)
         self._log(f"\n=== flashing {mcu or 'ALL'} (mode={mode}) ===")
         self._set_flash_enabled(False)
         self.flash_proc = QProcess(self)

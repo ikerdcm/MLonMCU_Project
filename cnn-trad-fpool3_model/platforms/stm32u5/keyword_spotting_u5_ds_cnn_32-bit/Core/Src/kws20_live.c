@@ -30,8 +30,9 @@
 #define DEMO_CHUNK                  128u
 #define DEMO_PREAMBLE_SIZE          (30u * DEMO_CHUNK)
 #define DEMO_TRIGGER_CONSEC_HIGH    3u
-#define DEMO_THRESHOLD_HIGH         40u
-#define DEMO_QUIET_THRESHOLD        20u
+#define LIVE_VAD_K_HIGH             4.0f   /* trigger when avg >= nf * K_HIGH */
+#define LIVE_VAD_K_LOW              2.0f   /* end when avg <  nf * K_LOW */
+#define LIVE_VAD_WARMUP_CHUNKS      60u    /* ~0.5 s @ 125 Hz chunk rate to seed nf */
 #define DEMO_ARM_QUIET_CHUNKS       0u
 #define DEMO_INITIAL_WARMUP_SAMPLES 32000u
 #define DEMO_POST_TRIGGER_SAMPLES   (DS_CNN_AUDIO_WINDOW_SAMPLES - DEMO_PREAMBLE_SIZE)
@@ -78,6 +79,9 @@ static volatile uint32_t live_capture_enabled = 0;
 static volatile uint32_t live_dma_active = 0;
 static uint32_t live_stream_primed = 0;
 static uint32_t live_last_post_trigger_samples = 0;
+static float    live_nf = 0.0f, live_nf_seed = 0.0f;  /* noise floor + startup-ambient floor */
+static uint32_t live_vad_warmup = 0;   /* chunks seen toward seeding live_nf */
+static uint32_t live_norm = 100u;      /* latest level normalized to nf (×100) for the plot */
 
 static int live_capture_ok = 0;
 
@@ -256,12 +260,34 @@ static int process_capture_sample(live_capture_ctx_t *ctx, int16_t raw)
         {
             uint32_t avg = chunk_sum_abs / DEMO_CHUNK;
 
+            /* Adaptive noise floor (shared design, ported from the 8-bit VAD):
+               running mean during warmup, asymmetric EMA while idle (rise slow,
+               fall fast) so speech doesn't inflate it. threshold = nf * K
+               self-normalizes to this mic/room scale (replaces the old fixed
+               40/20 thresholds so v0 and v1 detect identically). */
+            float L = (float)avg;
+            if (live_vad_warmup < LIVE_VAD_WARMUP_CHUNKS) {
+                live_nf += (L - live_nf) / (float)(live_vad_warmup + 1u);
+                if (++live_vad_warmup == LIVE_VAD_WARMUP_CHUNKS)
+                    live_nf_seed = (live_nf < 1.0f) ? 1.0f : live_nf;
+            } else if (ctx->state == 0u) {
+                live_nf += (L > live_nf ? (1.0f / 64.0f) : (1.0f / 8.0f)) * (L - live_nf);
+            }
+            if (live_nf < 1.0f) live_nf = 1.0f;
+            if (live_nf < live_nf_seed) live_nf = live_nf_seed;  /* never collapse */
+            uint32_t thr_high = (uint32_t)(live_nf * LIVE_VAD_K_HIGH);
+            uint32_t thr_low  = (uint32_t)(live_nf * LIVE_VAD_K_LOW);
+            live_norm = (uint32_t)(100.0f * L / live_nf);
+
             if (ctx->ring_filled < DEMO_PREAMBLE_SIZE) {
                 return 0;
             }
+            if (live_vad_warmup < LIVE_VAD_WARMUP_CHUNKS) {
+                return 0;  /* wait for nf seed before detecting */
+            }
 
             if (ctx->state == 0u) {
-                if (avg <= DEMO_QUIET_THRESHOLD) {
+                if (avg <= thr_low) {
                     if (ctx->quiet_run < DEMO_ARM_QUIET_CHUNKS) {
                         ctx->quiet_run++;
                     }
@@ -274,7 +300,7 @@ static int process_capture_sample(live_capture_ctx_t *ctx, int16_t raw)
                     return 0;
                 }
 
-                if (avg >= DEMO_THRESHOLD_HIGH) {
+                if (avg >= thr_high) {
                     ctx->high_run++;
                 } else {
                     ctx->high_run = 0;
@@ -288,7 +314,7 @@ static int process_capture_sample(live_capture_ctx_t *ctx, int16_t raw)
                     ctx->high_run = 0;
                 }
             } else {
-                if ((avg < DEMO_QUIET_THRESHOLD) &&
+                if ((avg < thr_low) &&
                     (ctx->post_trigger_samples >= DEMO_MIN_KEYWORD_SAMPLES)) {
                     ctx->silence_run++;
                 } else {
@@ -322,6 +348,21 @@ static int process_capture_block(live_capture_ctx_t *ctx, const int16_t *samples
             return 1;
         }
     }
+
+#if KWS20_LIVE_BENCH_ENABLED
+    /* Normalized mic level (×100 of noise floor) + unified threshold — ~25 Hz —
+       for the dashboard's "Mic level" plot (matches the 8-bit firmware exactly). */
+    {
+        static uint32_t last_level_ms = 0u;
+        uint32_t now = HAL_GetTick();
+        if (sample_count && (now - last_level_ms) >= 40u) {
+            last_level_ms = now;
+            printf("BENCH,event=level,rms=%lu,thr=%lu\r\n",
+                   (unsigned long)live_norm,
+                   (unsigned long)(uint32_t)(100.0f * LIVE_VAD_K_HIGH));
+        }
+    }
+#endif
 
     return 0;
 }
@@ -545,6 +586,39 @@ static void run_inference(ai_handle network,
            (unsigned long)best,
            (unsigned long)post_trigger_samples,
            (unsigned long)(((uint64_t)(DEMO_PREAMBLE_SIZE + post_trigger_samples) * 1000ULL) / DS_CNN_SAMPLE_RATE));
+
+    /* Decision view: per-class scores 0..100 (min-max normalized) for the
+       dashboard's score bars. Self-contained; min-max is affine-invariant so the
+       raw (float) output values give the same result. */
+    {
+        float mn = (float)ai_output_data[0], mx = mn;
+        for (uint32_t i = 1; i < DS_CNN_OUTPUT_SIZE; i++) {
+            float v = (float)ai_output_data[i];
+            if (v < mn) mn = v;
+            if (v > mx) mx = v;
+        }
+        float rng = (mx > mn) ? (mx - mn) : 1.0f;
+        char sb[256];
+        int n = snprintf(sb, sizeof(sb), "BENCH,event=scores,run=%lu,s=", (unsigned long)run_index);
+        for (uint32_t i = 0; i < DS_CNN_OUTPUT_SIZE; i++) {
+            int v = (int)(((float)ai_output_data[i] - mn) / rng * 100.0f + 0.5f);
+            if (v < 0) v = 0; else if (v > 100) v = 100;
+            n += snprintf(sb + n, sizeof(sb) - n, "%s%d", i ? ";" : "", v);
+        }
+        printf("%s\r\n", sb);
+
+        /* MFCC the model saw (49 frames × 10 bins) for the dashboard spectrogram.
+           Input elems are ai_float here (32-bit build) → round to int for transport. */
+        {
+            static char mb[3072];
+            int m = snprintf(mb, sizeof(mb), "BENCH,event=mfcc,run=%lu,w=10,h=49,d=",
+                             (unsigned long)run_index);
+            for (uint32_t i = 0; i < (uint32_t)AI_NETWORK_IN_1_SIZE; i++)
+                m += snprintf(mb + m, sizeof(mb) - m, "%s%d",
+                              i ? ";" : "", (int)lrintf((float)ai_input_data[i]));
+            printf("%s\r\n", mb);
+        }
+    }
 #endif
 
 #if !KWS20_LIVE_MINIMAL_OUTPUT_ENABLED

@@ -46,6 +46,10 @@ GSC_DIR_TO_IDX = {
     "right": 6, "stop": 7, "up": 8, "yes": 9, "_silence_": 10, "_unknown_": 11,
 }
 WINDOW = 16000  # 1 s @ 16 kHz
+MODEL_ACCURACY = {
+    "v0": 92.4,
+    "v1": 92.0,
+}
 
 PLATFORMS = Path(__file__).resolve().parents[1]          # .../cnn-trad-fpool3_model/platforms
 HERE = Path(__file__).resolve().parent
@@ -230,11 +234,12 @@ def upsert_ledger(board, model, row):
         "# DS-CNN normalized test-bench ledger (v2)\n\n"
         "Device-in-the-loop, one common GSC **test** audio set per board "
         "(`testbench.py`). One unique row per (board, model) — re-running replaces it. "
-        "Accuracy + latency are on-device; flash/SRAM from the ELF. Energy still needs "
-        "the power meter (separate).\n\n"
-        "| Timestamp | Board | Config | Model | N | Accuracy % | Lat avg (ms) | "
-        "Lat p95 (ms) | Flash .text (KiB) | SRAM (KiB) | Run |\n"
-        "|---|---|---|---|---|---|---|---|---|---|---|\n"
+        "Model accuracy is the canonical model score; MCU accuracy is the on-device "
+        "test-bench result. Flash/SRAM come from the ELF. Energy still needs the "
+        "power meter (separate).\n\n"
+        "| Timestamp | Board | Config | Model | N | Model accuracy % | MCU accuracy % | "
+        "Lat avg (ms) | Lat p95 (ms) | Flash .text (KiB) | SRAM (KiB) | Run |\n"
+        "|---|---|---|---|---|---|---|---|---|---|---|---|\n"
     )
     LEDGER.parent.mkdir(parents=True, exist_ok=True)
     if not LEDGER.exists():
@@ -322,7 +327,7 @@ def main():
         "timestamp": datetime.now().isoformat(), "board": args.board, "model": args.model,
         "name": spec["name"], "config_id": spec["config_id"], "dataset": str(args.dataset),
         "per_class": args.per_class, "seed": args.seed, "n_clips": total,
-        "accuracy": acc, "correct": correct, "labels": LABELS,
+        "model_accuracy": MODEL_ACCURACY.get(args.model), "accuracy": acc, "correct": correct, "labels": LABELS,
         "confusion_matrix": cm, "per_class": per_class, "latency": lat, "memory": size,
     }, indent=2))
 
@@ -330,10 +335,12 @@ def main():
     lat_p95 = f"{lat['p95_ms']:.3f}" if lat else "—"
     flash = f"{size['flash_text_kib']:.1f}" if size else "—"
     sram = f"{size['static_sram_kib']:.1f}" if size else "—"
+    model_accuracy = MODEL_ACCURACY.get(args.model)
+    model_accuracy_str = f"{model_accuracy:.1f}" if model_accuracy is not None else "—"
     upsert_ledger(
         args.board, args.model,
         f"| {datetime.now().strftime('%Y-%m-%d %H:%M')} | {args.board} | "
-        f"{spec['config_id']} | {args.model} | {total} | {acc*100:.2f} | "
+        f"{spec['config_id']} | {args.model} | {total} | {model_accuracy_str} | {acc*100:.2f} | "
         f"{lat_avg} | {lat_p95} | {flash} | {sram} | results/{run_id} |")
     print(f"\nWrote {out_dir/'summary.json'} + confusion_matrix.png")
     print(f"Upserted {args.board}/{args.model} row in {LEDGER.name}")

@@ -1,0 +1,276 @@
+{
+  "run_id": "u5_v0",
+  "timestamp": "2026-06-10T18:57:34.127390",
+  "board": "u5",
+  "model": "v0",
+  "name": "STM32U5 fp32-cpu (DS-CNN-L, X-CUBE-AI float32)",
+  "config_id": "fp32-cpu",
+  "dataset": "/Users/iker/MAX78000_Toolchain/ai8x-training/data/KWS/raw_test",
+  "per_class": {
+    "down": {
+      "support": 12,
+      "recall": 0.75,
+      "precision": 1.0
+    },
+    "go": {
+      "support": 12,
+      "recall": 0.9166666666666666,
+      "precision": 1.0
+    },
+    "left": {
+      "support": 12,
+      "recall": 1.0,
+      "precision": 1.0
+    },
+    "no": {
+      "support": 12,
+      "recall": 0.9166666666666666,
+      "precision": 0.9166666666666666
+    },
+    "off": {
+      "support": 12,
+      "recall": 1.0,
+      "precision": 0.9230769230769231
+    },
+    "on": {
+      "support": 12,
+      "recall": 0.8333333333333334,
+      "precision": 1.0
+    },
+    "right": {
+      "support": 12,
+      "recall": 1.0,
+      "precision": 1.0
+    },
+    "stop": {
+      "support": 12,
+      "recall": 1.0,
+      "precision": 1.0
+    },
+    "up": {
+      "support": 12,
+      "recall": 0.9166666666666666,
+      "precision": 1.0
+    },
+    "yes": {
+      "support": 12,
+      "recall": 0.9166666666666666,
+      "precision": 1.0
+    },
+    "silence": {
+      "support": 12,
+      "recall": 1.0,
+      "precision": 1.0
+    },
+    "unknown": {
+      "support": 12,
+      "recall": 1.0,
+      "precision": 0.631578947368421
+    }
+  },
+  "seed": 0,
+  "n_clips": 144,
+  "accuracy": 0.9375,
+  "correct": 135,
+  "labels": [
+    "down",
+    "go",
+    "left",
+    "no",
+    "off",
+    "on",
+    "right",
+    "stop",
+    "up",
+    "yes",
+    "silence",
+    "unknown"
+  ],
+  "confusion_matrix": [
+    [
+      9,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2
+    ],
+    [
+      0,
+      11,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      0,
+      12,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      11,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      12,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      10,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      12,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      12,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      11,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      11,
+      0,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      12,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      12
+    ]
+  ],
+  "latency": {
+    "count": 144,
+    "avg_ms": 224.54190972222221,
+    "median_ms": 224.542,
+    "p95_ms": 224.54285000000002,
+    "min_ms": 224.541,
+    "max_ms": 224.543
+  },
+  "memory": {
+    "elf": "/Users/iker/Projects/ETHZ/Q2/ML_on_MCUs/MLonMCU_Project_Real/MLonMCU_Project/cnn-trad-fpool3_model/platforms/stm32u5/keyword_spotting_u5_ds_cnn_32-bit/Debug/keyword_spotting_u5_ds_cnn.elf",
+    "text_bytes": 226108,
+    "data_bytes": 9348,
+    "bss_bytes": 119456,
+    "flash_text_kib": 220.80859375,
+    "static_sram_kib": 125.78515625,
+    "from_eval_build": true
+  }
+}

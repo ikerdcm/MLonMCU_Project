@@ -86,7 +86,11 @@ static uint32_t live_norm = 100u;      /* latest level normalized to nf (×100) 
 
 static int live_capture_ok = 0;
 
-#if !KWS20_CFG_LIVE_MEASURE_MINIMAL_OUTPUT
+/* labels[] is used by the pretty-print path, which is gated on
+   KWS20_LIVE_MINIMAL_OUTPUT_ENABLED = BENCH_ENABLED && CFG_MINIMAL. Declare it
+   under the SAME condition (offline mode has BENCH_ENABLED=0 so the pretty path
+   compiles in and needs labels). */
+#if !(KWS20_CFG_ENABLE_MEASURE && KWS20_CFG_MEASURE_LIVE && KWS20_CFG_LIVE_MEASURE_MINIMAL_OUTPUT)
 static const char *labels[DS_CNN_OUTPUT_SIZE] = {
     "down", "go", "left", "no", "off", "on",
     "right", "stop", "up", "yes", "silence", "unknown"

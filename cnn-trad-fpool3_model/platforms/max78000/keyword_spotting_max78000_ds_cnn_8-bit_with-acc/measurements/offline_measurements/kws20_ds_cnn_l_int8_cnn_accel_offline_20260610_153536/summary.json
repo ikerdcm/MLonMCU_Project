@@ -1,0 +1,33 @@
+{
+  "timestamp": "2026-06-10T15:35:36.067750",
+  "mode": "offline",
+  "variant_name": "ds_cnn_l_int8_cnn_accel",
+  "config": "/Users/iker/Projects/ETHZ/Q2/ML_on_MCUs/MLonMCU_Project_Real/MLonMCU_Project/cnn-trad-fpool3_model/platforms/max78000/keyword_spotting_max78000_ds_cnn_8-bit_with-acc/tools/kws20_measure_max78000_ds_cnn_v1_offline_config.json",
+  "project": "/Users/iker/Projects/ETHZ/Q2/ML_on_MCUs/MLonMCU_Project_Real/MLonMCU_Project/cnn-trad-fpool3_model/platforms/max78000/keyword_spotting_max78000_ds_cnn_8-bit_with-acc",
+  "port": "/dev/tty.usbmodem11302",
+  "baud": 115200,
+  "board": "FTHR_RevA",
+  "clock_mhz": 100.0,
+  "elf": "/Users/iker/Projects/ETHZ/Q2/ML_on_MCUs/MLonMCU_Project_Real/MLonMCU_Project/cnn-trad-fpool3_model/platforms/max78000/keyword_spotting_max78000_ds_cnn_8-bit_with-acc/build/max78000.elf",
+  "elf_size_bytes": 958152,
+  "memory": {
+    "text_bytes": 94072,
+    "data_bytes": 1872,
+    "bss_bytes": 5160,
+    "dec_bytes": 101104,
+    "hex": "18af0"
+  },
+  "static_sram_usage": {
+    "static_sram_bytes": 7032,
+    "static_sram_kib": 6.8671875,
+    "data_bytes": 1872,
+    "bss_bytes": 5160
+  },
+  "counts": {
+    "num_uart_events": 73,
+    "num_inference_events": 0
+  },
+  "model_info": null,
+  "cnn_latency_us": null,
+  "cycles": null
+}

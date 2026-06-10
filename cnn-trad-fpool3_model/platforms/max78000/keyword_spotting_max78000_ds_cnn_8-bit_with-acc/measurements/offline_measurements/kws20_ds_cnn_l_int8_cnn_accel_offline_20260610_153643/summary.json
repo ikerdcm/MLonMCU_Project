@@ -1,0 +1,65 @@
+{
+  "timestamp": "2026-06-10T15:36:43.072215",
+  "mode": "offline",
+  "variant_name": "ds_cnn_l_int8_cnn_accel",
+  "config": "/Users/iker/Projects/ETHZ/Q2/ML_on_MCUs/MLonMCU_Project_Real/MLonMCU_Project/cnn-trad-fpool3_model/platforms/max78000/keyword_spotting_max78000_ds_cnn_8-bit_with-acc/tools/kws20_measure_max78000_ds_cnn_v1_offline_config.json",
+  "project": "/Users/iker/Projects/ETHZ/Q2/ML_on_MCUs/MLonMCU_Project_Real/MLonMCU_Project/cnn-trad-fpool3_model/platforms/max78000/keyword_spotting_max78000_ds_cnn_8-bit_with-acc",
+  "port": "/dev/tty.usbmodem11302",
+  "baud": 115200,
+  "board": "FTHR_RevA",
+  "clock_mhz": 100.0,
+  "elf": "/Users/iker/Projects/ETHZ/Q2/ML_on_MCUs/MLonMCU_Project_Real/MLonMCU_Project/cnn-trad-fpool3_model/platforms/max78000/keyword_spotting_max78000_ds_cnn_8-bit_with-acc/build/max78000.elf",
+  "elf_size_bytes": 958152,
+  "memory": {
+    "text_bytes": 94072,
+    "data_bytes": 1872,
+    "bss_bytes": 5160,
+    "dec_bytes": 101104,
+    "hex": "18af0"
+  },
+  "static_sram_usage": {
+    "static_sram_bytes": 7032,
+    "static_sram_kib": 6.8671875,
+    "data_bytes": 1872,
+    "bss_bytes": 5160
+  },
+  "counts": {
+    "num_uart_events": 35,
+    "num_inference_events": 33
+  },
+  "model_info": null,
+  "cnn_latency_us": {
+    "count": 33,
+    "min": 160.0,
+    "max": 160.0,
+    "avg": 160.0,
+    "median": 160.0,
+    "std": 0.0,
+    "p95": 160.0
+  },
+  "cycles": {
+    "count": 33,
+    "min": 16000.0,
+    "max": 16000.0,
+    "avg": 16000.0,
+    "median": 16000.0,
+    "std": 0.0,
+    "p95": 16000.0
+  },
+  "cnn_latency_ms_avg": 0.16,
+  "inferences_per_second": 6250.000000000001,
+  "mac_ops_per_cycle": 84.252,
+  "compute_estimate": {
+    "mac_ops_per_inference": 1348032.0,
+    "mac_ops_per_second": 8425200000.000001,
+    "gops": 8.4252
+  },
+  "energy_estimate": {
+    "voltage_v": 3.7,
+    "current_ma": 38.85,
+    "power_w": 0.143745,
+    "energy_per_inference_j": 2.2999199999999998e-05,
+    "energy_per_inference_uj": 22.9992,
+    "mac_ops_per_joule": 58612125639.15267
+  }
+}

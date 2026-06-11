@@ -14,12 +14,11 @@
 #include "testoutputs.h"
 
 // RW: Remove MAINSTACKSIZE because gap9-sdk does not use it
-#define SLAVESTACKSIZE 3800
-
-#ifdef POWER_MEASUREMENT
-unsigned int GPIOs = 89;
-#define WRITE_GPIO(x) pi_gpio_pin_write(GPIOs, x)
-#endif
+#define SLAVESTACKSIZE    3800
+#define N_POWER_RUNS      10
+// Sleep between inference peaks so each lands in its own 5-second PPK2 window.
+// Inference ~117ms + POWER_SLEEP_MS ≈ 5000ms per window.
+#define POWER_SLEEP_MS    4880
 
 struct pi_device cluster_dev;
 uint32_t total_cycles = 0;
@@ -74,7 +73,6 @@ void InitNetworkWrapper(void *args) {
 
 void RunNetworkWrapper(void *args) {
   (void)args;
-  // Initialize performance counter in cluster context
   ResetTimer();
   StartTimer();
   RunNetwork(pi_core_id(), pi_cl_cluster_nb_cores());
@@ -84,28 +82,15 @@ void RunNetworkWrapper(void *args) {
 
 int main(void) {
 
-#ifdef POWER_MEASUREMENT
-  pi_pad_function_set(GPIOs, 1);
-  pi_gpio_pin_configure(GPIOs, PI_GPIO_OUTPUT);
-  pi_gpio_pin_write(GPIOs, 0);
-#endif
-
-#ifndef CI
-  uint32_t core_id = pi_core_id(), cluster_id = pi_cluster_id();
-  printf("[%d %d] Hello World!\n", cluster_id, core_id);
-#endif
-  printf("Step A\n");
   struct pi_cluster_conf conf;
   pi_cluster_conf_init(&conf);
-  printf("Step B\n");
   conf.id = 0;
-  printf("Step C\n");
   pi_open_from_conf(&cluster_dev, &conf);
-  printf("Step D\n");
-  int cl_ret = pi_cluster_open(&cluster_dev);
-  printf("pi_cluster_open returned: %d\n", cl_ret);
-  if (cl_ret)
+  if (pi_cluster_open(&cluster_dev))
     return -1;
+
+  pi_freq_set(PI_FREQ_DOMAIN_FC, 240000000);
+  pi_freq_set(PI_FREQ_DOMAIN_CL, 240000000);
 
 #ifndef NOFLASH
   mem_init();
@@ -130,26 +115,22 @@ int main(void) {
     }
   }
 
-#ifndef CI
-  printf("Input copied\r\n");
-#endif
-
-  pi_cluster_task(&cluster_task, RunNetworkWrapper, NULL);
-  cluster_task.slave_stack_size = SLAVESTACKSIZE;
-
-#ifdef POWER_MEASUREMENT
-  WRITE_GPIO(1);
-#endif
-
-  pi_cluster_send_task_to_cl(&cluster_dev, &cluster_task);
-
-#ifdef POWER_MEASUREMENT
-  WRITE_GPIO(0);
-#endif
-
-#ifndef CI
-  printf("Output:\r\n");
-#endif
+  // N_POWER_RUNS consecutive inferences — cluster stays open, no valley between peaks.
+  // RunNetwork frees the input buffer on each call; re-alloc + re-copy before each repeat.
+  for (int run = 0; run < N_POWER_RUNS; run++) {
+    if (run > 0) {
+      for (uint32_t buf = 0; buf < DeeployNetwork_num_inputs; buf++) {
+        DeeployNetwork_inputs[buf] = pi_l2_malloc(DeeployNetwork_inputs_bytes[buf]);
+        memcpy(DeeployNetwork_inputs[buf], testInputVector[buf],
+               DeeployNetwork_inputs_bytes[buf]);
+      }
+    }
+    pi_cluster_task(&cluster_task, RunNetworkWrapper, NULL);
+    cluster_task.slave_stack_size = SLAVESTACKSIZE;
+    pi_cluster_send_task_to_cl(&cluster_dev, &cluster_task);
+    printf("Runtime: %u cycles\r\n", total_cycles);
+    vTaskDelay(pdMS_TO_TICKS(POWER_SLEEP_MS));
+  }
 
   uint32_t tot_err, tot_tested;
   tot_err = 0;
@@ -204,7 +185,6 @@ int main(void) {
     }
   }
 
-  printf("Runtime: %u cycles\r\n", total_cycles);
   printf("Errors: %u out of %u \r\n", tot_err, tot_tested);
 
   // Print predicted class (argmax over float output buffer 0)

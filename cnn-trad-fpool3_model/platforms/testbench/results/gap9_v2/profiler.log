@@ -1,0 +1,63 @@
+2026-06-09 17:22:28 INFO     Experiment directory: experiments/ds_cnn_l_quant_ne16_ne16_int8_board_20260609_172228
+2026-06-09 17:22:28 INFO     Configs saved to experiment directory
+2026-06-09 17:22:28 INFO     Loading model: /app/models/ds_cnn_l.onnx
+2026-06-09 17:22:28 INFO       Model name : ds_cnn_l
+2026-06-09 17:22:28 INFO       Inputs     : ['input_1']
+2026-06-09 17:22:28 INFO       Outputs    : ['output_1']
+2026-06-09 17:22:28 INFO     Applying fusions: ['scaled_match_group']
+2026-06-09 17:22:28 INFO     Collecting fake statistics (1 random samples)
+2026-06-09 17:22:28 INFO     Quantizing (scheme=SQ8, fake=True)
+2026-06-09 17:22:29 INFO       Quantization done
+2026-06-09 17:22:29 INFO     Running execute_on_target (platform=board)
+2026-06-09 17:28:11 INFO     ────────────────────────────────────────────────────────────────────────────────
+2026-06-09 17:28:11 INFO       ⚡ PERFORMANCE SUMMARY
+2026-06-09 17:28:11 INFO     ────────────────────────────────────────────────────────────────────────────────
+2026-06-09 17:28:11 INFO       Node                                 Cycles        Ops           Ops/Cyc     % Cycles    % Ops     
+2026-06-09 17:28:11 INFO       ─────────────────────────────────────────────────────────────────────────────────────────────────────
+2026-06-09 17:28:11 INFO       S4_functional_1_conv2d_1_BiasAdd_fusion  12,950        320,000       24.71       8.3%        6.9%      
+2026-06-09 17:28:11 INFO       S7_Conv__100_fusion                  17,886        72,000        4.03        1.9%        9.5%      
+2026-06-09 17:28:11 INFO       S10_functional_1_conv2d_1_2_BiasAdd_fusion  10,833        512,000       47.26       13.4%       5.7%      
+2026-06-09 17:28:11 INFO       S13_Conv__118_fusion                 17,692        72,000        4.07        1.9%        9.4%      
+2026-06-09 17:28:11 INFO       S16_functional_1_conv2d_2_1_BiasAdd_fusion  10,672        512,000       47.98       13.4%       5.7%      
+2026-06-09 17:28:11 INFO       S19_Conv__136_fusion                 17,637        72,000        4.08        1.9%        9.3%      
+2026-06-09 17:28:11 INFO       S22_functional_1_conv2d_3_1_BiasAdd_fusion  10,693        512,000       47.88       13.4%       5.7%      
+2026-06-09 17:28:11 INFO       S25_Conv__154_fusion                 17,605        72,000        4.09        1.9%        9.3%      
+2026-06-09 17:28:11 INFO       S28_functional_1_conv2d_4_1_BiasAdd_fusion  10,626        512,000       48.18       13.4%       5.6%      
+2026-06-09 17:28:11 INFO       S31_Conv__172_fusion                 17,623        72,000        4.09        1.9%        9.3%      
+2026-06-09 17:28:11 INFO       S34_functional_1_conv2d_5_1_BiasAdd_fusion  10,648        512,000       48.08       13.4%       5.6%      
+2026-06-09 17:28:11 INFO       S37_Conv__190_fusion                 17,607        72,000        4.09        1.9%        9.3%      
+2026-06-09 17:28:11 INFO       S40_functional_1_conv2d_6_1_BiasAdd_fusion  10,634        512,000       48.15       13.4%       5.6%      
+2026-06-09 17:28:11 INFO       S41_functional_1_average_pooling2d_1_AvgPool  2,843         7,680         2.70        0.2%        1.5%      
+2026-06-09 17:28:11 INFO       S45_functional_1_dense_1_MatMul      1,252         768           0.61        0.0%        0.7%      
+2026-06-09 17:28:11 INFO       S47_functional_1_dense_1_Softmax     1,445         12            0.01        0.0%        0.8%      
+2026-06-09 17:28:11 INFO       ─────────────────────────────────────────────────────────────────────────────────────────────────────
+2026-06-09 17:28:11 INFO       Total                                188,646       3,832,460     20.32       —           —         
+2026-06-09 17:28:11 INFO     ────────────────────────────────────────────────────────────────────────────────
+2026-06-09 17:28:11 INFO       🧠 MEMORY INFO
+2026-06-09 17:28:11 INFO     ────────────────────────────────────────────────────────────────────────────────
+2026-06-09 17:28:11 INFO       Graph Max Alive Size           20500
+2026-06-09 17:28:11 INFO       Shared L1                      ███░░░░░░░░░░░░░░░░░  16.8%  (20.0 KB / 119.0 KB)
+2026-06-09 17:28:11 INFO       L2                             ░░░░░░░░░░░░░░░░░░░░   2.8%  (36.4 KB / 1.3 MB)
+2026-06-09 17:28:11 INFO       L2 Static Memory Usage         ░░░░░░░░░░░░░░░░░░░░   2.8%  (36.4 KB / 1.3 MB)
+2026-06-09 17:28:11 INFO       L2 Dyn Memory Usage            ░░░░░░░░░░░░░░░░░░░░   0.0%  (0 B / 1.3 MB)
+2026-06-09 17:28:11 INFO       DefaultRam                     ░░░░░░░░░░░░░░░░░░░░   0.0%  (0 B / 7.6 MB)
+2026-06-09 17:28:11 INFO       eMRAM                          ░░░░░░░░░░░░░░░░░░░░   0.1%  (36.4 KB / 64.0 MB)
+2026-06-09 17:28:11 INFO       Total Flash Used at runtime    37248
+2026-06-09 17:28:11 INFO       L3 Memory bandwidth for 1 graph run 0
+2026-06-09 17:28:11 INFO       L2 Memory bandwidth for 1 graph run 245914
+2026-06-09 17:28:11 INFO       Sum of all Kernels arguments size 245914
+2026-06-09 17:28:11 INFO       Tiling Bandwith overhead       1.0
+2026-06-09 17:28:11 INFO       Sum of baseline bandwidth      245370
+2026-06-09 17:28:11 INFO       Percentage of baseline BW for L2 100.222
+2026-06-09 17:28:11 INFO       Percentage of baseline BW for L3 0.0
+2026-06-09 17:28:11 INFO       Sum of all Kernels operations  3832460
+2026-06-09 17:28:11 INFO       Total amount of flash coefficients 37248
+2026-06-09 17:28:11 INFO     ────────────────────────────────────────────────────────────────────────────────
+2026-06-09 17:28:11 INFO     Results saved to experiments/ds_cnn_l_quant_ne16_ne16_int8_board_20260609_172228/results.json
+2026-06-09 17:28:12 INFO     Saved memory plot: experiments/ds_cnn_l_quant_ne16_ne16_int8_board_20260609_172228/mem_boxes_L1.png
+2026-06-09 17:28:13 INFO     Saved memory plot: experiments/ds_cnn_l_quant_ne16_ne16_int8_board_20260609_172228/mem_boxes_L2.png
+2026-06-09 17:28:13 INFO     Saved memory plot: experiments/ds_cnn_l_quant_ne16_ne16_int8_board_20260609_172228/mem_boxes_L3.png
+2026-06-09 17:28:14 INFO     Saved memory plot: experiments/ds_cnn_l_quant_ne16_ne16_int8_board_20260609_172228/mem_boxes_L1.png
+2026-06-09 17:28:15 INFO     Saved memory plot: experiments/ds_cnn_l_quant_ne16_ne16_int8_board_20260609_172228/mem_boxes_L2.png
+2026-06-09 17:28:15 INFO     Saved memory plot: experiments/ds_cnn_l_quant_ne16_ne16_int8_board_20260609_172228/mem_boxes_L3.png
+2026-06-09 17:28:15 INFO     Experiment complete: experiments/ds_cnn_l_quant_ne16_ne16_int8_board_20260609_172228

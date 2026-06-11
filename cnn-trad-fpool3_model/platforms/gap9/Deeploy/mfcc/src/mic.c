@@ -90,6 +90,16 @@ int mic_open(void)
 
 void mic_record(int32_t *buf, int n_samples_48k)
 {
+    /* Sentinel in the last sample: the uDMA writes the buffer sequentially,
+     * so the last sample is overwritten exactly at transfer completion.
+     * pi_time_wait_us() runs on a timer clock that drifts against the audio
+     * sample clock; a pure wall-clock wait can return long before the DMA is
+     * done.  The unwritten tail then holds stale data from the previous
+     * recording and live words get truncated mid-vowel. */
+    volatile int32_t *last = &buf[n_samples_48k - 1];
+    const int32_t SENTINEL = (int32_t)0xDEADBEEF;
+    *last = SENTINEL;
+
     /* Enqueue output buffer — SFU fills it while the graph is already
      * running.  Samples produced between iterations are silently discarded
      * by the SFU (no DMA active on MemOut); only samples produced while
@@ -100,9 +110,24 @@ void mic_record(int32_t *buf, int n_samples_48k)
     pi_sfu_mem_port_t *port = pi_sfu_mem_port_get(s_graph, SFU_Name(KWSMic, MemOut1));
     pi_sfu_enqueue(s_graph, port, &sfu_buf);
 
-    /* Wait for exactly n_samples to be captured. */
+    /* Coarse wait for the nominal duration, then poll for true completion. */
     uint32_t duration_us = (uint32_t)n_samples_48k * 1000000UL / MIC_SAMPLE_RATE_HZ;
     pi_time_wait_us(duration_us);
+
+    uint32_t extra_ms = 0;
+    while (*last == SENTINEL) {
+        pi_time_wait_us(1000);
+        if (++extra_ms >= MIC_RECORD_TIMEOUT_MS) {
+            uint32_t done = pi_sfu_nb_transferred_bytes_get(port);
+            printf("[mic] WARNING: DMA incomplete after +%u ms (%u/%u bytes)\r\n",
+                   (unsigned)extra_ms, (unsigned)done,
+                   (unsigned)((uint32_t)n_samples_48k * sizeof(int32_t)));
+            break;
+        }
+    }
+    if (extra_ms > 0)
+        printf("[mic] DMA lagged wall-clock wait by ~%u ms\r\n",
+               (unsigned)extra_ms);
 }
 
 void mic_downsample_to_16k(const int32_t *buf_48k, float *audio_16k)

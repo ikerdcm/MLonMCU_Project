@@ -58,6 +58,18 @@ MODEL_ACCURACY = {
     "v32": 76.5,   # prune-distill f32b4   — ᵒ
 }
 
+# Static per-version Coral memory facts — DETERMINISTIC (not measured live), so the
+# testbench re-emits them on every run; that's why an eval re-run does NOT wipe the
+# Model-flash / TPU-SRAM ledger columns. `model_flash_kib` = the baked .tflite size;
+# `tpu_sram_kib` = Edge-TPU on-chip weight cache (edgetpu_compiler "On-chip memory
+# used for caching model parameters", 0 B streamed off-chip). v0 = M7 CPU → no TPU.
+CORAL_MODEL_FLASH_KIB = {
+    "v0": 144.5, "v1": 144.6, "v21": 120.6, "v22": 108.6, "v23": 92.6, "v31": 120.6, "v32": 92.6,
+}
+CORAL_TPU_SRAM_KIB = {
+    "v1": 62.0, "v21": 46.5, "v22": 39.0, "v23": 30.5, "v31": 46.5, "v32": 30.5,
+}
+
 PLATFORMS = Path(__file__).resolve().parents[1]          # .../cnn-trad-fpool3_model/platforms
 HERE = Path(__file__).resolve().parent
 RESULTS = HERE / "results"                                # all new, unique results live here
@@ -374,35 +386,55 @@ def print_confusion(cm):
         print(f"{lab[:6]:>6} " + " ".join(f"{cm[i][j]:>4}" for j in range(len(LABELS))))
 
 
-def upsert_ledger(board, model, row):
-    """Append `row`, or REPLACE the existing row for this (board, model) so the
-    ledger always holds one unique, latest result per MCU/model."""
+# Ledger columns the testbench OWNS (overwrites). Everything else on an existing
+# row — notably the memory columns (Flash/L2, SRAM/L1) and Energy — is PRESERVED, so
+# re-running an eval never wipes hand-curated / per-version columns. 0-indexed among
+# the 13 data cells: 0 ts | 1 board | 2 config | 3 model | 4 N | 5 model-acc |
+# 6 mcu-acc | 7 lat-avg | 8 lat-p95 | 9 flash/L2 | 10 sram/L1 | 11 energy | 12 run.
+LEDGER_OWNED = {0, 4, 5, 6, 7, 8, 12}            # config/board/model = identity (also set)
+LEDGER_IDENTITY = {1, 2, 3}
+
+
+def upsert_ledger(board, model, cells):
+    """`cells`: the testbench's 13-cell view of the row. If a row for (board, model)
+    exists, only LEDGER_OWNED (+ identity) cells are overwritten; all other cells
+    (Flash/L2, SRAM/L1, Energy, any manual column) are kept from the existing row.
+    A fresh ledger is created with a minimal header; the repo's curated multi-board
+    header is preserved when the file already exists (we only touch matching rows)."""
     header = (
-        "# DS-CNN normalized test-bench ledger (v2)\n\n"
-        "Device-in-the-loop, one common GSC **test** audio set per board "
-        "(`testbench.py`). One unique row per (board, model) — re-running replaces it. "
-        "Model accuracy is the canonical model score; MCU accuracy is the on-device "
-        "test-bench result. Flash/SRAM come from the ELF. Energy still needs the "
-        "power meter (separate).\n\n"
+        "# DS-CNN normalized test-bench ledger\n\n"
+        "Device-in-the-loop (`testbench.py`). One row per (board, model); a re-run "
+        "updates only the measured columns and **preserves** Flash/L2, SRAM/L1 and "
+        "Energy (curated separately).\n\n"
         "| Timestamp | Board | Config | Model | N | Model accuracy % | MCU accuracy % | "
-        "Lat avg (ms) | Lat p95 (ms) | Flash .text (KiB) | SRAM (KiB) | Run |\n"
-        "|---|---|---|---|---|---|---|---|---|---|---|---|\n"
+        "Lat avg (ms) | Lat p95 (ms) | Flash/.text / L2 (KiB) | SRAM / L1 scratch (KiB) | "
+        "Energy/Inference (µJ) | Run |\n"
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|\n"
     )
     LEDGER.parent.mkdir(parents=True, exist_ok=True)
     if not LEDGER.exists():
         LEDGER.write_text(header)
     lines = LEDGER.read_text().splitlines()
 
+    def split_cells(line):
+        return [c.strip() for c in line.strip().strip("|").split("|")]
+
     def is_match(line):
-        cells = [c.strip() for c in line.split("|")]
-        return len(cells) > 5 and cells[2] == board and cells[4] == model
+        c = split_cells(line)
+        return len(c) >= 13 and c[1] == board and c[3] == model
+
+    def render(cs):
+        return "| " + " | ".join(cs) + " |"
 
     for i, line in enumerate(lines):
         if line.startswith("|") and "---" not in line and is_match(line):
-            lines[i] = row
+            old = split_cells(line)
+            merged = [(cells[j] if (j in LEDGER_OWNED or j in LEDGER_IDENTITY) else old[j])
+                      for j in range(len(cells))] if len(old) == len(cells) else cells
+            lines[i] = render(merged)
             break
     else:
-        lines.append(row)
+        lines.append(render(cells))
     LEDGER.write_text("\n".join(lines) + "\n")
 
 
@@ -512,15 +544,23 @@ def main():
 
     lat_avg = f"{lat['avg_ms']:.3f}" if lat else "—"
     lat_p95 = f"{lat['p95_ms']:.3f}" if lat else "—"
-    flash = f"{size['flash_text_kib']:.1f}" if size else "—"
-    sram = "n/a" if (size and sram_na) else (f"{size['static_sram_kib']:.1f}" if size else "—")
+    # Memory cells: on Coral the meaningful pair is the model-file flash and the
+    # Edge-TPU on-chip weight cache (static per-version facts) — NOT the EVAL .text /
+    # SDRAM bss. Elsewhere use the ELF. These cells are PRESERVED on re-run (see
+    # upsert_ledger), so a manual/curated value is never clobbered.
+    if args.board == "coral":
+        flash = f"{CORAL_MODEL_FLASH_KIB[args.model]:.1f}" if args.model in CORAL_MODEL_FLASH_KIB else "—"
+        sram = f"{CORAL_TPU_SRAM_KIB[args.model]:.1f}" if args.model in CORAL_TPU_SRAM_KIB else "—"
+    else:
+        flash = f"{size['flash_text_kib']:.1f}" if size else "—"
+        sram = "n/a" if (size and sram_na) else (f"{size['static_sram_kib']:.1f}" if size else "—")
+    energy = "—"  # filled separately from the power meter; preserved across re-runs
     model_accuracy = MODEL_ACCURACY.get(args.model)
     model_accuracy_str = f"{model_accuracy:.1f}" if model_accuracy is not None else "—"
-    upsert_ledger(
-        args.board, args.model,
-        f"| {datetime.now().strftime('%Y-%m-%d %H:%M')} | {args.board} | "
-        f"{spec['config_id']} | {args.model} | {total} | {model_accuracy_str} | {acc*100:.2f} | "
-        f"{lat_avg} | {lat_p95} | {flash} | {sram} | results/{run_id} |")
+    upsert_ledger(args.board, args.model, [
+        datetime.now().strftime('%Y-%m-%d %H:%M'), args.board, spec['config_id'],
+        args.model, str(total), model_accuracy_str, f"{acc*100:.2f}",
+        lat_avg, lat_p95, flash, sram, energy, f"results/{run_id}"])
     print(f"\nWrote {out_dir/'summary.json'} + confusion_matrix.png")
     print(f"Upserted {args.board}/{args.model} row in {LEDGER.name}")
 

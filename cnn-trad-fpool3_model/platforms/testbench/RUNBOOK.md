@@ -132,6 +132,70 @@ python3 ../testbench/testbench.py --board coral --model v21 --port /dev/tty.usbm
 
 ---
 
+## Power measurement — duty-cycle firmware (NOT the accuracy eval)
+
+> **This is a different procedure from everything above.** The accuracy testbench
+> streams/bakes the GSC test set and tallies predictions. **This** flashes a tiny
+> *power* firmware that does **ONE offline inference every 5 s, continuously**, with
+> the M7 asleep (WFI) in between — so a power meter sees a clean **active spike vs
+> idle baseline** duty cycle. No host, no `testbench.py`, no dataset. It runs forever.
+
+**What "sleep" is here:** coralmicro's FreeRTOS runs tickless idle
+(`configUSE_TICKLESS_IDLE=2`), so while the task is blocked in `vTaskDelay(5 s)` the
+M7 core enters `__WFI()` (clock-gated; PLLs + USB/serial stay up so it keeps
+reporting). This is the deepest sleep coralmicro exposes — there is no STOP/SetPoint
+deep-sleep API. Input is the baked "left" MFCC test vector (offline, no mic); the
+model + interpreter (+ Edge TPU for v1) are set up once, so each cycle is just
+`Invoke()`.
+
+| App | Flash script | Versions | Network(s) | Active window |
+|---|---|---|---|---|
+| `kws_idle_cpu` | `build_and_flash_idle_cpu.sh` | `v0` | `ds_cnn_l_float` (M7 CPU) | ~417 ms |
+| `kws_idle` | `build_and_flash_idle.sh --version vNN` | `v1`,`v21`,`v22`,`v23`,`v31`,`v32` | the matching Edge-TPU network | ~1.8–2.3 ms |
+
+`kws_idle` is **version-selectable** exactly like the accuracy harness: `--version vNN`
+bakes that one TPU network (the same `vNN → model` map as
+`build_and_flash_eval_stream.sh`), and the firmware self-reports it on boot
+(`version=…,model=…,app=kws_idle`). `kws_idle_cpu` is the fixed v0 CPU twin.
+
+```bash
+cd cnn-trad-fpool3_model/platforms/coral
+
+# v1 — Edge-TPU int8 6-block (default; ~2.3 ms spike per 5 s)
+./scripts/build_and_flash_idle.sh                 # == --version v1
+
+# a prune/distill variant — e.g. v21 (prune f64b4, ~1.8 ms)
+./scripts/build_and_flash_idle.sh --version v21   # v21|v22|v23|v31|v32
+
+# v0 — M7 CPU fp32 (~417 ms spike per 5 s)
+./scripts/build_and_flash_idle_cpu.sh
+```
+
+Each cycle emits (for aligning the power trace to inferences):
+
+```text
+BENCH,event=model_info,...,version=<vNN>,model=<basename>,app=kws_idle   (once, on boot)
+BENCH,event=inference,cycle=<n>,mode=offline,cnn_us=<us>,pred_idx=<i>,pred_label=<l>
+BENCH,event=sleep,cycle=<n>,sleep_ms=5000
+```
+
+- **Read the serial log** to confirm it's alive and to timestamp each inference:
+  `screen $(ls /dev/tty.usbmodem* | head -1) 115200`.
+- **Capture power** with the meter as usual, then analyze the duty cycle
+  (active spike energy + idle baseline) with the `Experiments/PWR Consumption/` tools
+  (e.g. `analyze_power_peaks.py`). The idle floor is SDRAM refresh + PLLs + USB CDC
+  (+ the Edge TPU powered-but-idle for v1).
+- **Knobs** (top of the `.cc`): `kPeriodMs` = the 5 s interval; `kMarkerLed` = pulse the
+  user LED during each inference as a trace marker (adds a few mA — leave `false` for
+  the cleanest active-current reading).
+- These are **power** apps, separate from the `kws_eval_stream` **accuracy** harness,
+  but they share the same `vNN → network` map so a given version means the same network
+  in both. `kws_idle` bakes exactly one network per flash (boot line names it);
+  `kws_idle_cpu` is the fixed v0 CPU case. Latency is block-count-bound on the TPU
+  (4-blk ≈ 1.8 ms, 6-blk ≈ 2.3 ms), so v21/v31 (4-blk) spike slightly shorter than v1.
+
+---
+
 ## Output & flags
 
 - Results: `testbench/results/<board>_<model>/summary.json` + `confusion_matrix.png`;

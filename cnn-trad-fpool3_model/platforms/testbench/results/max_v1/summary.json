@@ -272,5 +272,14 @@
     "flash_text_kib": 139.45703125,
     "static_sram_kib": 38.02734375,
     "from_eval_build": true
+  },
+
+  "energy_estimate": {
+    "voltage_v": 3.7,
+    "current_ma": 39.41,
+    "power_w": 0.145817,
+    "energy_per_inference_j": 2.3622354e-05,
+    "energy_per_inference_uj": 23.622354,
+    "note": "PPK2 measurement: 3.7V supply, avg 39.41mA during MAX78000 int8-accel inference (CNN hardware accelerator). Energy from measured power x testbench latency.avg_ms (0.162 ms)."
   }
 }

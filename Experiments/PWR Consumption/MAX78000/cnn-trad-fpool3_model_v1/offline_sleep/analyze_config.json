@@ -1,0 +1,22 @@
+{
+  "csv": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/Experiments/PWR Consumption/MAX78000/cnn-trad-fpool3_model_v1/offline_sleep/on_clean.csv",
+  "summary_json": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/cnn-trad-fpool3_model/platforms/testbench/results/max_v1/summary.json",
+  "out_dir": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/Experiments/PWR Consumption/MAX78000/cnn-trad-fpool3_model_v1/offline_sleep/on_peak_analysis",
+  "expected_peaks": 6,
+  "period_ms": 5013.0,
+  "window_start_times_ms": [0.0, 5013.37, 10026.77, 15040.17, 20053.54, 25066.93],
+  "expected_duration_ms": 0.162,
+  "window_mode": "fixed_duration_from_window_start",
+  "voltage": 3.7,
+  "zoom_half_window_ms": 0.5,
+  "overlay_half_window_ms": 0.4,
+  "local_baseline_window_ms": 1.0,
+  "local_baseline_guard_ms": 0.05,
+  "threshold_fraction": 0.25,
+  "transition_start_fraction": 0.3,
+  "transition_end_fraction": 0.2,
+  "transition_settle_ms": 0.05,
+  "transition_smooth_ms": 0.02,
+  "plateau_coarse_fraction": 0.3,
+  "write_zoom_outputs": true
+}

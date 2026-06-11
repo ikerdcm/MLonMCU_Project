@@ -277,7 +277,11 @@
     "sram_na_reason": "tensor arena + baked eval buffer live in SDRAM; on-chip SRAM is not the comparable axis (ledger \u1d47)"
   },
   "energy_estimate": {
-    "voltage_v": 5,
-    "current_ma": 156.46
+    "voltage_v": 5.0,
+    "current_ma": 156.46,
+    "power_w": 0.7823,
+    "energy_per_inference_j": 0.0017956941319444445,
+    "energy_per_inference_uj": 1795.6941319444445,
+    "note": "PPK2 measurement: 5.0V supply, avg 156.46mA during Coral v22 INT8 Edge-TPU inference window. Energy from measured power x testbench latency.avg_ms (2.295402778 ms)."
   }
 }

@@ -1,0 +1,30 @@
+{
+  "csv": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/Experiments/PWR Consumption/Coral/cnn-trad-fpool3_model_v0/offline_sleep/on_raw.csv",
+  "summary_json": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/cnn-trad-fpool3_model/platforms/testbench/results/coral_v0/summary.json",
+  "out_dir": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/Experiments/PWR Consumption/Coral/cnn-trad-fpool3_model_v0/offline_sleep/on_peak_analysis",
+  "expected_peaks": 7,
+  "period_ms": 5440.0,
+  "window_start_times_ms": [
+    2110.02,
+    7550.32,
+    12990.68,
+    18431.03,
+    23871.20,
+    29310.54,
+    34750.07
+  ],
+  "expected_duration_ms": 417.0116111111111,
+  "window_mode": "fixed_duration_from_window_start",
+  "threshold_fraction": 0.25,
+  "local_baseline_window_ms": 100.0,
+  "local_baseline_guard_ms": 4.0,
+  "transition_start_fraction": 0.3,
+  "transition_end_fraction": 0.2,
+  "transition_settle_ms": 20.0,
+  "transition_smooth_ms": 5.0,
+  "plateau_coarse_fraction": 0.3,
+  "zoom_half_window_ms": 20.0,
+  "overlay_half_window_ms": 250.0,
+  "voltage": 5.0,
+  "write_zoom_outputs": false
+}

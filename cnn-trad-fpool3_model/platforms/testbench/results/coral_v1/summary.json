@@ -265,6 +265,16 @@
     "min_ms": 2.215,
     "max_ms": 4.761
   },
+  "energy_estimate": {
+    "voltage_v": 5.0,
+    "current_ma": 164.73,
+    "power_w": 0.82365,
+    "energy_per_inference_j": 0.0019320255093749998,
+    "energy_per_inference_uj": 1932.0255093749997,
+    "mac_ops_per_joule": 2038128886.4419968,
+    "mac_ops_per_second_per_watt": 2038128886.4419968,
+    "note": "PPK2 measurement: 5.0V supply, avg 164.73mA during Coral v1 INT8 Edge-TPU inference window. Energy from measured power x testbench latency.avg_ms; MAC efficiency uses 3,937,717 MAC per inference."
+  },
   "memory": {
     "elf": "/Users/iker/Projects/ETHZ/Q2/ML_on_MCUs/MLonMCU_Project_Real/MLonMCU_Project/cnn-trad-fpool3_model/platforms/coral/build/kws_apps/kws_eval_stream/kws_eval_stream",
     "text_bytes": 290196,

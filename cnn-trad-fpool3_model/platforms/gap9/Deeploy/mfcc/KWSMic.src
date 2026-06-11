@@ -1,0 +1,18 @@
+SFU_CreateGraph("KWSMic");
+
+Defines:
+    /* CIC: 3.072 MHz PDM → 48 kHz PCM (R=64, M=2, N=8, Shift=25 for Q31).
+       DynOut = N*log2(R*M) = 8*log2(128) = 56 bits => Shift = 56-31 = 25 */
+    CIC_N = 8; CIC_M = 2; CIC_R = 64; CIC_Shift = 25;
+
+Nodes:
+    PdmIn1 = Node(PDM_IN, CIC_N, CIC_M, CIC_R, CIC_Shift);  /* 3.072 MHz PDM → 48 kHz PCM */
+    MemOut1 = Node(MEM_OUT);
+
+Configure:
+    PdmIn1.Frequency = 3072000;
+
+Connects:
+    Connect(PdmIn1, MemOut1);
+
+SFU_CloseGraph();

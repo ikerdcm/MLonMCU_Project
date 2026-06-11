@@ -275,5 +275,9 @@
     "from_eval_build": true,
     "sram_na": true,
     "sram_na_reason": "tensor arena + baked eval buffer live in SDRAM; on-chip SRAM is not the comparable axis (ledger \u1d47)"
+  },
+  "energy_estimate": {
+    "voltage_v": 5,
+    "current_ma": 160.71
   }
 }

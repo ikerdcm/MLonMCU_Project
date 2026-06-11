@@ -26,7 +26,7 @@ from .reader import SerialReader, list_serial_ports, detect_ports
 from .flasher import (flash_command, flash_available, FLASH_MODES, REPORT_MODES,
                       MODELS, MODEL_LABEL_SET)
 
-# Time-series plot sources (the dropdown). Scores/MFCC are separate stackable views.
+# Time-series plot sources (the dropdown). Scores are a separate stackable view.
 PLOT_SOURCES = {
     "Mic level": ("level", False),
     "Confidence %": ("confidence", True),
@@ -102,33 +102,6 @@ class ScoreBars(pg.PlotWidget):
         self.bar.setOpts(x=[0], height=[0])
 
 
-class MfccView(pg.PlotWidget):
-    """MFCC 'what it hears' heatmap (frames × bins). DS-CNN models only."""
-
-    def __init__(self):
-        super().__init__()
-        self.setFixedHeight(150)
-        self.setMouseEnabled(x=False, y=False)
-        self.setLabel("left", "MFCC bin")
-        self.setLabel("bottom", "frame")
-        self.img = pg.ImageItem()
-        self.addItem(self.img)
-        try:
-            self.img.setColorMap(pg.colormap.get("inferno"))
-        except Exception:
-            pass
-
-    def set_mfcc(self, data: list, w: int, h: int) -> None:
-        import numpy as np
-        if not data or not w or not h or len(data) < w * h:
-            return
-        a = np.array(data[: w * h], dtype=float).reshape(h, w)   # h=frames, w=bins
-        self.img.setImage(a, autoLevels=True)   # x=frames (rows), y=bins (cols)
-
-    def clear_data(self) -> None:
-        self.img.clear()
-
-
 MAX_ROWS = 300              # cap table rows per panel
 RATE_WINDOW_S = 5.0         # window for lines/s and inf/s
 
@@ -151,7 +124,7 @@ class McuPanel(QGroupBox):
         return self.cb_mcu.currentData()
 
     def model_token(self) -> str:
-        return MODELS.get(self.mcu_key(), {}).get(self.cb_model.currentText(), "dscnn")
+        return MODELS.get(self.mcu_key(), {}).get(self.cb_model.currentText(), "v1")
 
     # ── UI ──────────────────────────────────────────────────────────────
     def _build_ui(self) -> None:
@@ -225,22 +198,16 @@ class McuPanel(QGroupBox):
         self.cb_plot.currentIndexChanged.connect(lambda: self.plot.clear_data())
         plot_row.addWidget(self.cb_plot)
         self.chk_scores = QCheckBox("Scores"); self.chk_scores.setChecked(True)
-        self.chk_mfcc = QCheckBox("MFCC")
         plot_row.addWidget(self.chk_scores)
-        plot_row.addWidget(self.chk_mfcc)
         plot_row.addStretch(1)
         root.addLayout(plot_row)
 
-        # Stacked lower views — show any combination at once (default: mic + scores).
+        # Stacked lower views — mic level plot + score bars (default: both shown).
         self.plot = RollingPlot()
         self.bars = ScoreBars()
-        self.mfcc_view = MfccView()
-        self.mfcc_view.setVisible(False)
         self.chk_scores.toggled.connect(self.bars.setVisible)
-        self.chk_mfcc.toggled.connect(self.mfcc_view.setVisible)
         root.addWidget(self.plot)
         root.addWidget(self.bars)
-        root.addWidget(self.mfcc_view)
 
         self._on_mcu_changed()
         self.refresh_ports()
@@ -338,12 +305,10 @@ class McuPanel(QGroupBox):
                 # On the Mic level plot, overlay the adaptive trigger threshold.
                 thr = rec.thr if attr == "level" else None
                 self.plot.add(rec.t_host, float(val), thr)
-        # Score bars + MFCC views (only when shown).
+        # Score bars (only when shown).
         if rec.scores and self.bars.isVisible():
             best = max(range(len(rec.scores)), key=lambda i: rec.scores[i])
             self.bars.set_scores(rec.scores, best)
-        if rec.mfcc and self.mfcc_view.isVisible():
-            self.mfcc_view.set_mfcc(rec.mfcc, rec.mfcc_w or 10, rec.mfcc_h or 49)
 
         if not rec.is_inference:
             return
@@ -846,10 +811,12 @@ class MonitorWindow(QWidget):
                 p._disconnect()
         report = REPORT_MODES[self.flash_report.currentText()]
         max_model = next((p.model_token() for p in self.panels
-                          if p.mcu_key() == "max78000"), "dscnn")
+                          if p.mcu_key() == "max78000"), "v1")
         coral_model = next((p.model_token() for p in self.panels
                             if p.mcu_key() == "coral"), "int8")
-        cmd = flash_command(mode, mcu, report, max_model, coral_model)
+        stm32_model = next((p.model_token() for p in self.panels
+                            if p.mcu_key() == "stm32u5"), "v1")
+        cmd = flash_command(mode, mcu, report, max_model, coral_model, stm32_model)
         self._log(f"\n=== flashing {mcu or 'ALL'} (mode={mode}) ===")
         self._set_flash_enabled(False)
         self.flash_proc = QProcess(self)

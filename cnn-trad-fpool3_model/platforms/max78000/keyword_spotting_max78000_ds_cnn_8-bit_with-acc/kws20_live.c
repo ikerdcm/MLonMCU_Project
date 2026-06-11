@@ -204,11 +204,13 @@ static void run_inference(uint32_t run_idx, uint32_t post_samples)
         }
         printf("%s\r\n", sb);
 
-        /* MFCC the model saw (49 frames × 10 bins) for the dashboard spectrogram.
-           Many tiny writes (no large buffer); clamp to int8 so each value is narrow. */
+        /* MFCC the model ACTUALLY sees: the int8 input load_mfcc feeds the
+           accelerator = round(mfcc_in * 127) clamped (NOT (int)mfcc_in, which
+           truncated the [-1,1] values to ~0). Lets us compare the live frontend
+           output to the known-good reference vector (ds_cnn_test_input_left). */
         printf("BENCH,event=mfcc,run=%lu,w=10,h=49,d=", (unsigned long)run_idx);
         for (uint32_t i = 0; i < LIVE_INPUT_ELEMS; ++i) {
-            int v = (int)mfcc_in[i];
+            int v = (int)(mfcc_in[i] * 127.0f + (mfcc_in[i] >= 0.0f ? 0.5f : -0.5f));
             if (v < -128) v = -128; else if (v > 127) v = 127;
             printf("%s%d", i ? ";" : "", v);
         }

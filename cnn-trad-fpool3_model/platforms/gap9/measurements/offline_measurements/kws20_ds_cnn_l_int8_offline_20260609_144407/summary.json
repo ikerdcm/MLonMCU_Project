@@ -88,5 +88,15 @@
     "mac_ops_per_inference": 3824768.0,
     "mac_ops_per_second": 222980327.90978923,
     "gops": 0.22298032790978922
+  },
+  "energy_estimate": {
+    "voltage_v": 1.8,
+    "current_ma": 15.55,
+    "power_w": 0.02799,
+    "energy_per_inference_j": 0.000480111,
+    "energy_per_inference_uj": 480.111,
+    "mac_ops_per_joule": 7966418029.0,
+    "mac_ops_per_second_per_watt": 7966418029.0,
+    "note": "PPK2 measurement: 1.8V supply, avg 15.55mA during INT8 SIMD cluster inference (8-core, 240MHz, pi_cl_team_fork). Energy from measured power x cycle-counter latency."
   }
 }

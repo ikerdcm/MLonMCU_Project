@@ -1,0 +1,101 @@
+{
+  "timestamp": "2026-06-10T17:09:02.397880",
+  "mode": "offline",
+  "platform": "GAP9",
+  "board": "GAP9_EVK",
+  "variant_name": "ds_cnn_l_float32",
+  "config": "/app/Deeploy/tools/gap9_ds_cnn_measure_config.json",
+  "binary": "/app/Deeploy/DeeployTest/TEST_GAP9/build_master/DSCNNL",
+  "clock_mhz": 240.0,
+  "clock_hz": 240000000.0,
+  "counts": {
+    "num_inference_events": 20,
+    "n_runs_requested": 20,
+    "n_runs_failed": 0
+  },
+  "memory": {
+    "text_bytes": 47594,
+    "data_bytes": 132784,
+    "bss_bytes": 4512,
+    "dec_bytes": 184890,
+    "size_tool": "/app/install/llvm/bin/llvm-size"
+  },
+  "static_sram_usage": {
+    "static_sram_bytes": 137296,
+    "static_sram_kib": 134.078125,
+    "data_bytes": 132784,
+    "bss_bytes": 4512,
+    "note": "GAP9 NOFLASH: data section contains compiled model weights; equivalent metric to MCU SRAM usage"
+  },
+  "l2_memory": {
+    "total_l2_bytes": 184890,
+    "total_l2_kib": 180.556640625,
+    "code_bytes": 47594,
+    "data_bytes": 132784,
+    "bss_bytes": 4512,
+    "source": "estimated from ELF sections (llvm-size)"
+  },
+  "cycles": {
+    "count": 20,
+    "min": 28014490.0,
+    "max": 28054032.0,
+    "avg": 28033447.7,
+    "median": 28033061.0,
+    "std": 9365.502853276852,
+    "p95": 28048307.0
+  },
+  "cnn_latency_us": {
+    "count": 20,
+    "min": 116727.04166666667,
+    "max": 116891.8,
+    "avg": 116806.03208333331,
+    "median": 116804.42083333334,
+    "std": 39.022928555320384,
+    "p95": 116867.94583333333
+  },
+  "latency_us": {
+    "count": 20,
+    "min": 116727.04166666667,
+    "max": 116891.8,
+    "avg": 116806.03208333331,
+    "median": 116804.42083333334,
+    "std": 39.022928555320384,
+    "p95": 116867.94583333333
+  },
+  "cnn_latency_ms_avg": 116.8060320833333,
+  "latency_ms_avg": 116.8060320833333,
+  "labels": [
+    "down",
+    "go",
+    "left",
+    "no",
+    "off",
+    "on",
+    "right",
+    "stop",
+    "up",
+    "yes",
+    "silence",
+    "unknown"
+  ],
+  "pred_class_distribution": {
+    "left": 20
+  },
+  "inferences_per_second": 8.561201696215196,
+  "mac_ops_per_cycle": 0.13643587620512335,
+  "compute_estimate": {
+    "mac_ops_per_inference": 3824768.0,
+    "mac_ops_per_second": 32744610.289229605,
+    "gops": 0.032744610289229606
+  },
+  "energy_estimate": {
+    "voltage_v": 1.8,
+    "current_ma": 18.52,
+    "power_w": 0.033336,
+    "energy_per_inference_j": 0.003893846,
+    "energy_per_inference_uj": 3893.846,
+    "mac_ops_per_joule": 982259380.0,
+    "mac_ops_per_second_per_watt": 982259380.0,
+    "note": "PPK2 measurement: 1.8V supply, avg 18.52mA during Float32 cluster inference (8-core, 240MHz, pi_cl_team_fork). Energy from measured power x cycle-counter latency."
+  }
+}

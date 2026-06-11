@@ -22,8 +22,14 @@
 #define LIVE_CHUNK              128u     /* samples processed per iteration */
 #define LIVE_PREAMBLE_SAMPLES   (30u * LIVE_CHUNK)   /* 3840 samples pre-trigger */
 #define LIVE_POST_MAX_SAMPLES   (LIVE_WINDOW_SAMPLES - LIVE_PREAMBLE_SAMPLES)
-#define LIVE_THRESHOLD_HIGH     350u     /* energy trigger to start collecting */
-#define LIVE_THRESHOLD_LOW      100u     /* energy threshold for end-of-word */
+/* UNIFIED across all 3 boards: level is reported normalized to the noise floor
+   (×100, baseline ~100 everywhere) and the threshold is the same line at
+   K_HIGH×100. nf is floored at the startup-ambient seed so it never collapses.
+   Adaptive nf VAD (ported from the 8-bit/v1 firmware) replaces the old fixed
+   350/100 thresholds so v0 and v1 detect identically. */
+#define LIVE_VAD_K_HIGH         4.0f   /* trigger when avg >= nf * K_HIGH */
+#define LIVE_VAD_K_LOW          2.0f   /* end when avg <  nf * K_LOW */
+#define LIVE_VAD_WARMUP_CHUNKS  60u    /* ~0.5 s @ 125 Hz chunk rate to seed nf */
 #define LIVE_SILENCE_THRESH     20u      /* consecutive quiet chunks → end */
 #define LIVE_WARMUP_SAMPLES     10000u   /* discard initial mic charge samples */
 #define LIVE_I2S_BUF_SIZE       64u
@@ -238,6 +244,17 @@ static void run_inference(uint32_t run_idx, uint32_t post_samples)
                (unsigned long)cycles,
                pred,
                (unsigned long)(((uint64_t)post_samples * 1000ULL) / LIVE_SAMPLE_RATE));
+
+        /* Decision view: per-class scores 0..100 for the dashboard bar chart
+           (ds_cnn_infer applies softmax → scores are 0..1). */
+        char sb[256];
+        int n = snprintf(sb, sizeof(sb), "BENCH,event=scores,run=%lu,s=", (unsigned long)run_idx);
+        for (uint32_t i = 0; i < LIVE_OUT_CLASSES; ++i) {
+            int s = (int)(scores[i] * 100.0f + 0.5f);
+            if (s < 0) s = 0; else if (s > 100) s = 100;
+            n += snprintf(sb + n, sizeof(sb) - n, "%s%d", i ? ";" : "", s);
+        }
+        printf("%s\r\n", sb);
     }
 #endif
 
@@ -257,6 +274,8 @@ void kws20_live_run_once(void)
     uint32_t ai_counter     = 0;    /* samples collected after trigger       */
     uint32_t silence_run    = 0;    /* consecutive quiet chunks after trigger */
     uint8_t  collecting     = 0;
+    float    nf = 0.0f, nf_seed = 0.0f;   /* noise floor + startup-ambient floor */
+    uint32_t vad_warmup = 0;
 
     int mic_err = Microphone_Power(POWER_ON);
     if (mic_err != E_NO_ERROR) {
@@ -280,14 +299,12 @@ void kws20_live_run_once(void)
            (unsigned int)LIVE_SAMPLE_RATE,
            (unsigned int)LIVE_WINDOW_SAMPLES);
     printf("BENCH,event=acquisition,mode=live,sample_rate_hz=%u,sample_count=%u"
-           ",audio_window_ms=%u,chunk=%u,preamble=%u,threshold_high=%u,threshold_low=%u\r\n",
+           ",audio_window_ms=%u,chunk=%u,preamble=%u\r\n",
            (unsigned int)LIVE_SAMPLE_RATE,
            (unsigned int)LIVE_WINDOW_SAMPLES,
            (unsigned int)(LIVE_WINDOW_SAMPLES * 1000u / LIVE_SAMPLE_RATE),
            (unsigned int)LIVE_CHUNK,
-           (unsigned int)LIVE_PREAMBLE_SAMPLES,
-           (unsigned int)LIVE_THRESHOLD_HIGH,
-           (unsigned int)LIVE_THRESHOLD_LOW);
+           (unsigned int)LIVE_PREAMBLE_SAMPLES);
 #endif
 
     for (;;) {
@@ -298,21 +315,53 @@ void kws20_live_run_once(void)
 
         sample_count += LIVE_CHUNK;
 
+        /* Adaptive noise floor (shared design, ported from the 8-bit VAD):
+           running mean during warmup, asymmetric EMA while idle (rise slow,
+           fall fast) so speech doesn't inflate it. threshold = nf * K
+           self-normalizes to this board's scale (replaces the old fixed
+           350/100 thresholds so v0 and v1 detect identically). */
+        float L = (float)avg;
+        if (vad_warmup < LIVE_VAD_WARMUP_CHUNKS) {
+            nf += (L - nf) / (float)(vad_warmup + 1u);
+            if (++vad_warmup == LIVE_VAD_WARMUP_CHUNKS) nf_seed = (nf < 1.0f) ? 1.0f : nf;
+        } else if (!collecting) {
+            nf += (L > nf ? (1.0f / 64.0f) : (1.0f / 8.0f)) * (L - nf);
+        }
+        if (nf < 1.0f) nf = 1.0f;
+        if (nf < nf_seed) nf = nf_seed;   /* never collapse */
+        uint32_t thr_high = (uint32_t)(nf * LIVE_VAD_K_HIGH);
+        uint32_t thr_low  = (uint32_t)(nf * LIVE_VAD_K_LOW);
+
+#if LIVE_BENCH_ENABLED
+        /* Normalized mic level (×100 of noise floor) + unified threshold — ~25 Hz —
+           for the dashboard's "Mic level" plot (matches the 8-bit firmware). */
+        {
+            static uint32_t level_div = 0;
+            if ((++level_div % 5u) == 0u) {
+                uint32_t norm = (uint32_t)(100.0f * L / nf);
+                printf("BENCH,event=level,rms=%lu,thr=%lu\r\n",
+                       (unsigned long)norm, (unsigned long)(uint32_t)(100.0f * LIVE_VAD_K_HIGH));
+            }
+        }
+#endif
+
         /* need at least PREAMBLE_SAMPLES before we can trigger */
         if (ring_filled < LIVE_PREAMBLE_SAMPLES)
             continue;
+        if (vad_warmup < LIVE_VAD_WARMUP_CHUNKS)
+            continue;   /* wait for nf seed before detecting */
 
         if (!collecting) {
-            if (avg >= LIVE_THRESHOLD_HIGH) {
+            if (avg >= thr_high) {
                 collecting     = 1;
                 ai_counter     = LIVE_PREAMBLE_SAMPLES;
                 silence_run    = 0;
-                printf("Trigger detected (avg=%u)\r\n", avg);
+                printf("Trigger detected (avg=%u thr=%lu)\r\n", avg, (unsigned long)thr_high);
             }
         } else {
             ai_counter += LIVE_CHUNK;
 
-            if (avg < LIVE_THRESHOLD_LOW && ai_counter >= LIVE_WINDOW_SAMPLES / 3u)
+            if (avg < thr_low && ai_counter >= LIVE_WINDOW_SAMPLES / 3u)
                 silence_run++;
             else
                 silence_run = 0;

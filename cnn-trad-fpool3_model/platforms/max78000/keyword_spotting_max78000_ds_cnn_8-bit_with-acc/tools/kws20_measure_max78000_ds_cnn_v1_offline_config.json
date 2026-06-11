@@ -1,8 +1,8 @@
 {
   "mode": "offline",
-  "project": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/cnn-trad-fpool3_model/platforms/max78000/keyword_spotting_max78000_ds_cnn_v1",
+  "project": "/Users/iker/Projects/ETHZ/Q2/ML_on_MCUs/MLonMCU_Project_Real/MLonMCU_Project/cnn-trad-fpool3_model/platforms/max78000/keyword_spotting_max78000_ds_cnn_8-bit_with-acc",
   "board": "FTHR_RevA",
-  "port": "/dev/ttyACM0",
+  "port": "/dev/tty.usbmodem11302",
   "baud": 115200,
   "timeout": 120.0,
   "clock_mhz": 100.0,
@@ -12,9 +12,9 @@
   "variant_name": "ds_cnn_l_int8_cnn_accel",
   "voltage": 3.7,
   "current_ma": 38.85,
-  "maxim_path": "/home/pascal/max78000/ai8x-synthesis/sdk",
-  "openocd_root": "/home/pascal/max78000/ai8x-synthesis/openocd",
+  "maxim_path": "/Users/iker/Projects/ETHZ/Q2/ML_on_MCUs/max78000/ai8x-synthesis/sdk",
+  "openocd_root": "/Users/iker/Projects/ETHZ/Q2/ML_on_MCUs/max78000/ai8x-synthesis/openocd",
   "no_build": true,
   "no_flash": true,
-  "measurements_root": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/cnn-trad-fpool3_model/platforms/max78000/keyword_spotting_max78000_ds_cnn_v1/measurements"
+  "measurements_root": "/Users/iker/Projects/ETHZ/Q2/ML_on_MCUs/MLonMCU_Project_Real/MLonMCU_Project/cnn-trad-fpool3_model/platforms/max78000/keyword_spotting_max78000_ds_cnn_8-bit_with-acc/measurements"
 }

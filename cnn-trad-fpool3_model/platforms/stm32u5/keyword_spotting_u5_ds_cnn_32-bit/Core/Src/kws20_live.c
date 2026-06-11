@@ -6,6 +6,7 @@
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "main.h"
@@ -30,8 +31,9 @@
 #define DEMO_CHUNK                  128u
 #define DEMO_PREAMBLE_SIZE          (30u * DEMO_CHUNK)
 #define DEMO_TRIGGER_CONSEC_HIGH    3u
-#define DEMO_THRESHOLD_HIGH         40u
-#define DEMO_QUIET_THRESHOLD        20u
+#define LIVE_VAD_K_HIGH             4.0f   /* trigger when avg >= nf * K_HIGH */
+#define LIVE_VAD_K_LOW              2.0f   /* end when avg <  nf * K_LOW */
+#define LIVE_VAD_WARMUP_CHUNKS      60u    /* ~0.5 s @ 125 Hz chunk rate to seed nf */
 #define DEMO_ARM_QUIET_CHUNKS       0u
 #define DEMO_INITIAL_WARMUP_SAMPLES 32000u
 #define DEMO_POST_TRIGGER_SAMPLES   (DS_CNN_AUDIO_WINDOW_SAMPLES - DEMO_PREAMBLE_SIZE)
@@ -78,10 +80,17 @@ static volatile uint32_t live_capture_enabled = 0;
 static volatile uint32_t live_dma_active = 0;
 static uint32_t live_stream_primed = 0;
 static uint32_t live_last_post_trigger_samples = 0;
+static float    live_nf = 0.0f, live_nf_seed = 0.0f;  /* noise floor + startup-ambient floor */
+static uint32_t live_vad_warmup = 0;   /* chunks seen toward seeding live_nf */
+static uint32_t live_norm = 100u;      /* latest level normalized to nf (×100) for the plot */
 
 static int live_capture_ok = 0;
 
-#if !KWS20_CFG_LIVE_MEASURE_MINIMAL_OUTPUT
+/* labels[] is used by the pretty-print path, which is gated on
+   KWS20_LIVE_MINIMAL_OUTPUT_ENABLED = BENCH_ENABLED && CFG_MINIMAL. Declare it
+   under the SAME condition (offline mode has BENCH_ENABLED=0 so the pretty path
+   compiles in and needs labels). */
+#if !(KWS20_CFG_ENABLE_MEASURE && KWS20_CFG_MEASURE_LIVE && KWS20_CFG_LIVE_MEASURE_MINIMAL_OUTPUT)
 static const char *labels[DS_CNN_OUTPUT_SIZE] = {
     "down", "go", "left", "no", "off", "on",
     "right", "stop", "up", "yes", "silence", "unknown"
@@ -256,12 +265,34 @@ static int process_capture_sample(live_capture_ctx_t *ctx, int16_t raw)
         {
             uint32_t avg = chunk_sum_abs / DEMO_CHUNK;
 
+            /* Adaptive noise floor (shared design, ported from the 8-bit VAD):
+               running mean during warmup, asymmetric EMA while idle (rise slow,
+               fall fast) so speech doesn't inflate it. threshold = nf * K
+               self-normalizes to this mic/room scale (replaces the old fixed
+               40/20 thresholds so v0 and v1 detect identically). */
+            float L = (float)avg;
+            if (live_vad_warmup < LIVE_VAD_WARMUP_CHUNKS) {
+                live_nf += (L - live_nf) / (float)(live_vad_warmup + 1u);
+                if (++live_vad_warmup == LIVE_VAD_WARMUP_CHUNKS)
+                    live_nf_seed = (live_nf < 1.0f) ? 1.0f : live_nf;
+            } else if (ctx->state == 0u) {
+                live_nf += (L > live_nf ? (1.0f / 64.0f) : (1.0f / 8.0f)) * (L - live_nf);
+            }
+            if (live_nf < 1.0f) live_nf = 1.0f;
+            if (live_nf < live_nf_seed) live_nf = live_nf_seed;  /* never collapse */
+            uint32_t thr_high = (uint32_t)(live_nf * LIVE_VAD_K_HIGH);
+            uint32_t thr_low  = (uint32_t)(live_nf * LIVE_VAD_K_LOW);
+            live_norm = (uint32_t)(100.0f * L / live_nf);
+
             if (ctx->ring_filled < DEMO_PREAMBLE_SIZE) {
                 return 0;
             }
+            if (live_vad_warmup < LIVE_VAD_WARMUP_CHUNKS) {
+                return 0;  /* wait for nf seed before detecting */
+            }
 
             if (ctx->state == 0u) {
-                if (avg <= DEMO_QUIET_THRESHOLD) {
+                if (avg <= thr_low) {
                     if (ctx->quiet_run < DEMO_ARM_QUIET_CHUNKS) {
                         ctx->quiet_run++;
                     }
@@ -274,7 +305,7 @@ static int process_capture_sample(live_capture_ctx_t *ctx, int16_t raw)
                     return 0;
                 }
 
-                if (avg >= DEMO_THRESHOLD_HIGH) {
+                if (avg >= thr_high) {
                     ctx->high_run++;
                 } else {
                     ctx->high_run = 0;
@@ -288,7 +319,7 @@ static int process_capture_sample(live_capture_ctx_t *ctx, int16_t raw)
                     ctx->high_run = 0;
                 }
             } else {
-                if ((avg < DEMO_QUIET_THRESHOLD) &&
+                if ((avg < thr_low) &&
                     (ctx->post_trigger_samples >= DEMO_MIN_KEYWORD_SAMPLES)) {
                     ctx->silence_run++;
                 } else {
@@ -322,6 +353,21 @@ static int process_capture_block(live_capture_ctx_t *ctx, const int16_t *samples
             return 1;
         }
     }
+
+#if KWS20_LIVE_BENCH_ENABLED
+    /* Normalized mic level (×100 of noise floor) + unified threshold — ~25 Hz —
+       for the dashboard's "Mic level" plot (matches the 8-bit firmware exactly). */
+    {
+        static uint32_t last_level_ms = 0u;
+        uint32_t now = HAL_GetTick();
+        if (sample_count && (now - last_level_ms) >= 40u) {
+            last_level_ms = now;
+            printf("BENCH,event=level,rms=%lu,thr=%lu\r\n",
+                   (unsigned long)live_norm,
+                   (unsigned long)(uint32_t)(100.0f * LIVE_VAD_K_HIGH));
+        }
+    }
+#endif
 
     return 0;
 }
@@ -545,6 +591,27 @@ static void run_inference(ai_handle network,
            (unsigned long)best,
            (unsigned long)post_trigger_samples,
            (unsigned long)(((uint64_t)(DEMO_PREAMBLE_SIZE + post_trigger_samples) * 1000ULL) / DS_CNN_SAMPLE_RATE));
+
+    /* Decision view: per-class scores 0..100 (min-max normalized) for the
+       dashboard's score bars. Self-contained; min-max is affine-invariant so the
+       raw (float) output values give the same result. */
+    {
+        float mn = (float)ai_output_data[0], mx = mn;
+        for (uint32_t i = 1; i < DS_CNN_OUTPUT_SIZE; i++) {
+            float v = (float)ai_output_data[i];
+            if (v < mn) mn = v;
+            if (v > mx) mx = v;
+        }
+        float rng = (mx > mn) ? (mx - mn) : 1.0f;
+        char sb[256];
+        int n = snprintf(sb, sizeof(sb), "BENCH,event=scores,run=%lu,s=", (unsigned long)run_index);
+        for (uint32_t i = 0; i < DS_CNN_OUTPUT_SIZE; i++) {
+            int v = (int)(((float)ai_output_data[i] - mn) / rng * 100.0f + 0.5f);
+            if (v < 0) v = 0; else if (v > 100) v = 100;
+            n += snprintf(sb + n, sizeof(sb) - n, "%s%d", i ? ";" : "", v);
+        }
+        printf("%s\r\n", sb);
+    }
 #endif
 
 #if !KWS20_LIVE_MINIMAL_OUTPUT_ENABLED
@@ -625,6 +692,84 @@ int kws20_live_audio_error_callback(uint32_t instance)
 
     live_dma_error_count++;
     return 1;
+}
+
+/* Device-in-the-loop accuracy eval: host streams 16 kHz int16 clips over the
+   console UART (huart1); we run the SAME frontend + ai_network_run the live path
+   uses and report pred + cnn_us for the host to tally (testbench.py). Reuses the
+   live network/buffers/frontend; argmax on raw output (affine-invariant). */
+void kws20_eval_run_once(void)
+{
+    extern UART_HandleTypeDef huart1;
+    ai_handle network = AI_HANDLE_NULL;
+    ai_handle act_addr[] = { activations };
+    ai_error err = ai_network_create_and_init(&network, act_addr, NULL);
+    uint32_t hclk_hz = HAL_RCC_GetHCLKFreq();
+    char hdr[64];
+
+    if (err.type != AI_ERROR_NONE) {
+        printf("ai_network_create_and_init failed: type=%d code=%d\r\n", err.type, err.code);
+        return;
+    }
+    ai_buffer *ai_input = ai_network_inputs_get(network, NULL);
+    ai_buffer *ai_output = ai_network_outputs_get(network, NULL);
+    if ((ai_input == NULL) || (ai_output == NULL)) {
+        printf("ai_network_inputs_get / outputs_get failed\r\n");
+        ai_network_destroy(network);
+        return;
+    }
+    live_dwt_init();
+
+    printf("BENCH,event=eval_ready,classes=12,window=%u\r\n",
+           (unsigned)DS_CNN_AUDIO_WINDOW_SAMPLES);
+
+    for (;;) {
+        /* read ASCII header line "EVAL <idx> <nsamples>" */
+        int hi = 0;
+        for (;;) {
+            uint8_t c;
+            if (HAL_UART_Receive(&huart1, &c, 1, HAL_MAX_DELAY) != HAL_OK) continue;
+            if (c == '\n') break;
+            if (c == '\r') continue;
+            if (hi < (int)sizeof(hdr) - 1) hdr[hi++] = (char)c;
+        }
+        hdr[hi] = '\0';
+        if (strncmp(hdr, "EVAL ", 5) != 0) continue;
+        char *q = hdr + 5;
+        unsigned long idx = strtoul(q, &q, 10);
+        unsigned long n   = strtoul(q, &q, 10);
+        if (n != DS_CNN_AUDIO_WINDOW_SAMPLES) {
+            printf("BENCH,event=eval_error,idx=%lu,reason=nsamples\r\n", idx);
+            continue;
+        }
+
+        /* receive n int16 little-endian straight into live_audio_pcm (LE MCU) */
+        HAL_UART_Receive(&huart1, (uint8_t *)live_audio_pcm,
+                         (uint16_t)(DS_CNN_AUDIO_WINDOW_SAMPLES * 2u), HAL_MAX_DELAY);
+
+        memset(ai_output_data, 0, sizeof(ai_output_data));
+        fill_input_from_live_audio();
+        memcpy(ai_input[0].data, ai_input_data, AI_NETWORK_IN_1_SIZE_BYTES);
+
+        DWT->CYCCNT = 0;
+        uint32_t c0 = DWT->CYCCNT;
+        ai_i32 batch = ai_network_run(network, ai_input, ai_output);
+        uint32_t cycles = DWT->CYCCNT - c0;
+        if (batch != 1) {
+            printf("BENCH,event=eval_error,idx=%lu,reason=run\r\n", idx);
+            continue;
+        }
+        memcpy(ai_output_data, ai_output[0].data, AI_NETWORK_OUT_1_SIZE_BYTES);
+
+        uint32_t best = 0;
+        for (uint32_t k = 1; k < DS_CNN_OUTPUT_SIZE; k++)
+            if (ai_output_data[k] > ai_output_data[best]) best = k;
+
+        uint32_t cnn_us = (hclk_hz > 0u)
+            ? (uint32_t)(((uint64_t)cycles * 1000000ULL) / hclk_hz) : 0u;
+        printf("BENCH,event=eval,idx=%lu,pred_idx=%lu,cnn_us=%lu\r\n",
+               idx, (unsigned long)best, (unsigned long)cnn_us);
+    }
 }
 
 void kws20_live_run_once(void)

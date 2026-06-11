@@ -1,6 +1,12 @@
-/**
- * DS-CNN-L offline benchmark for MAX78000 FTHR.
- * When RUNS=1: sleep → infer → sleep pattern for clean power-trace isolation.
+/*
+ * DS-CNN-L offline benchmark for MAX78000 FTHR (CPU-only software inference).
+ * When RUNS=1: periodic LPM sleep → infer → repeat forever for power traces.
+ *   The idle window enters Low-Power Mode (CM4 retained, IPO/peripherals
+ *   gated) and wakes from the RTC alarm — APB timers stop in LPM, so the wake
+ *   source must be the RTC. This drops the between-inference baseline below
+ *   the SLEEP-mode floor, sharpening the per-inference delta for power traces.
+ *   (No CNN accelerator here, so there is no CNN power-down to do — the M4 is
+ *   already halted in LPM during idle.)
  * When RUNS>1: back-to-back inferences (latency benchmark).
  */
 
@@ -10,6 +16,7 @@
 
 #include "mxc_device.h"
 #include "tmr.h"
+#include "rtc.h"
 #include "lp.h"
 #include "uart.h"
 #include "board.h"
@@ -22,8 +29,9 @@
 #endif
 
 /* Duration of sleep window before and after inference (power isolation) */
-#define POWER_SLEEP_PRE_MS  500u
-#define POWER_SLEEP_POST_MS 500u
+#define POWER_SLEEP_PRE_MS   500u
+#define POWER_SLEEP_POST_MS  500u
+#define POWER_PERIOD_MS      5000u
 
 #define DS_CNN_INPUT_ELEMS    490u
 #define DS_CNN_OUTPUT_ELEMS   12u
@@ -34,44 +42,48 @@ static float measure_input[DS_CNN_INPUT_ELEMS];
 static float measure_scores[DS_CNN_OUTPUT_ELEMS];
 
 #if KWS20_CFG_MEASURE_RUNS == 1
-/* ── TMR1 one-shot sleep (power-measurement mode only) ───────────────────── */
-static volatile int tmr1_fired = 0;
+/* ── RTC-woken LPM sleep (power-measurement mode only) ────────────────────── */
+static volatile int rtc_alarmed = 0;
 
-void TMR1_IRQHandler(void)
+void RTC_IRQHandler(void)
 {
-    MXC_TMR_ClearFlags(MXC_TMR1);
-    tmr1_fired = 1;
+    int flags = MXC_RTC_GetFlags();
+
+    if (flags & MXC_RTC_INT_FL_LONG) {
+        MXC_RTC_ClearFlags(MXC_RTC_INT_FL_LONG);
+        rtc_alarmed = 1;
+    }
 }
 
-/* Put CPU to sleep for `ms` milliseconds using TMR1 + WFI.
- * PCLK = HCLK/2 = 50 MHz → cmp_cnt = 50000 * ms */
+/* Sleep in LPM for ~ms, waking on the RTC time-of-day alarm. The TOD alarm
+   has 1 s granularity, so ms is rounded up to whole seconds (the only caller
+   passes a 5000 ms period). RTC is re-initialised to 0 each call so the alarm
+   fires `sec` seconds later. */
 static void power_sleep_ms(uint32_t ms)
 {
-    mxc_tmr_cfg_t cfg;
+    uint32_t sec = (ms + 999u) / 1000u;
+    if (sec == 0u)
+        sec = 1u;
 
-    MXC_UART_ClearTXFIFO(MXC_UART_GET_UART(CONSOLE_UART));
+    /* Don't enter LPM mid-transmit — let the console UART drain first. */
+    while (MXC_UART_ReadyForSleep(MXC_UART_GET_UART(CONSOLE_UART)) != E_NO_ERROR) {}
 
-    tmr1_fired = 0;
-    MXC_TMR_Shutdown(MXC_TMR1);
+    rtc_alarmed = 0;
 
-    cfg.pres    = MXC_TMR_PRES_1;
-    cfg.mode    = MXC_TMR_MODE_ONESHOT;
-    cfg.bitMode = MXC_TMR_BIT_MODE_32;
-    cfg.clock   = MXC_TMR_APB_CLK;
-    cfg.cmp_cnt = (SystemCoreClock / 2u) / 1000u * ms;
-    cfg.pol     = 0;
+    while (MXC_RTC_Init(0, 0) == E_BUSY) {}
+    while (MXC_RTC_DisableInt(MXC_RTC_INT_EN_LONG) == E_BUSY) {}
+    while (MXC_RTC_SetTimeofdayAlarm(sec) == E_BUSY) {}
+    while (MXC_RTC_EnableInt(MXC_RTC_INT_EN_LONG) == E_BUSY) {}
+    while (MXC_RTC_Start() == E_BUSY) {}
 
-    MXC_TMR_Init(MXC_TMR1, &cfg, false);
-    MXC_TMR_EnableInt(MXC_TMR1);
-    NVIC_EnableIRQ(TMR1_IRQn);
-    MXC_TMR_Start(MXC_TMR1);
+    NVIC_EnableIRQ(RTC_IRQn);
+    MXC_LP_EnableRTCAlarmWakeup();
 
-    while (!tmr1_fired) {
-        MXC_LP_EnterSleepMode();
-    }
+    while (!rtc_alarmed)
+        MXC_LP_EnterLowPowerMode();
 
-    NVIC_DisableIRQ(TMR1_IRQn);
-    MXC_TMR_Shutdown(MXC_TMR1);
+    MXC_LP_DisableRTCAlarmWakeup();
+    MXC_RTC_Stop();
 }
 #endif /* KWS20_CFG_MEASURE_RUNS == 1 */
 
@@ -111,18 +123,15 @@ void kws20_measure_run_once(void)
            (unsigned int)DS_CNN_WINDOW_SAMPLES,
            (unsigned int)((DS_CNN_WINDOW_SAMPLES * 1000u) / DS_CNN_SAMPLE_RATE));
 
-    for (uint32_t run = 0; run < KWS20_CFG_MEASURE_RUNS; run++) {
+#if KWS20_CFG_MEASURE_RUNS == 1
+    for (uint32_t run = 0;; run++) {
         uint32_t time_us;
         uint32_t cycles;
         int pred;
 
-        memset(measure_scores, 0, sizeof(measure_scores));
+        power_sleep_ms(POWER_PERIOD_MS);
 
-#if KWS20_CFG_MEASURE_RUNS == 1
-        /* Power-measurement mode: sleep before inference so the active
-         * inference window is clearly isolated in the power trace. */
-        power_sleep_ms(POWER_SLEEP_PRE_MS);
-#endif
+        memset(measure_scores, 0, sizeof(measure_scores));
 
         MXC_TMR_SW_Start(MXC_TMR0);
         pred = ds_cnn_infer(measure_input, measure_scores);
@@ -130,10 +139,27 @@ void kws20_measure_run_once(void)
 
         cycles = (uint32_t)(((uint64_t)time_us * (uint64_t)hclk) / 1000000ULL);
 
-#if KWS20_CFG_MEASURE_RUNS == 1
-        /* Sleep after inference to mark the end of the active window. */
-        power_sleep_ms(POWER_SLEEP_POST_MS);
-#endif
+        printf("BENCH,event=inference,run=%lu,mode=offline"
+               ",cnn_us=%lu,cycles=%lu,pred_idx=%d,period_ms=%u\r\n",
+               (unsigned long)run,
+               (unsigned long)time_us,
+               (unsigned long)cycles,
+               pred,
+               (unsigned int)POWER_PERIOD_MS);
+    }
+#else
+    for (uint32_t run = 0; run < KWS20_CFG_MEASURE_RUNS; run++) {
+        uint32_t time_us;
+        uint32_t cycles;
+        int pred;
+
+        memset(measure_scores, 0, sizeof(measure_scores));
+
+        MXC_TMR_SW_Start(MXC_TMR0);
+        pred = ds_cnn_infer(measure_input, measure_scores);
+        time_us = MXC_TMR_SW_Stop(MXC_TMR0);
+
+        cycles = (uint32_t)(((uint64_t)time_us * (uint64_t)hclk) / 1000000ULL);
 
         printf("BENCH,event=inference,run=%lu,mode=offline"
                ",cnn_us=%lu,cycles=%lu,pred_idx=%d\r\n",
@@ -144,4 +170,5 @@ void kws20_measure_run_once(void)
     }
 
     printf("BENCH,event=done\r\n");
+#endif
 }

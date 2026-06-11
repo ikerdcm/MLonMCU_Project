@@ -10,6 +10,8 @@
 # Mode is compile-time via Core/Inc/kws20_mode_config.h:
 #   live    → KWS20_CFG_ENABLE_MEASURE=1, KWS20_CFG_MEASURE_LIVE=1  (mic + BENCH)
 #   offline → KWS20_CFG_ENABLE_MEASURE=1, KWS20_CFG_MEASURE_LIVE=0  (test tensor)
+# For both of these autonomous flash modes, device-in-the-loop eval is disabled
+# so the firmware does not block waiting for host testbench traffic.
 #
 # Requires:
 #   - STM32CubeIDE (default /Applications/STM32CubeIDE.app; override $STM32CUBEIDE)
@@ -55,6 +57,7 @@ sed -i.bak \
   -e 's/^#define KWS20_CFG_APP_MODE .*/#define KWS20_CFG_APP_MODE KWS20_CFG_APP_MODE_KWS_LIVE/' \
   -e 's/^#define KWS20_CFG_ENABLE_MEASURE .*/#define KWS20_CFG_ENABLE_MEASURE 1/' \
   -e "s/^#define KWS20_CFG_MEASURE_LIVE .*/#define KWS20_CFG_MEASURE_LIVE   $MEASURE_LIVE/" \
+  -e 's/^#define KWS20_CFG_ENABLE_EVAL .*/#define KWS20_CFG_ENABLE_EVAL    0/' \
   "$CFG"
 rm -f "$CFG.bak"
 

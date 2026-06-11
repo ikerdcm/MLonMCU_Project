@@ -1,0 +1,277 @@
+{
+  "run_id": "coral_v1",
+  "timestamp": "2026-06-10T20:21:41.122517",
+  "board": "coral",
+  "model": "v1",
+  "name": "Coral Edge-TPU int8-accel (DS-CNN-L v2)",
+  "config_id": "int8-accel",
+  "dataset": "/Users/iker/MAX78000_Toolchain/ai8x-training/data/KWS/raw_test",
+  "per_class": {
+    "down": {
+      "support": 12,
+      "recall": 0.9166666666666666,
+      "precision": 1.0
+    },
+    "go": {
+      "support": 12,
+      "recall": 1.0,
+      "precision": 1.0
+    },
+    "left": {
+      "support": 12,
+      "recall": 0.9166666666666666,
+      "precision": 0.7857142857142857
+    },
+    "no": {
+      "support": 12,
+      "recall": 0.8333333333333334,
+      "precision": 1.0
+    },
+    "off": {
+      "support": 12,
+      "recall": 0.9166666666666666,
+      "precision": 0.9166666666666666
+    },
+    "on": {
+      "support": 12,
+      "recall": 0.9166666666666666,
+      "precision": 0.9166666666666666
+    },
+    "right": {
+      "support": 12,
+      "recall": 0.8333333333333334,
+      "precision": 1.0
+    },
+    "stop": {
+      "support": 12,
+      "recall": 0.9166666666666666,
+      "precision": 1.0
+    },
+    "up": {
+      "support": 12,
+      "recall": 0.8333333333333334,
+      "precision": 1.0
+    },
+    "yes": {
+      "support": 12,
+      "recall": 0.9166666666666666,
+      "precision": 1.0
+    },
+    "silence": {
+      "support": 12,
+      "recall": 1.0,
+      "precision": 1.0
+    },
+    "unknown": {
+      "support": 12,
+      "recall": 1.0,
+      "precision": 0.631578947368421
+    }
+  },
+  "seed": 0,
+  "n_clips": 144,
+  "model_accuracy": 92.0,
+  "accuracy": 0.9166666666666666,
+  "correct": 132,
+  "labels": [
+    "down",
+    "go",
+    "left",
+    "no",
+    "off",
+    "on",
+    "right",
+    "stop",
+    "up",
+    "yes",
+    "silence",
+    "unknown"
+  ],
+  "confusion_matrix": [
+    [
+      11,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      12,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      11,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      10,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      11,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      11,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      0,
+      2,
+      0,
+      0,
+      0,
+      10,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      11,
+      0,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      10,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      11,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      12,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      12
+    ]
+  ],
+  "latency": {
+    "count": 144,
+    "avg_ms": 2.3456875,
+    "median_ms": 2.33,
+    "p95_ms": 2.37225,
+    "min_ms": 2.215,
+    "max_ms": 4.761
+  },
+  "memory": {
+    "elf": "/Users/iker/Projects/ETHZ/Q2/ML_on_MCUs/MLonMCU_Project_Real/MLonMCU_Project/cnn-trad-fpool3_model/platforms/coral/build/kws_apps/kws_eval_stream/kws_eval_stream",
+    "text_bytes": 290196,
+    "data_bytes": 11444,
+    "bss_bytes": 25987216,
+    "flash_text_kib": 283.39453125,
+    "static_sram_kib": 25389.31640625,
+    "from_eval_build": true
+  }
+}

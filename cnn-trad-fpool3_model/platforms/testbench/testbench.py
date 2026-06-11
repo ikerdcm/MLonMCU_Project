@@ -97,6 +97,28 @@ REGISTRY = {
         "flash_hint": "set KWS20_CFG_ENABLE_EVAL=1, then "
                       "./tools/build_flash.sh --mode offline  (headless CubeIDE build+flash)",
     },
+    ("coral", "v1"): {
+        "name": "Coral Edge-TPU int8-accel (DS-CNN-L v2)",
+        "config_id": "int8-accel",
+        "dir": PLATFORMS / "coral",
+        "elf": "build/kws_apps/kws_eval_stream/kws_eval_stream",
+        "labels": LABELS,
+        "assert_dtr": True,    # Coral CDC drops bytes until DTR is asserted
+        "embedded": True,      # runs a baked LittleFS audio set (console drops USB RX)
+        "flash_hint": "python3 ../testbench/make_eval_audio_set.py --per-class N , then "
+                      "./scripts/build_and_flash_eval_stream.sh",
+    },
+    ("coral", "v0"): {
+        "name": "Coral fp32-cpu (DS-CNN-L float, M7)",
+        "config_id": "fp32-cpu",
+        "dir": PLATFORMS / "coral",
+        "elf": "build/kws_apps/kws_eval_stream_cpu/kws_eval_stream_cpu",
+        "labels": LABELS,
+        "assert_dtr": True,
+        "embedded": True,
+        "flash_hint": "python3 ../testbench/make_eval_audio_set.py --per-class N , then "
+                      "./scripts/build_and_flash_eval_stream_cpu.sh",
+    },
 }
 
 
@@ -124,11 +146,13 @@ def build_subset(dataset: Path, per_class: int, seed: int):
     return items
 
 
-def stream_eval(items, port, baud, timeout):
+def stream_eval(items, port, baud, timeout, assert_dtr=False):
     """Stream clips; collect [(true, pred, cnn_us)]."""
     import serial
     out = []
     with serial.Serial(port, baud, timeout=timeout) as ser:
+        if assert_dtr:
+            ser.dtr = True   # Coral CDC drops RX until DTR is asserted
         time.sleep(0.3)
         ser.reset_input_buffer()
         for idx, (path, true_idx) in enumerate(items):
@@ -149,6 +173,52 @@ def stream_eval(items, port, baud, timeout):
                   f"pred={LABELS[pred] if pred is not None and 0 <= pred < 12 else pred}"
                   f"{f'  {cnn_us/1000:.2f} ms' if cnn_us else ''}")
             out.append((true_idx, pred if pred is not None else -1, cnn_us))
+    return out
+
+
+def read_embedded_eval(port, baud, assert_dtr=False, total_timeout=600):
+    """For boards that run an EMBEDDED audio set autonomously (Coral): don't
+    stream — just read one pass of self-describing eval lines:
+        BENCH,event=eval,idx=,pred_idx=,true_idx=,cnn_us=
+    framed by eval_ready/eval_done. Returns [(true, pred, cnn_us)]."""
+    import serial
+    out, started, waited_note = [], False, False
+    deadline = time.monotonic() + total_timeout
+    with serial.Serial(port, baud, timeout=2) as ser:
+        if assert_dtr:
+            ser.dtr = True
+        time.sleep(0.3)
+        ser.reset_input_buffer()
+        print("  waiting for the board's eval pass to start (a pass re-runs every ~8 s)...")
+        while time.monotonic() < deadline:
+            line = ser.readline().decode("utf-8", "replace").strip()
+            if not line:
+                continue
+            is_eval = line.startswith("BENCH,event=eval,")
+            f = (dict(kv.split("=", 1) for kv in line.split(",")[1:] if "=" in kv)
+                 if is_eval else {})
+            idx = int(f["idx"]) if f.get("idx", "").lstrip("-").isdigit() else None
+            # Start a fresh pass on eval_ready OR on idx==0 (robust if we missed ready)
+            if "event=eval_ready" in line or (is_eval and idx == 0):
+                out, started = [], True
+                if "event=eval_ready" in line:
+                    print(f"  {line}")
+            elif "event=eval_done" in line and started and out:
+                break
+            if started and is_eval:
+                try:
+                    t, p = int(f["true_idx"]), int(f["pred_idx"])
+                except (KeyError, ValueError):
+                    continue
+                u = float(f["cnn_us"]) if "cnn_us" in f else None
+                out.append((t, p, u))
+                mark = "ok" if p == t else "X "
+                print(f"  [{len(out)}] {mark} true={LABELS[t]:8} "
+                      f"pred={LABELS[p] if 0 <= p < 12 else p}"
+                      f"{f'  {u/1000:.2f} ms' if u else ''}")
+            elif not started and not waited_note:
+                waited_note = True
+                print(f"  (board alive, mid-pass — will start at the next pass) e.g. {line[:54]}")
     return out
 
 
@@ -280,28 +350,43 @@ def main():
     if not spec:
         sys.exit(f"unknown (board,model)=({args.board},{args.model}); "
                  f"have: {sorted('/'.join(k) for k in REGISTRY)}")
-    if not args.dataset.exists():
-        sys.exit(f"dataset not found: {args.dataset}")
+    embedded = spec.get("embedded", False)   # board runs a baked set autonomously (Coral)
 
     print(f"== {spec['name']} ==")
-    print(f"Subset: {args.per_class}/class from {args.dataset}")
-    items = build_subset(args.dataset, args.per_class, args.seed)
-    print(f"  {len(items)} clips, {len({i for _, i in items})} classes")
+    items = None
+    if not embedded:
+        if not args.dataset.exists():
+            sys.exit(f"dataset not found: {args.dataset}")
+        print(f"Subset: {args.per_class}/class from {args.dataset}")
+        items = build_subset(args.dataset, args.per_class, args.seed)
+        print(f"  {len(items)} clips, {len({i for _, i in items})} classes")
+    else:
+        print("  embedded eval — the board runs the baked /eval/audio_set.bin")
 
     if args.no_serial:
-        a = load_clip(items[0][0])
-        print(f"  sanity: {items[0][0].name} -> int16[{len(a)}] [{a.min()},{a.max()}]")
+        if items:
+            a = load_clip(items[0][0])
+            print(f"  sanity: {items[0][0].name} -> int16[{len(a)}] [{a.min()},{a.max()}]")
         print(f"  flash hint: {spec['flash_hint']}")
+        if embedded:
+            print("  bake first: python3 make_eval_audio_set.py --per-class N")
         return
 
     port = args.port or next(iter(sorted(
         glob.glob("/dev/tty.usbmodem*") + glob.glob("/dev/cu.usbmodem*"))), None)
     if not port:
         sys.exit("no serial port — pass --port")
-    print(f"Streaming on {port} (board must be in EVAL mode)...")
-    print(f"  (if it times out: {spec['flash_hint']})")
 
-    triples = stream_eval(items, port, args.baud, args.timeout)
+    if embedded:
+        print(f"Reading embedded eval on {port}...")
+        print(f"  (if nothing comes: {spec['flash_hint']})")
+        triples = read_embedded_eval(port, args.baud,
+                                     assert_dtr=spec.get("assert_dtr", False))
+    else:
+        print(f"Streaming on {port} (board must be in EVAL mode)...")
+        print(f"  (if it times out: {spec['flash_hint']})")
+        triples = stream_eval(items, port, args.baud, args.timeout,
+                              assert_dtr=spec.get("assert_dtr", False))
     cm, acc, correct, total, per_class = confusion_and_metrics(triples)
     lat = latency_stats(triples)
     size = read_elf_size(args.deployed_elf or (spec["dir"] / spec["elf"]))

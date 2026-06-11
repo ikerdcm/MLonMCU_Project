@@ -4,22 +4,34 @@
  * Pipeline:
  *   PDM mic (Vesper, SAI1) → SFU CIC → 48 kHz PCM int32
  *   → 3:1 decimation → 16 kHz float32 (2-second window)
- *   → peak-based 1-second extraction
- *   → MFCC (490 coefficients)
- *   → Deeploy DS-CNN-L Float32 inference (8-core cluster, 240 MHz)
- *   → argmax → keyword label printed via UART
+ *   → multi-alignment 1-second extraction around the speech peak
+ *   → MFCC (490 coefficients) per alignment — raw, no gating/stretching
+ *   → Deeploy DS-CNN-L Float32 inference per alignment (8-core cluster)
+ *   → softmax-average over alignments → argmax + confidence threshold
+ *   → keyword label printed via UART
  *
  * Build:
  *   python deeployRunner_gap9.py -t Tests/Models/DSCNNL -s board -D LIVE_INFERENCE=ON
  *
- * Recording strategy:
- *   Always record 2 seconds.  After decimation we find the speech-energy peak
- *   in the 2-second buffer, then extract a 1-second (MFCC_AUDIO_LEN) window
- *   starting EXTRACT_PRE_FRAMES before the peak.  This guarantees:
- *     • Keyword can arrive any time in the first 1.5 s without being cut off.
- *     • Post-keyword nasal / plosive tail is always captured in the tail of the
- *       2-second buffer.
- *   Latency per recognition cycle: 2 s recording + ~120 ms inference ≈ 2.1 s.
+ * Feature strategy — match the training distribution exactly:
+ *   get_dataset.py computes MFCC over the complete, untouched 1-second clip:
+ *   peak-normalise → MFCC.  No VAD, no gating, no stretching.  80 % of the
+ *   training clips additionally carry real background noise mixed in at up to
+ *   0.1 amplitude (kws_util.py defaults), so room noise around the keyword
+ *   (c0 ≈ −15…−25) is IN distribution.  Synthetic silence frames (c0 −87.4)
+ *   only ever appear in training as zero-padding at clip ends.  Therefore the
+ *   live frontend feeds the raw MFCC of the extracted window with no
+ *   post-processing whatsoever.
+ *
+ * Alignment strategy:
+ *   GSC keywords sit roughly centred in their 1-second clip (the training
+ *   code's time-shift augmentation is hardcoded off), so the model is
+ *   alignment-sensitive.  We extract N_WINDOWS windows that place the
+ *   amplitude peak at different frames around the GSC-typical position and
+ *   average the softmax outputs (ensemble over alignments).
+ *
+ * Latency per recognition cycle: 2 s recording + N_WINDOWS × (MFCC + ~120 ms
+ * inference) ≈ 2.5 s.
  */
 
 #include <math.h>
@@ -34,13 +46,20 @@
 
 #define SLAVESTACKSIZE  3800
 
-/* VAD threshold on abs-peak of DC-removed 16 kHz signal.
+/* VAD threshold on abs-peak of DC-removed 16 kHz signal — used only as a
+ * trigger to skip empty cycles, never to modify features.
  * Observed:  background ~3–15 M,  speech ~100–1000 M. */
 #define VAD_THRESHOLD 300000000.0f
 
-/* Number of MFCC frames to include before the speech peak in the extracted
- * 1-second window.  5 frames = 100 ms of pre-context. */
-#define EXTRACT_PRE_FRAMES 5
+/* Ensemble window alignments: number of MFCC frames before the amplitude
+ * peak.  In GSC the keyword is roughly centred, so its vowel peak typically
+ * falls at ~280–520 ms (frames 14–26).  Three alignments ±120 ms around
+ * frame 20 cover that range. */
+static const int EXTRACT_PRE[] = { 14, 20, 26 };
+#define N_WINDOWS ((int)(sizeof(EXTRACT_PRE) / sizeof(EXTRACT_PRE[0])))
+
+/* Detection threshold on the ensemble-averaged softmax probability. */
+#define CONF_THRESHOLD 0.60f
 
 /* 2-second audio constants */
 #define AUDIO_2S_48K  (2 * MIC_SAMPLES_1S)    /* 96000 samples @ 48 kHz */
@@ -127,7 +146,7 @@ int main(void)
     printf("Microphone ready.\r\n");
 
     /* ── Inference loop ─────────────────────────────────────────────────── */
-    int run = 0;
+    int inference_count = 0;
     while (1) {
         /* 1. Signal that we are listening, then capture 2 seconds. */
         printf("-- Listening --\r\n");
@@ -154,6 +173,20 @@ int main(void)
         if (vad_peak < VAD_THRESHOLD)
             continue;
 
+        /* 3b. CIC saturation check: Q31 output clips near ±2^31.  Clipped
+              vowels distort the spectrum, so flag recordings that get close
+              to full scale (observed peaks up to ~2.0e9 ≈ 93 % FS). */
+        {
+            int clipped = 0;
+            for (int i = 0; i < AUDIO_2S_16K; i++) {
+                float v = s_audio_16k[i];
+                if (v > 2.0e9f || v < -2.0e9f) clipped++;
+            }
+            if (clipped > 0)
+                printf("[clip] %d samples near int32 full scale — "
+                       "speak softer / increase CIC_Shift\r\n", clipped);
+        }
+
         /* 4. Find the speech peak: frame with highest abs-max amplitude.
               Searching in MFCC frame steps (320 samples = 20 ms per frame). */
         int peak_frame_2s = 0;
@@ -174,135 +207,38 @@ int main(void)
             }
         }
 
-        /* 5. Extract 1-second (MFCC_AUDIO_LEN) window starting
-              EXTRACT_PRE_FRAMES before the peak. */
-        int extract_start_frame = peak_frame_2s - EXTRACT_PRE_FRAMES;
-        if (extract_start_frame < 0) extract_start_frame = 0;
-        int extract_start_sample = extract_start_frame * MFCC_FRAME_STEP;
-        /* Clamp so the 1-second window stays within the 2-second buffer. */
-        if (extract_start_sample + MFCC_AUDIO_LEN > AUDIO_2S_16K)
-            extract_start_sample = AUDIO_2S_16K - MFCC_AUDIO_LEN;
+        printf("--- Detected (peak=%.0f) peak_frame=%d (%.0fms in 2s buf) ---\r\n",
+               vad_peak, peak_frame_2s, peak_frame_2s * 20.0f);
 
-        const float *audio_1s = s_audio_16k + extract_start_sample;
+        /* 5. Ensemble over N_WINDOWS alignments: extract the 1-second window,
+              compute the raw MFCC (peak-normalise → MFCC, exactly like
+              training), run inference, accumulate softmax outputs. */
+        float probs_avg[KWS_NUM_CLASSES];
+        memset(probs_avg, 0, sizeof(probs_avg));
+        int n_run = 0;
+        int prev_start_sample = -1;
 
-        /* Debug: show where in the 2-second recording the speech is. */
-        printf("--- Detected (peak=%.0f) peak_frame=%d (%.0fms in 2s buf) "
-               "extract_start=%.0fms ---\r\n",
-               vad_peak,
-               peak_frame_2s, peak_frame_2s * 20.0f,
-               extract_start_sample / 16.0f);
+        for (int w = 0; w < N_WINDOWS; w++) {
+            int start_frame = peak_frame_2s - EXTRACT_PRE[w];
+            if (start_frame < 0) start_frame = 0;
+            int start_sample = start_frame * MFCC_FRAME_STEP;
+            /* Clamp so the 1-second window stays within the 2-second buffer. */
+            if (start_sample + MFCC_AUDIO_LEN > AUDIO_2S_16K)
+                start_sample = AUDIO_2S_16K - MFCC_AUDIO_LEN;
 
-        /* 6. Compute MFCC on the extracted 1-second window. */
-        mfcc_compute(audio_1s, s_mfcc);
+            /* Clamping can collapse alignments onto the same window when the
+               peak sits near a buffer edge — skip duplicates. */
+            if (start_sample == prev_start_sample)
+                continue;
+            prev_start_sample = start_sample;
 
-        /* 6b. Contiguous-region gating + duration normalisation.
-         *
-         *  PROBLEM: natural "on" is ~160-180 ms (6-9 MFCC frames), but GSC
-         *  training clips have the keyword at ~400 ms (20 frames).  After
-         *  global-average pooling, a 9-frame keyword contributes only 9/49 =
-         *  18 % of the signal — the model "sees" mostly silence and cannot
-         *  reliably classify.  Stretching to 25 frames raises that to 51 %.
-         *
-         *  Step 1 — contiguous region: expand from the c0 peak while c0 > -20.
-         *            Zero all frames outside the contiguous region (eliminates
-         *            isolated PDM background leakage).
-         *  Step 2 — minimum check: skip inference if < MIN_FRAMES (false trig).
-         *  Step 3 — time-stretch to TARGET_FRAMES (linear interp) and place
-         *            starting at TARGET_START, filling the rest with silence.
-         *            Applied only when the speech region is shorter than
-         *            TARGET_FRAMES; longer regions are left untouched. */
-        static const float s_silence_vec[MFCC_N_MFCC] = {
-            -87.4f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f
-        };
-        /* static scratch for stretched frames — not on stack */
-        static float s_stretched[25 * MFCC_N_MFCC];
+            /* 5a. Raw MFCC of the full window — no gating, no stretching. */
+            mfcc_compute(s_audio_16k + start_sample, s_mfcc);
 
-        const float gate_thresh   = -20.0f;
-        const int   MIN_FRAMES    = 4;
-        const int   TARGET_FRAMES = 25;   /* ~500 ms, matches GSC duration */
-        const int   TARGET_START  = 5;    /* 100 ms pre-keyword silence      */
-
-        /* ── Step 1: contiguous region ─────────────────────────────────── */
-        int speech_left, speech_right;
-        {
-            int pk = 0;
-            float pk_c0 = s_mfcc[0];
-            for (int t = 1; t < MFCC_N_FRAMES; t++) {
-                if (s_mfcc[t * MFCC_N_MFCC] > pk_c0) {
-                    pk_c0 = s_mfcc[t * MFCC_N_MFCC];
-                    pk = t;
-                }
-            }
-            speech_left = pk;
-            while (speech_left > 0 &&
-                   s_mfcc[(speech_left - 1) * MFCC_N_MFCC] > gate_thresh)
-                speech_left--;
-            speech_right = pk;
-            while (speech_right < MFCC_N_FRAMES - 1 &&
-                   s_mfcc[(speech_right + 1) * MFCC_N_MFCC] > gate_thresh)
-                speech_right++;
-            for (int t = 0; t < speech_left; t++)
-                memcpy(s_mfcc + t * MFCC_N_MFCC, s_silence_vec,
-                       MFCC_N_MFCC * sizeof(float));
-            for (int t = speech_right + 1; t < MFCC_N_FRAMES; t++)
-                memcpy(s_mfcc + t * MFCC_N_MFCC, s_silence_vec,
-                       MFCC_N_MFCC * sizeof(float));
-        }
-        int n_speech = speech_right - speech_left + 1;
-        printf("[speech_region] frames %d-%d (%d frames, %.0f-%.0fms)\r\n",
-               speech_left, speech_right, n_speech,
-               speech_left * 20.0f, speech_right * 20.0f);
-
-        /* ── Step 2: minimum duration ───────────────────────────────────── */
-        if (n_speech < MIN_FRAMES) {
-            printf("[skip] too short (%d frames)\r\n", n_speech);
-            continue;
-        }
-
-        /* ── Step 3: time-stretch ────────────────────────────────────────── */
-        if (n_speech < TARGET_FRAMES) {
-            /* Linear interpolation: N input frames → TARGET_FRAMES output. */
-            for (int j = 0; j < TARGET_FRAMES; j++) {
-                float pos  = (float)j * (float)(n_speech - 1)
-                             / (float)(TARGET_FRAMES - 1);
-                int   i0   = (int)pos;
-                float alpha = pos - (float)i0;
-                int   i1   = (i0 + 1 < n_speech) ? i0 + 1 : i0;
-                const float *f0 = s_mfcc + (speech_left + i0) * MFCC_N_MFCC;
-                const float *f1 = s_mfcc + (speech_left + i1) * MFCC_N_MFCC;
-                float *dst = s_stretched + j * MFCC_N_MFCC;
-                for (int c = 0; c < MFCC_N_MFCC; c++)
-                    dst[c] = f0[c] * (1.0f - alpha) + f1[c] * alpha;
-            }
-            /* Clear window, then write stretched keyword at TARGET_START. */
-            for (int t = 0; t < MFCC_N_FRAMES; t++)
-                memcpy(s_mfcc + t * MFCC_N_MFCC, s_silence_vec,
-                       MFCC_N_MFCC * sizeof(float));
-            int copy = TARGET_FRAMES;
-            if (TARGET_START + copy > MFCC_N_FRAMES)
-                copy = MFCC_N_FRAMES - TARGET_START;
-            for (int j = 0; j < copy; j++)
-                memcpy(s_mfcc + (TARGET_START + j) * MFCC_N_MFCC,
-                       s_stretched + j * MFCC_N_MFCC,
-                       MFCC_N_MFCC * sizeof(float));
-            printf("[stretched] %d→%d frames, placed at %d-%d\r\n",
-                   n_speech, TARGET_FRAMES,
-                   TARGET_START, TARGET_START + copy - 1);
-        }
-
-        /* DEBUG: all 49 c0 values + full MFCC near the peak frame. */
-        {
-            int peak_t = 0;
-            float peak_c0 = s_mfcc[0];
-            for (int t = 1; t < MFCC_N_FRAMES; t++) {
-                if (s_mfcc[t * MFCC_N_MFCC] > peak_c0) {
-                    peak_c0 = s_mfcc[t * MFCC_N_MFCC];
-                    peak_t = t;
-                }
-            }
-            printf("[peak_mfcc] frame=%d (%.1fms in extracted) c0=%.2f\r\n",
-                   peak_t, peak_t * 20.0f, peak_c0);
-
+#ifdef KWS_DEBUG_C0
+            /* Full c0 trace — costs ~400 bytes of semihosting I/O per window,
+               which stretches the deaf gap between recordings.  Enable only
+               for frontend debugging. */
             printf("[c0all]");
             for (int t = 0; t < MFCC_N_FRAMES; t++) {
                 printf(" %6.2f", s_mfcc[t * MFCC_N_MFCC]);
@@ -310,54 +246,62 @@ int main(void)
                     printf("\r\n[c0all]");
             }
             printf("\r\n");
+#endif
 
-            int t0 = peak_t - 2; if (t0 < 0) t0 = 0;
-            int t1 = peak_t + 4; if (t1 >= MFCC_N_FRAMES) t1 = MFCC_N_FRAMES - 1;
-            for (int t = t0; t <= t1; t++) {
-                const float *f = s_mfcc + t * MFCC_N_MFCC;
-                printf("[mfcc t=%02d] %6.2f %6.2f %6.2f %6.2f %6.2f"
-                       " %6.2f %6.2f %6.2f %6.2f %6.2f\r\n",
-                       t, f[0],f[1],f[2],f[3],f[4],f[5],f[6],f[7],f[8],f[9]);
+            /* 5b. Copy MFCC into network input buffer.
+                  RunNetwork freed the buffer on the previous inference, so
+                  re-allocate it before copying. */
+            if (inference_count > 0) {
+                for (uint32_t buf = 0; buf < DeeployNetwork_num_inputs; buf++) {
+                    DeeployNetwork_inputs[buf] =
+                        pi_l2_malloc(DeeployNetwork_inputs_bytes[buf]);
+                }
+            }
+            if (DeeployNetwork_num_inputs > 0 &&
+                DeeployNetwork_inputs[0] != NULL) {
+                memcpy(DeeployNetwork_inputs[0], s_mfcc,
+                       DeeployNetwork_inputs_bytes[0]);
+            }
+
+            /* 5c. Run inference on the cluster. */
+            pi_cluster_task(&cluster_task, RunNetworkWrapper, NULL);
+            cluster_task.slave_stack_size = SLAVESTACKSIZE;
+            pi_cluster_send_task_to_cl(&cluster_dev, &cluster_task);
+            inference_count++;
+
+            /* 5d. Accumulate softmax probabilities, report this alignment. */
+            if (DeeployNetwork_num_outputs > 0) {
+                const float *out = (const float *)DeeployNetwork_outputs[0];
+                int n = (int)(DeeployNetwork_outputs_bytes[0] / sizeof(float));
+                if (n > KWS_NUM_CLASSES) n = KWS_NUM_CLASSES;
+                for (int i = 0; i < n; i++)
+                    probs_avg[i] += out[i];
+                n_run++;
+                int cls = argmax_float(out, n);
+                printf("[win %d] peak@frame %2d  start=%4dms  best=%-8s p=%.4f"
+                       "  [%u cycles]\r\n",
+                       w, EXTRACT_PRE[w], start_sample / 16,
+                       KWS_LABELS[cls], out[cls], total_cycles);
             }
         }
+        if (n_run == 0)
+            continue;
 
-        /* 7. Copy MFCC into network input buffer.
-              RunNetwork freed the buffer on the previous run (run>0), so
-              re-allocate it before copying. */
-        if (run > 0) {
-            for (uint32_t buf = 0; buf < DeeployNetwork_num_inputs; buf++) {
-                DeeployNetwork_inputs[buf] =
-                    pi_l2_malloc(DeeployNetwork_inputs_bytes[buf]);
-            }
-        }
-        if (DeeployNetwork_num_inputs > 0 &&
-            DeeployNetwork_inputs[0] != NULL) {
-            memcpy(DeeployNetwork_inputs[0], s_mfcc,
-                   DeeployNetwork_inputs_bytes[0]);
-        }
+        /* 6. Decode the ensemble average. */
+        for (int i = 0; i < KWS_NUM_CLASSES; i++)
+            probs_avg[i] /= (float)n_run;
 
-        /* 8. Run inference on the cluster */
-        pi_cluster_task(&cluster_task, RunNetworkWrapper, NULL);
-        cluster_task.slave_stack_size = SLAVESTACKSIZE;
-        pi_cluster_send_task_to_cl(&cluster_dev, &cluster_task);
+        int   cls  = argmax_float(probs_avg, KWS_NUM_CLASSES);
+        float conf = probs_avg[cls];
 
-        /* 9. Decode output */
-        if (DeeployNetwork_num_outputs > 0) {
-            float *out = (float *)DeeployNetwork_outputs[0];
-            int n      = (int)(DeeployNetwork_outputs_bytes[0] / sizeof(float));
-            int cls    = argmax_float(out, n);
-            float conf_val = out[cls];
-
-            const char *label = (cls < KWS_NUM_CLASSES)
-                                 ? KWS_LABELS[cls]
-                                 : "?";
-            printf(">> %-8s  (class %d, score %.4f)  [%u cycles]\r\n",
-                   label, cls, conf_val, total_cycles);
-            for (int i = 0; i < n && i < KWS_NUM_CLASSES; i++)
-                printf("   %-8s %.4f\r\n", KWS_LABELS[i], out[i]);
-        }
-
-        run++;
+        if (conf >= CONF_THRESHOLD)
+            printf(">> %-8s  (class %d, avg score %.4f)\r\n",
+                   KWS_LABELS[cls], cls, conf);
+        else
+            printf(">> no detection  (best: %s, avg score %.4f < %.2f)\r\n",
+                   KWS_LABELS[cls], conf, CONF_THRESHOLD);
+        for (int i = 0; i < KWS_NUM_CLASSES; i++)
+            printf("   %-8s %.4f\r\n", KWS_LABELS[i], probs_avg[i]);
     }
 
     mic_close();

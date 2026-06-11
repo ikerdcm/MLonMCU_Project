@@ -29,6 +29,12 @@
 #define MIC_SAI_ITF         1           /* SAI interface for Vesper mic */
 #define MIC_PDM_CHANNEL     2           /* PDM channel within SAI1 */
 
+/* Extra time mic_record() may poll for DMA completion beyond the nominal
+ * recording duration before giving up with a warning.  The wall-clock timer
+ * drifts against the audio sample clock, so the DMA regularly finishes later
+ * than the nominal wait. */
+#define MIC_RECORD_TIMEOUT_MS  3000U
+
 /*
  * mic_open() — open I2S peripheral + SFU graph.
  * Must be called once before mic_record().
@@ -38,7 +44,8 @@ int mic_open(void);
 
 /*
  * mic_record() — capture n_samples_48k samples at 48 kHz into buf (int32 Q31).
- * Blocks for n_samples_48k / MIC_SAMPLE_RATE_HZ seconds.
+ * Blocks until the DMA transfer has actually completed (nominal duration plus
+ * up to MIC_RECORD_TIMEOUT_MS of completion polling).
  * buf must be allocated by caller (n_samples_48k * sizeof(int32_t) bytes).
  */
 void mic_record(int32_t *buf, int n_samples_48k);

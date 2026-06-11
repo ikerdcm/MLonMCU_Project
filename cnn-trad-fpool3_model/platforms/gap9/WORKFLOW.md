@@ -127,6 +127,47 @@ Predicted class: 2 (confidence 0.9998)   ← "Left"
 
 ---
 
+### Live-Inferenz: Mikrofon-Keyword-Spotting auf dem Board
+
+Erkennt Schlüsselwörter in Echtzeit über das PDM-Mikrofon (Vesper, SAI1).
+Klassen: `down go left no off on right stop up yes silence unknown`
+
+```bash
+cd /app/Deeploy/DeeployTest
+
+# Standard (kein Debug-Output)
+python deeployRunner_gap9.py -t Tests/Models/DSCNNL -s board -D LIVE_INFERENCE=ON
+
+# Mit c0-Debug (alle 49 c0-Werte pro Fenster — für Fehlersuche)
+python deeployRunner_gap9.py -t Tests/Models/DSCNNL -s board -D LIVE_INFERENCE=ON -D KWS_DEBUG_C0
+```
+
+Erwartete Ausgabe nach Start:
+```
+Initializing network...
+Network ready.
+Microphone ready.
+-- Listening --
+-- Listening --
+```
+
+Nach einem gesprochenen Keyword:
+```
+--- Detected (peak=800000000) peak_frame=65 (1300ms in 2s buf) ---
+[win 0] peak@frame 14  start= 980ms  best=on       p=0.8500  [27835000 cycles]
+[win 1] peak@frame 20  start= 900ms  best=on       p=0.9200  [27835000 cycles]
+[win 2] peak@frame 26  start= 840ms  best=on       p=0.8900  [27835000 cycles]
+>> on        (class 5, avg score 0.8867)
+```
+
+**Hinweise:**
+- Nach `-- Listening --` hat man **2 Sekunden** Zeit das Keyword zu sprechen.
+- Das System nimmt immer 2 s auf, sucht den Amplituden-Peak und probiert 3 verschiedene Fenster-Alignments (±120 ms um Frame 20). Die Softmax-Ausgaben werden gemittelt.
+- Erkennung gilt nur bei avg score ≥ 0.60 (sonst `>> no detection`).
+- Bei Rebuild nach Code-Änderungen denselben Befehl einfach nochmal ausführen — CMake erkennt Änderungen automatisch.
+
+---
+
 ## Schritt 6 — Offline-Messung: 50 Inferences auf dem Board (im Container)
 
 Nach dem ersten erfolgreichen Board-Run alle nötigen Dateien kompiliert — jetzt 50 Inferences laufen lassen und Stats automatisch speichern.
@@ -231,7 +272,8 @@ cd /app/Deeploy && pip install -e .          # Deeploy installieren (jedes Mal!)
 cd DeeployTest
 
 python deeployRunner_gap9.py -t Tests/Models/MLPerf/KeywordSpotting -s board   # Referenz
-python deeployRunner_gap9.py -t Tests/Models/DSCNNL -s board                   # DS-CNN-L Float32
+python deeployRunner_gap9.py -t Tests/Models/DSCNNL -s board                          # DS-CNN-L Float32 (offline test)
+python deeployRunner_gap9.py -t Tests/Models/DSCNNL -s board -D LIVE_INFERENCE=ON    # DS-CNN-L Live-Mikrofon
 python deeployRunner_gap9.py -t Tests/Models/DSCNNL_INT8 -s board              # DS-CNN-L INT8
 
 # Offline-Messung Float32 (20 Runs → summary.json + CSV)

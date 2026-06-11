@@ -75,6 +75,15 @@ void run_eval() {
     TfLiteTensor* input  = interpreter.input(0);
     TfLiteTensor* output = interpreter.output(0);
 
+    // Memory footprint probe: arena_used = real activation working set the planner
+    // packed; weights live in-place in the model_data heap buffer (not copied into
+    // the arena). The addresses identify the physical region (i.MX RT1176 external
+    // SDRAM = 0x8000_0000.., OCRAM = 0x2024_0000.., DTCM = 0x2000_0000..).
+    printf("BENCH,event=mem,arena_used=%u,arena_size=%d,arena_addr=%p,"
+           "weights_bytes=%u,weights_addr=%p,eval_buf_addr=%p\r\n",
+           (unsigned)interpreter.arena_used_bytes(), kTensorArenaSize, (void*)tensor_arena,
+           (unsigned)model_data.size(), (void*)model_data.data(), (void*)g_eval_buf);
+
     // v0 = fp32-cpu, the only network this app can run (ds_cnn_l_float).
     printf("BENCH,event=eval_ready,classes=12,total=%lu,version=v0,model=ds_cnn_l_float\r\n",
            (unsigned long)N);

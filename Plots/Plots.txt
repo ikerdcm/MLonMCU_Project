@@ -1,0 +1,106 @@
+
+Instructions for plotting your results.
+
+Data Sources:
+  - Primary:   cnn-trad-fpool3_model/platforms/testbench/results/RESULTS_LEDGER.md
+  - Online/Offline energy: Experiments/RESULTS_LEDGER.md
+  - Device capacities: hardcoded constants (see Plot 4)
+
+Guidelines
+(1) Create clean plots with enough padding and headroom
+(2) Keep color consistency between MCUs (GAP9=Green, MAX78000=Orange, Coral=Red, STM=Blue)
+    use the exact same HEX values across all plots
+(3) The plots are for slides — all text must be HUGE, ensure enough space for large fonts
+(4) For each plot create a different python file, following structure:
+    plot_name.py => plot_name.png
+
+
+Plots:
+
+(1) Q: What is the difference between online and offline power performance?
+File: plot_online_offline_energy.py
+
+Bar plot; y-axis = energy (µJ, log scale); x-axis = MCU/config pairing.
+Data source: Experiments/RESULTS_LEDGER.md (NOT the testbench ledger — it is offline-only).
+For each (MCU, config) that has both online and offline, place the two bars side by side.
+Leave a gap between each MCU/config group.
+For entries where online or offline energy is not yet captured, render a hatched
+"Data pending" bar at the same position so the gap is visible and honest.
+GAP9 is offline-only by design — single bar + footnote "no online mode".
+
+Available data points:
+  STM32U5 / fp32-cpu:  offline=16159 µJ  online=16161 µJ
+  STM32U5 / int8-cpu:  offline=4610 µJ   online=4927 µJ
+  Coral / fp32-cpu:    offline measured, energy pending => hatched bar for online
+  Coral / int8-accel:  offline ~2358 µJ,  online NOT captured => hatched bar
+  MAX78000 / fp32-cpu: offline=101639 µJ, online NOT captured => hatched bar
+  MAX78000 / int8-accel: online CSV only, not processed => hatched bars for both
+  GAP9 / all configs:  offline only
+
+
+(2) Q: How does the accuracy degrade from PC to MCU?
+File: plot_accuracy_degradation.py
+
+Bar plot; y-axis = accuracy (%); x-axis grouped by CONFIG
+(fp32-cpu, int8-cpu, int8-accel, int8-ne16, int8-cluster, ...).
+Within each config group, one dark-gray bar for PC model accuracy,
+then one bar per MCU that has that config, side by side.
+Use DS-CNN only for this plot (only model with all 4 boards).
+If you want AI85KWS20NetV3, add it as a second subplot in the same file.
+
+Important: MAX78000 int8-accel uses a DIFFERENT architecture (ai8x kws-ds-cnn-l-kws12,
+1.34M MACs) vs DS-CNN-L (3.94M MACs). Mark that bar with * and add a footnote:
+"* Different architecture — not a same-model comparison."
+Do NOT remove it — the contrast is interesting.
+
+
+(3) Q: How much accuracy do we get for how much power?
+File: plot_accuracy_vs_energy.py
+
+Scatterplot; each dot = one (MCU, config) row from the testbench ledger.
+  y-axis: MCU accuracy (%)          — the real on-device number, not model/sim accuracy
+  x-axis: Energy/Inference (µJ)     — LOG SCALE (range spans ~34 µJ to ~317000 µJ)
+  Bubble size: Flash / L2 footprint (KiB) — most consistently measured column across all boards
+  Color: MCU color scheme (same HEX as all other plots)
+  Label each dot with its config name (int8-accel, fp32-cpu, etc.)
+
+Caption footnote: "Coral SRAM lives in external SDRAM and is not shown.
+GAP9 is NOFLASH — bubble size reflects L2 code footprint."
+
+
+(4) Q: How much memory do we have left for the firmware?
+File: plot_memory_utilization.py
+
+Bar plot. For each (MCU, config) pair: two side-by-side bars (Flash, SRAM).
+Each bar shows used KiB against the device maximum as a filled segment:
+  0% [xxxxxxxxx........] 100%  (absolute KiB on the axis, max line as a reference)
+
+Hardcode device capacities at the top of the script:
+  DEVICE_CAPACITY = {
+      "u5":    {"flash_kib": 4096,  "sram_kib": 2560},
+      "max":   {"flash_kib": 512,   "sram_kib": 128},
+      "coral": {"flash_kib": 4096,  "sram_kib": 8192},
+      "gap9":  {"flash_kib": 1536,  "sram_kib": 1536},
+  }
+
+Special cases:
+  Coral: Flash = SPI NOR firmware; SRAM = Edge-TPU on-chip weight cache.
+         Add footnote: "Coral tensor arena is in external SDRAM — not shown."
+  GAP9:  NOFLASH — both bars draw from L2 SRAM budget.
+         Flash bar = L2 code section; SRAM bar = L1 cluster scratchpad.
+         Label the Flash bar "L2 code" and SRAM bar "L1 scratch".
+
+
+(5) Q: How big is the difference between accelerated and non-accelerated models?
+File: plot_accel_vs_cpu.py
+
+Scatterplot; each dot = one (MCU, config) row.
+  x-axis: Flash / L2 footprint (KiB)  — consistent proxy for model size, already in data
+           (parameter count is NOT in the data; do not use it)
+  y-axis: MCU accuracy (%)
+  Color:  MCU color (same HEX as all other plots)
+  Shape:  filled circle  = hardware-accelerated (int8-accel, int8-ne16)
+          open circle    = CPU-only (fp32-cpu, int8-cpu, fp32-cluster, int8-cluster)
+
+This directly answers: what accuracy and model-size trade-off do you get
+by using the hardware accelerator vs running on the CPU?

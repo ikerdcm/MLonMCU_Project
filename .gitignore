@@ -262,9 +262,7 @@ __pycache__/
 *.pyc
 .venv/
 
-*.png
 *.jpg
-*.PNG
 *.bmp
 *.mff
 ai85kws20netv3_model/platforms/stm32u5/u5_keyword_spotting/Core/Src/kws20_live.c.bak_demo_trigger_2026-05-01_215427

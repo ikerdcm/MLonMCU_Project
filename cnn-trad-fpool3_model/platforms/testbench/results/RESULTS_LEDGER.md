@@ -14,11 +14,11 @@ Device-in-the-loop, one common GSC **test** audio set per board (`testbench.py`)
 | 2026-06-10 18:57 | u5 | fp32-cpu | v0 | 144 | 92.4 | 93.75 | 224.542 | 224.543 | 220.8 | 125.8 | — | results/u5_v0 |
 | 2026-06-10 20:21 | coral | int8-accel | v1 | 144 | 92.0 | 91.67 | 2.346 | 2.372 | 144.6 | 62.0 | — | results/coral_v1 |
 | 2026-06-10 20:25 | coral | fp32-cpu | v0 | 144 | 92.4 | 90.97 | 417.012 | 417.240 | 144.5 | — | — | results/coral_v0 |
-| — | coral | int8-prune | v21 | — | 89.7 | ✱ | — | — | 120.6 | 46.5 | — | results/coral_v21 |
-| — | coral | int8-prune | v22 | — | 76.7 | ✱ | — | — | 108.6 | 39.0 | — | results/coral_v22 |
-| — | coral | int8-prune | v23 | — | 65.1 | ✱ | — | — | 92.6 | 30.5 | — | results/coral_v23 |
-| — | coral | int8-prune-distill | v31 | — | 90.8 | ✱ | — | — | 120.6 | 46.5 | — | results/coral_v31 |
-| — | coral | int8-prune-distill | v32 | — | 76.5 | ✱ | — | — | 92.6 | 30.5 | — | results/coral_v32 |
+| 2026-06-11 17:59 | coral | int8-prune | v21 | 144 | 89.7 | 88.89 | 1.961 | 1.991 | 120.6 | 46.5 | — | results/coral_v21 |
+| 2026-06-11 18:03 | coral | int8-prune | v22 | 144 | 76.7 | 72.22 | 2.295 | 2.330 | 108.6 | 39.0 | — | results/coral_v22 |
+| 2026-06-11 18:05 | coral | int8-prune | v23 | 144 | 65.1 | 62.50 | 1.911 | 1.957 | 92.6 | 30.5 | — | results/coral_v23 |
+| 2026-06-11 18:09 | coral | int8-prune-distill | v31 | 144 | 90.8 | 90.28 | 1.958 | 1.987 | 120.6 | 46.5 | — | results/coral_v31 |
+| 2026-06-11 18:12 | coral | int8-prune-distill | v32 | 144 | 76.5 | 77.78 | 1.911 | 1.953 | 92.6 | 30.5 | — | results/coral_v32 |
 | 2026-06-10 17:09 | gap9 | fp32-cluster | v0 | 144 | 92.4 | 91.62 | 116.806 | 116.868 | 46.48 | 134.08 | 3893.85 | results/gap_v0 |
 | 2026-06-09 14:45 | gap9 | int8-cluster | v1 | 144 | 92.0 | 91.45 | 17.153 | 17.165 | 46.69 | 32.86 | 480.11 | results/gap_v1 |
 | 2026-06-09 17:28 | gap9 | int8-ne16 | v2 | 144 | 92.0 | 91.23 | 0.786 | 0.786 | 36.38 (L2 total) | 20.02 (L1) | 34.32 | results/gap_v2 |

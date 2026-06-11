@@ -500,6 +500,7 @@ def main():
                      f"    Re-flash: {spec['flash_hint']}")
         if expected and reported_model == expected:
             print(f"  ✓ board model matches {args.model} ({reported_model})")
+    else:
         print(f"Streaming on {port} (board must be in EVAL mode)...")
         print(f"  (if it times out: {spec['flash_hint']})")
         triples = stream_eval(items, port, args.baud, args.timeout,

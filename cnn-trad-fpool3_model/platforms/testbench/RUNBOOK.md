@@ -97,6 +97,39 @@ python3 ../testbench/testbench.py --board coral --model v0 --port /dev/tty.usbmo
 - ⚠️ Never open the Coral at 1200 baud (→ bootloader). The testbench uses 115200 and
   asserts DTR automatically.
 
+### Coral optimization variants — honest version ids (ONE network per version)
+
+Every Coral int8 variant runs the **same `kws_eval_stream` firmware** (same Edge-TPU +
+MFCC frontend); only the **single baked network** changes, selected by its version id.
+Flash and read use the **same `vNN`** — and the board self-reports its identity in the
+`eval_ready` line (`version=…,model=…`), which the testbench cross-checks (it aborts on
+a mismatch). Audio set is shared; bake once with `--per-class 12` if missing.
+
+| Version | Config | Network |
+|---|---|---|
+| `v1`  | int8-accel        | 6-block `ds_cnn_l_static_v2` |
+| `v21` | int8-prune        | f64b4 (4-blk, 64f) — prune winner |
+| `v22` | int8-prune        | f32b6 (6-blk, 32f) |
+| `v23` | int8-prune        | f32b4 (4-blk, 32f) |
+| `v31` | int8-prune-distill| f64b4+KD (ladder top) |
+| `v32` | int8-prune-distill| f32b4+KD (32-filter rescue) |
+
+```bash
+cd cnn-trad-fpool3_model/platforms/coral
+
+# one network at a time — flash vNN, then read vNN
+./scripts/build_and_flash_eval_stream.sh --version v21
+python3 ../testbench/testbench.py --board coral --model v21 --port /dev/tty.usbmodemXXXX
+# ...repeat for v22 v23 v31 v32. Return to the int8 baseline with --version v1.
+```
+
+- The baked network is re-selected at CMake-configure time on every
+  `build_and_flash_eval_stream.sh` run — just change `--version`, no file edits.
+- All variants share `v1`'s input scale (0.5847/83), so the device MFCC
+  (`KwsMfccCompute`) feeds them correctly — no rescaling (prune validated by the older
+  `kws_eval` ⁿ numbers; distill `v31/v32` are the **first on-device measurement**, their
+  Edge-TPU models compiled via `scripts/compile_edgetpu_v2.sh`, all ops on-TPU).
+
 ---
 
 ## Output & flags

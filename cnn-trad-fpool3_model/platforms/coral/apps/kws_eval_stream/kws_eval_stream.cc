@@ -32,7 +32,20 @@
 namespace coralmicro {
 namespace {
 
-const char* kModelPath = "/models/ds_cnn_l_static_v2_edgetpu.tflite";
+// Baked under a fixed LittleFS name; the SOURCE model is chosen at build time
+// via -DKWS_EVAL_STREAM_MODEL=<basename> (see CMakeLists.txt). This lets the same
+// firmware eval the v2 6-block or any pruned variant without touching this file.
+const char* kModelPath = "/models/eval_model_edgetpu.tflite";
+// Which source model was baked (set by -DKWS_EVAL_STREAM_MODEL at build time), so
+// the board self-reports its identity in eval_ready. Falls back if not defined.
+#ifndef KWS_EVAL_STREAM_MODEL_NAME
+#define KWS_EVAL_STREAM_MODEL_NAME "unknown"
+#endif
+#ifndef KWS_EVAL_STREAM_VERSION_NAME
+#define KWS_EVAL_STREAM_VERSION_NAME "unknown"
+#endif
+const char* kModelName = KWS_EVAL_STREAM_MODEL_NAME;
+const char* kVersion   = KWS_EVAL_STREAM_VERSION_NAME;
 const char* kEvalPath  = "/eval/audio_set.bin";
 constexpr int kNumClasses = 12;
 constexpr int kAudioSamples = MFCC_AUDIO_SAMPLES;   // 16000
@@ -69,7 +82,8 @@ void run_eval() {
     TfLiteTensor* input  = interpreter.input(0);
     TfLiteTensor* output = interpreter.output(0);
 
-    printf("BENCH,event=eval_ready,classes=12,total=%lu\r\n", (unsigned long)N);
+    printf("BENCH,event=eval_ready,classes=12,total=%lu,version=%s,model=%s\r\n",
+           (unsigned long)N, kVersion, kModelName);
     for (uint32_t i = 0; i < N; i++) {
         KwsMfccCompute(reinterpret_cast<const int16_t*>(audio + (size_t)i * kClipBytes), g_mfcc);
         memcpy(input->data.int8, g_mfcc, kMfccElems);

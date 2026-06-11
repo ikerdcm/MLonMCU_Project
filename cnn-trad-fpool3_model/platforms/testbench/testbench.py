@@ -46,9 +46,16 @@ GSC_DIR_TO_IDX = {
     "right": 6, "stop": 7, "up": 8, "yes": 9, "_silence_": 10, "_unknown_": 11,
 }
 WINDOW = 16000  # 1 s @ 16 kHz
+# Version ids: ONE network per version (honest labelling). v0/v1 are shared across
+# boards; v2x (prune) and v3x (distill) are Coral-only. Host int8 test acc (n=4890).
 MODEL_ACCURACY = {
-    "v0": 92.4,
-    "v1": 92.0,
+    "v0":  92.4,   # fp32-cpu              — ds_cnn_l_float
+    "v1":  92.0,   # int8-accel 6-blk      — ds_cnn_l_static_v2
+    "v21": 89.7,   # int8-prune f64b4      — ⁿ
+    "v22": 76.7,   # int8-prune f32b6      — ⁿ
+    "v23": 65.1,   # int8-prune f32b4      — ⁿ
+    "v31": 90.8,   # prune-distill f64b4   — ᵒ
+    "v32": 76.5,   # prune-distill f32b4   — ᵒ
 }
 
 PLATFORMS = Path(__file__).resolve().parents[1]          # .../cnn-trad-fpool3_model/platforms
@@ -98,26 +105,94 @@ REGISTRY = {
                       "./tools/build_flash.sh --mode offline  (headless CubeIDE build+flash)",
     },
     ("coral", "v1"): {
-        "name": "Coral Edge-TPU int8-accel (DS-CNN-L v2)",
+        "name": "Coral int8-accel v1 (DS-CNN-L 6-blk)",
         "config_id": "int8-accel",
         "dir": PLATFORMS / "coral",
         "elf": "build/kws_apps/kws_eval_stream/kws_eval_stream",
         "labels": LABELS,
         "assert_dtr": True,    # Coral CDC drops bytes until DTR is asserted
         "embedded": True,      # runs a baked LittleFS audio set (console drops USB RX)
+        "baked_model": "ds_cnn_l_static_v2_edgetpu",
         "flash_hint": "python3 ../testbench/make_eval_audio_set.py --per-class N , then "
-                      "./scripts/build_and_flash_eval_stream.sh",
+                      "./scripts/build_and_flash_eval_stream.sh --version v1",
     },
     ("coral", "v0"): {
-        "name": "Coral fp32-cpu (DS-CNN-L float, M7)",
+        "name": "Coral fp32-cpu v0 (DS-CNN-L float, M7)",
         "config_id": "fp32-cpu",
         "dir": PLATFORMS / "coral",
         "elf": "build/kws_apps/kws_eval_stream_cpu/kws_eval_stream_cpu",
         "labels": LABELS,
         "assert_dtr": True,
         "embedded": True,
+        "baked_model": "ds_cnn_l_float",
         "flash_hint": "python3 ../testbench/make_eval_audio_set.py --per-class N , then "
                       "./scripts/build_and_flash_eval_stream_cpu.sh",
+    },
+    # Coral structured-prune branches (int8-prune). Same kws_eval_stream firmware
+    # (same Edge-TPU + MFCC frontend), only the baked model differs — selected via
+    # build_and_flash_eval_stream.sh --version vNN. `baked_model` is the basename
+    # the firmware must report (cross-checked against the board's eval_ready line).
+    ("coral", "v21"): {
+        "name": "Coral int8-prune v21 f64b4 (4-blk, 64f)",
+        "config_id": "int8-prune",
+        "dir": PLATFORMS / "coral",
+        "elf": "build/kws_apps/kws_eval_stream/kws_eval_stream",
+        "labels": LABELS,
+        "assert_dtr": True,
+        "embedded": True,
+        "baked_model": "ds_cnn_l_pruned_f64b4_int8_edgetpu",
+        "flash_hint": "python3 ../testbench/make_eval_audio_set.py --per-class N , then "
+                      "./scripts/build_and_flash_eval_stream.sh --version v21",
+    },
+    ("coral", "v22"): {
+        "name": "Coral int8-prune v22 f32b6 (6-blk, 32f)",
+        "config_id": "int8-prune",
+        "dir": PLATFORMS / "coral",
+        "elf": "build/kws_apps/kws_eval_stream/kws_eval_stream",
+        "labels": LABELS,
+        "assert_dtr": True,
+        "embedded": True,
+        "baked_model": "ds_cnn_l_pruned_f32b6_int8_edgetpu",
+        "flash_hint": "python3 ../testbench/make_eval_audio_set.py --per-class N , then "
+                      "./scripts/build_and_flash_eval_stream.sh --version v22",
+    },
+    ("coral", "v23"): {
+        "name": "Coral int8-prune v23 f32b4 (4-blk, 32f)",
+        "config_id": "int8-prune",
+        "dir": PLATFORMS / "coral",
+        "elf": "build/kws_apps/kws_eval_stream/kws_eval_stream",
+        "labels": LABELS,
+        "assert_dtr": True,
+        "embedded": True,
+        "baked_model": "ds_cnn_l_pruned_f32b4_int8_edgetpu",
+        "flash_hint": "python3 ../testbench/make_eval_audio_set.py --per-class N , then "
+                      "./scripts/build_and_flash_eval_stream.sh --version v23",
+    },
+    # Prune + knowledge-distillation branches (int8-prune-distill). Same firmware /
+    # frontend, share the v2 input scale (0.5847/83) — only the baked model differs.
+    ("coral", "v31"): {
+        "name": "Coral prune-distill v31 f64b4+KD (4-blk, 64f)",
+        "config_id": "int8-prune-distill",
+        "dir": PLATFORMS / "coral",
+        "elf": "build/kws_apps/kws_eval_stream/kws_eval_stream",
+        "labels": LABELS,
+        "assert_dtr": True,
+        "embedded": True,
+        "baked_model": "ds_cnn_l_distilled_f64b4_int8_edgetpu",
+        "flash_hint": "python3 ../testbench/make_eval_audio_set.py --per-class N , then "
+                      "./scripts/build_and_flash_eval_stream.sh --version v31",
+    },
+    ("coral", "v32"): {
+        "name": "Coral prune-distill v32 f32b4+KD (4-blk, 32f)",
+        "config_id": "int8-prune-distill",
+        "dir": PLATFORMS / "coral",
+        "elf": "build/kws_apps/kws_eval_stream/kws_eval_stream",
+        "labels": LABELS,
+        "assert_dtr": True,
+        "embedded": True,
+        "baked_model": "ds_cnn_l_distilled_f32b4_int8_edgetpu",
+        "flash_hint": "python3 ../testbench/make_eval_audio_set.py --per-class N , then "
+                      "./scripts/build_and_flash_eval_stream.sh --version v32",
     },
 }
 
@@ -180,9 +255,9 @@ def read_embedded_eval(port, baud, assert_dtr=False, total_timeout=600):
     """For boards that run an EMBEDDED audio set autonomously (Coral): don't
     stream — just read one pass of self-describing eval lines:
         BENCH,event=eval,idx=,pred_idx=,true_idx=,cnn_us=
-    framed by eval_ready/eval_done. Returns [(true, pred, cnn_us)]."""
+    framed by eval_ready/eval_done. Returns ([(true, pred, cnn_us)], reported_model)."""
     import serial
-    out, started, waited_note = [], False, False
+    out, started, waited_note, reported_model = [], False, False, None
     deadline = time.monotonic() + total_timeout
     with serial.Serial(port, baud, timeout=2) as ser:
         if assert_dtr:
@@ -203,6 +278,8 @@ def read_embedded_eval(port, baud, assert_dtr=False, total_timeout=600):
                 out, started = [], True
                 if "event=eval_ready" in line:
                     print(f"  {line}")
+                    rf = dict(kv.split("=", 1) for kv in line.split(",")[1:] if "=" in kv)
+                    reported_model = rf.get("model")
             elif "event=eval_done" in line and started and out:
                 break
             if started and is_eval:
@@ -219,7 +296,7 @@ def read_embedded_eval(port, baud, assert_dtr=False, total_timeout=600):
             elif not started and not waited_note:
                 waited_note = True
                 print(f"  (board alive, mid-pass — will start at the next pass) e.g. {line[:54]}")
-    return out
+    return out, reported_model
 
 
 def confusion_and_metrics(triples):
@@ -380,9 +457,17 @@ def main():
     if embedded:
         print(f"Reading embedded eval on {port}...")
         print(f"  (if nothing comes: {spec['flash_hint']})")
-        triples = read_embedded_eval(port, args.baud,
-                                     assert_dtr=spec.get("assert_dtr", False))
-    else:
+        triples, reported_model = read_embedded_eval(
+            port, args.baud, assert_dtr=spec.get("assert_dtr", False))
+        # Honesty guard: the board self-reports the baked model — make sure it's the
+        # one this version expects, so a flash/run mismatch can't silently mislabel.
+        expected = spec.get("baked_model")
+        if expected and reported_model and reported_model != expected:
+            sys.exit(f"\n  ✗ MODEL MISMATCH: you ran --model {args.model} (expects "
+                     f"'{expected}') but the board is running '{reported_model}'.\n"
+                     f"    Re-flash: {spec['flash_hint']}")
+        if expected and reported_model == expected:
+            print(f"  ✓ board model matches {args.model} ({reported_model})")
         print(f"Streaming on {port} (board must be in EVAL mode)...")
         print(f"  (if it times out: {spec['flash_hint']})")
         triples = stream_eval(items, port, args.baud, args.timeout,
@@ -391,16 +476,25 @@ def main():
     lat = latency_stats(triples)
     size = read_elf_size(args.deployed_elf or (spec["dir"] / spec["elf"]))
     eval_build_mem = size is not None and args.deployed_elf is None
+    # On Coral the tensor arena + baked eval buffer live in SDRAM (counted as bss by
+    # `size`), so data+bss is ~25 MB and is NOT comparable on-chip SRAM — report n/a
+    # (matches the Experiments ledger footnote ᵇ). Flash .text stays meaningful.
+    sram_na = spec.get("sram_na", args.board == "coral")
     print_confusion(cm)
     print(f"\nAccuracy: {acc*100:.2f}%  ({correct}/{total})")
     if lat:
         print(f"Latency : avg {lat['avg_ms']:.3f} ms  p95 {lat['p95_ms']:.3f} ms")
     if size:
         note = "  ⚠ EVAL build — pass --deployed-elf for deployed footprint" if eval_build_mem else ""
+        sram_str = "n/a (arena in SDRAM)" if sram_na else f"{size['static_sram_kib']:.1f} KiB"
         print(f"Memory  : flash .text {size['flash_text_kib']:.1f} KiB  "
-              f"SRAM {size['static_sram_kib']:.1f} KiB  (from {Path(size['elf']).name}){note}")
+              f"SRAM {sram_str}  (from {Path(size['elf']).name}){note}")
     if size:
         size["from_eval_build"] = eval_build_mem
+        size["sram_na"] = sram_na
+        if sram_na:
+            size["sram_na_reason"] = ("tensor arena + baked eval buffer live in SDRAM; "
+                                      "on-chip SRAM is not the comparable axis (ledger ᵇ)")
 
     # One central folder, one unique subfolder per MCU/model (overwrites on re-run).
     run_id = f"{args.board}_{args.model}"
@@ -419,7 +513,7 @@ def main():
     lat_avg = f"{lat['avg_ms']:.3f}" if lat else "—"
     lat_p95 = f"{lat['p95_ms']:.3f}" if lat else "—"
     flash = f"{size['flash_text_kib']:.1f}" if size else "—"
-    sram = f"{size['static_sram_kib']:.1f}" if size else "—"
+    sram = "n/a" if (size and sram_na) else (f"{size['static_sram_kib']:.1f}" if size else "—")
     model_accuracy = MODEL_ACCURACY.get(args.model)
     model_accuracy_str = f"{model_accuracy:.1f}" if model_accuracy is not None else "—"
     upsert_ledger(

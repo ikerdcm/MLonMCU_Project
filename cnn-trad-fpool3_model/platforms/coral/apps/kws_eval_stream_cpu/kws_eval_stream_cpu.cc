@@ -75,7 +75,9 @@ void run_eval() {
     TfLiteTensor* input  = interpreter.input(0);
     TfLiteTensor* output = interpreter.output(0);
 
-    printf("BENCH,event=eval_ready,classes=12,total=%lu\r\n", (unsigned long)N);
+    // v0 = fp32-cpu, the only network this app can run (ds_cnn_l_float).
+    printf("BENCH,event=eval_ready,classes=12,total=%lu,version=v0,model=ds_cnn_l_float\r\n",
+           (unsigned long)N);
     for (uint32_t i = 0; i < N; i++) {
         KwsMfccCompute(reinterpret_cast<const int16_t*>(audio + (size_t)i * kClipBytes), g_mfcc);
         for (int k = 0; k < kMfccElems; k++)

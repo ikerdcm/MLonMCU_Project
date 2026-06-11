@@ -1,0 +1,289 @@
+{
+  "run_id": "coral_v31",
+  "timestamp": "2026-06-11T18:09:01.164338",
+  "board": "coral",
+  "model": "v31",
+  "name": "Coral prune-distill v31 f64b4+KD (4-blk, 64f)",
+  "config_id": "int8-prune-distill",
+  "dataset": "/Users/iker/MAX78000_Toolchain/ai8x-training/data/KWS/raw_test",
+  "per_class": {
+    "down": {
+      "support": 12,
+      "recall": 0.8333333333333334,
+      "precision": 1.0
+    },
+    "go": {
+      "support": 12,
+      "recall": 1.0,
+      "precision": 0.9230769230769231
+    },
+    "left": {
+      "support": 12,
+      "recall": 1.0,
+      "precision": 0.8571428571428571
+    },
+    "no": {
+      "support": 12,
+      "recall": 0.8333333333333334,
+      "precision": 0.9090909090909091
+    },
+    "off": {
+      "support": 12,
+      "recall": 1.0,
+      "precision": 0.8571428571428571
+    },
+    "on": {
+      "support": 12,
+      "recall": 0.8333333333333334,
+      "precision": 1.0
+    },
+    "right": {
+      "support": 12,
+      "recall": 0.8333333333333334,
+      "precision": 1.0
+    },
+    "stop": {
+      "support": 12,
+      "recall": 0.9166666666666666,
+      "precision": 0.9166666666666666
+    },
+    "up": {
+      "support": 12,
+      "recall": 0.75,
+      "precision": 1.0
+    },
+    "yes": {
+      "support": 12,
+      "recall": 0.8333333333333334,
+      "precision": 1.0
+    },
+    "silence": {
+      "support": 12,
+      "recall": 1.0,
+      "precision": 1.0
+    },
+    "unknown": {
+      "support": 12,
+      "recall": 1.0,
+      "precision": 0.631578947368421
+    }
+  },
+  "seed": 0,
+  "n_clips": 144,
+  "model_accuracy": 90.8,
+  "accuracy": 0.9027777777777778,
+  "correct": 130,
+  "labels": [
+    "down",
+    "go",
+    "left",
+    "no",
+    "off",
+    "on",
+    "right",
+    "stop",
+    "up",
+    "yes",
+    "silence",
+    "unknown"
+  ],
+  "confusion_matrix": [
+    [
+      10,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      12,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      12,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      0,
+      10,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      12,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      1,
+      10,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      10,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      11,
+      0,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      9,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      10,
+      0,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      12,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      12
+    ]
+  ],
+  "latency": {
+    "count": 144,
+    "avg_ms": 1.9576944444444444,
+    "median_ms": 1.952,
+    "p95_ms": 1.9867000000000001,
+    "min_ms": 1.832,
+    "max_ms": 3.781
+  },
+  "memory": {
+    "elf": "/Users/iker/Projects/ETHZ/Q2/ML_on_MCUs/MLonMCU_Project_Real/MLonMCU_Project/cnn-trad-fpool3_model/platforms/coral/build/kws_apps/kws_eval_stream/kws_eval_stream",
+    "text_bytes": 290244,
+    "data_bytes": 11444,
+    "bss_bytes": 25987216,
+    "flash_text_kib": 283.44140625,
+    "static_sram_kib": 25389.31640625,
+    "from_eval_build": true,
+    "sram_na": true,
+    "sram_na_reason": "tensor arena + baked eval buffer live in SDRAM; on-chip SRAM is not the comparable axis (ledger \u1d47)"
+  },
+  "energy_estimate": {
+    "voltage_v": 5.0,
+    "current_ma": 164.52,
+    "power_w": 0.8226,
+    "energy_per_inference_j": 0.0016103994500000001,
+    "energy_per_inference_uj": 1610.3994500000001,
+    "mac_ops_per_joule": 1649757145.6572466,
+    "mac_ops_per_second_per_watt": 1649757145.6572466,
+    "note": "PPK2 measurement: 5.0V supply, avg 164.52mA during Coral v31 INT8 Edge-TPU inference window. Energy from measured power x testbench latency.avg_ms; MAC efficiency uses 2,656,768 MAC per inference for the 4-block 64-filter DS-CNN branch."
+  }
+}

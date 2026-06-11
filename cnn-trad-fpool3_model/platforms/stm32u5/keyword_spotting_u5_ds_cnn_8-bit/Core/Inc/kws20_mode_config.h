@@ -25,14 +25,14 @@
 #define KWS20_CFG_APP_MODE KWS20_CFG_APP_MODE_KWS_LIVE
 
 #define KWS20_CFG_ENABLE_MEASURE 1
-#define KWS20_CFG_MEASURE_LIVE   0
+#define KWS20_CFG_MEASURE_LIVE   1
 #define KWS20_CFG_LIVE_MEASURE_MINIMAL_OUTPUT 1
 #define KWS20_CFG_MEASURE_RUNS 50
 
 /* Device-in-the-loop accuracy eval mode (overrides measure/live when 1).
  * Host streams test audio over huart1; board runs frontend+model and returns
  * predictions + cnn_us. See testbench.py. */
-#define KWS20_CFG_ENABLE_EVAL    1
+#define KWS20_CFG_ENABLE_EVAL    0
 
 /* --- Offline power-measurement mode (PPK2) --------------------------------
  * KWS20_CFG_POWER_MODE = 1: the offline path runs exactly POWER_RUNS inferences
@@ -43,7 +43,7 @@
  */
 #define KWS20_CFG_POWER_MODE        1
 #define KWS20_CFG_POWER_CONTINUOUS  1      /* loop forever for live PPK watching; 0 = one POWER_RUNS pass (official protocol) */
-#define KWS20_CFG_POWER_SLEEP_IDLE  0      /* 1 = __WFI sleep between inferences (clean spikes); 0 = CPU never sleeps (run mode) */
+#define KWS20_CFG_POWER_SLEEP_IDLE  1      /* 1 = __WFI sleep between inferences (clean spikes); 0 = CPU never sleeps (run mode) */
 #define KWS20_CFG_POWER_RUNS        6
 #define KWS20_CFG_POWER_PERIOD_MS   5000u  /* official 6x5s protocol: 1 inference every 5 s -> spikes at t=1,6,11,16,21,26 s */
 #define KWS20_CFG_POWER_SETTLE_MS   1000u  /* settle 1 s before the first inference */

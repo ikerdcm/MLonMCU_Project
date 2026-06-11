@@ -116,6 +116,33 @@ def find_target_peaks(times_ms, currents_ua, peak_times_ms, search_half_window_m
     return peaks
 
 
+def find_window_start_peaks(times_ms, currents_ua, window_start_times_ms, period_ms, expected_duration_ms):
+    peaks = []
+    if not window_start_times_ms:
+        return peaks
+
+    ordered_starts = sorted(float(v) for v in window_start_times_ms)
+    total_end = times_ms[-1]
+    search_span_ms = expected_duration_ms if expected_duration_ms is not None else period_ms
+
+    for i, start_ms in enumerate(ordered_starts):
+        w0 = max(times_ms[0], start_ms)
+        if i + 1 < len(ordered_starts):
+            w1 = min(total_end, ordered_starts[i + 1])
+        else:
+            w1 = min(total_end, start_ms + period_ms)
+
+        search_hi = min(w1, start_ms + search_span_ms)
+        i0 = nearest_index(times_ms, w0)
+        i1 = min(len(times_ms) - 1, nearest_index(times_ms, search_hi))
+        if i1 <= i0:
+            continue
+        local_max_idx = max(range(i0, i1 + 1), key=lambda idx: currents_ua[idx])
+        peaks.append((i + 1, w0, w1, local_max_idx))
+
+    return peaks
+
+
 def moving_average(values, radius):
     if radius <= 0:
         return list(values)
@@ -606,6 +633,71 @@ def compute_fixed_duration_from_start_metrics(
     return metrics
 
 
+def compute_fixed_duration_from_window_start_metrics(
+    times_ms,
+    currents_ua,
+    peak_specs,
+    voltage_v,
+    expected_duration_ms,
+):
+    if expected_duration_ms is None:
+        raise RuntimeError("window_mode=fixed_duration_from_window_start requires expected_duration_ms")
+
+    dt_ms = times_ms[1] - times_ms[0]
+    duration_samples = max(1, int(round(expected_duration_ms / dt_ms)))
+    metrics = []
+
+    for peak_number, w0, w1, _ in peak_specs:
+        i0 = nearest_index(times_ms, w0)
+        i1 = min(len(times_ms) - 1, nearest_index(times_ms, w1))
+        end_idx = min(i1 - 1, i0 + duration_samples - 1)
+        if end_idx <= i0:
+            end_idx = min(i1 - 1, i0 + 1)
+
+        event_currents = currents_ua[i0:end_idx + 1]
+        event_peak_rel_idx = max(range(len(event_currents)), key=lambda idx: event_currents[idx])
+        peak_idx = i0 + event_peak_rel_idx
+
+        post0 = min(i1 - 1, end_idx + 1)
+        post_samples = currents_ua[post0:i1] if post0 < i1 else []
+        pre_samples = currents_ua[max(0, i0 - duration_samples):i0]
+        baseline_samples = post_samples or pre_samples or currents_ua[i0:i1]
+        baseline_ua = percentile(baseline_samples, 0.2)
+        peak_current_ua = currents_ua[peak_idx]
+        threshold_ua = baseline_ua
+
+        mean_current_ua = sum(event_currents) / len(event_currents)
+        mean_excess_ua = sum((v - baseline_ua) for v in event_currents) / len(event_currents)
+        duration_ms = times_ms[end_idx] - times_ms[i0] + dt_ms
+        charge_total_uc = sum(v * dt_ms / 1000.0 for v in event_currents)
+        charge_uc = sum((v - baseline_ua) * dt_ms / 1000.0 for v in event_currents)
+        energy_total_uj = None if voltage_v is None else charge_total_uc * voltage_v
+        energy_uj = None if voltage_v is None else charge_uc * voltage_v
+
+        metrics.append(
+            PeakMetrics(
+                peak_number=peak_number,
+                window_start_ms=w0,
+                window_end_ms=w1,
+                peak_time_ms=times_ms[peak_idx],
+                peak_current_ua=peak_current_ua,
+                baseline_current_ua=baseline_ua,
+                threshold_current_ua=threshold_ua,
+                start_ms=times_ms[i0],
+                end_ms=times_ms[end_idx],
+                duration_ms=duration_ms,
+                mean_current_ua=mean_current_ua,
+                mean_excess_current_ua=mean_excess_ua,
+                charge_total_uc=charge_total_uc,
+                charge_uc=charge_uc,
+                energy_total_uj=energy_total_uj,
+                energy_uj=energy_uj,
+            )
+        )
+
+    return metrics
+
+
 def compute_peak_metrics(
     times_ms,
     currents_ua,
@@ -678,6 +770,14 @@ def compute_peak_metrics(
             expected_duration_ms,
             threshold_fraction,
             plateau_coarse_fraction,
+        )
+    if window_mode == "fixed_duration_from_window_start":
+        return compute_fixed_duration_from_window_start_metrics(
+            times_ms,
+            currents_ua,
+            peak_specs,
+            voltage_v,
+            expected_duration_ms,
         )
     return compute_positive_peak_metrics(
         times_ms,
@@ -1052,6 +1152,7 @@ def main():
     ap.add_argument("--overlay-half-window-ms", type=float)
     ap.add_argument("--voltage", type=float)
     ap.add_argument("--peak-times-ms", nargs="*", type=float)
+    ap.add_argument("--window-start-times-ms", nargs="*", type=float)
     ap.add_argument("--peak-search-half-window-ms", type=float)
     ap.add_argument("--local-baseline-window-ms", type=float)
     ap.add_argument("--local-baseline-guard-ms", type=float)
@@ -1061,6 +1162,8 @@ def main():
     ap.add_argument("--transition-settle-ms", type=float)
     ap.add_argument("--transition-smooth-ms", type=float)
     ap.add_argument("--plateau-coarse-fraction", type=float)
+    ap.add_argument("--expected-duration-ms", type=float)
+    ap.add_argument("--skip-zoom-outputs", action="store_true")
     args = ap.parse_args()
     config_path = Path(args.config).expanduser().resolve() if args.config else None
     config = load_config(config_path)
@@ -1078,6 +1181,7 @@ def main():
     args.overlay_half_window_ms = float(pick_value(args.overlay_half_window_ms, config, "overlay_half_window_ms", 5.0))
     args.voltage = pick_value(args.voltage, config, "voltage")
     args.peak_times_ms = pick_value(args.peak_times_ms, config, "peak_times_ms")
+    args.window_start_times_ms = pick_value(args.window_start_times_ms, config, "window_start_times_ms")
     args.peak_search_half_window_ms = float(
         pick_value(args.peak_search_half_window_ms, config, "peak_search_half_window_ms", 120.0)
     )
@@ -1089,6 +1193,9 @@ def main():
     args.transition_settle_ms = float(pick_value(args.transition_settle_ms, config, "transition_settle_ms", 20.0))
     args.transition_smooth_ms = float(pick_value(args.transition_smooth_ms, config, "transition_smooth_ms", 5.0))
     args.plateau_coarse_fraction = float(pick_value(args.plateau_coarse_fraction, config, "plateau_coarse_fraction", 0.3))
+    args.expected_duration_ms = pick_value(args.expected_duration_ms, config, "expected_duration_ms")
+    args.expected_duration_ms = None if args.expected_duration_ms is None else float(args.expected_duration_ms)
+    args.write_zoom_outputs = bool(config.get("write_zoom_outputs", True)) and not args.skip_zoom_outputs
 
     csv_path = Path(csv_value).expanduser().resolve()
     summary_path = Path(args.summary_json).expanduser().resolve() if args.summary_json else None
@@ -1111,14 +1218,27 @@ def main():
             args.voltage = float(summary["energy_estimate"]["voltage_v"])
         except Exception:
             pass
-    expected_duration_ms = None
+    expected_duration_ms = args.expected_duration_ms
     if summary and summary.get("cnn_latency_us"):
         try:
             expected_duration_ms = float(summary["cnn_latency_us"]["avg"]) / 1000.0
         except Exception:
-            expected_duration_ms = None
+            pass
+    elif summary and summary.get("latency", {}).get("avg_ms") is not None:
+        try:
+            expected_duration_ms = float(summary["latency"]["avg_ms"])
+        except Exception:
+            pass
 
-    if args.peak_times_ms:
+    if args.window_start_times_ms:
+        peak_specs = find_window_start_peaks(
+            times_ms,
+            currents_ua,
+            args.window_start_times_ms,
+            args.period_ms,
+            expected_duration_ms,
+        )
+    elif args.peak_times_ms:
         peak_specs = find_target_peaks(
             times_ms,
             currents_ua,
@@ -1146,10 +1266,11 @@ def main():
 
     cleanup_old_peak_outputs(out_dir)
     write_peak_csv(out_dir / "peak_metrics.csv", metrics)
-    write_zoom_csvs(out_dir, times_ms, currents_ua, metrics, args.zoom_half_window_ms)
     save_full_plot(out_dir / "full_trace.png", times_ms, currents_ua, metrics)
-    save_zoom_grid(out_dir / "peak_zoom_grid.png", times_ms, currents_ua, metrics, args.zoom_half_window_ms)
-    save_overlay_plot(out_dir / "peak_overlay.png", times_ms, currents_ua, metrics, args.overlay_half_window_ms)
+    if args.write_zoom_outputs:
+        write_zoom_csvs(out_dir, times_ms, currents_ua, metrics, args.zoom_half_window_ms)
+        save_zoom_grid(out_dir / "peak_zoom_grid.png", times_ms, currents_ua, metrics, args.zoom_half_window_ms)
+        save_overlay_plot(out_dir / "peak_overlay.png", times_ms, currents_ua, metrics, args.overlay_half_window_ms)
 
     avg_duration_ms = sum(m.duration_ms for m in metrics) / len(metrics)
     avg_mean_current_ua = sum(m.mean_current_ua for m in metrics) / len(metrics)
@@ -1194,14 +1315,26 @@ def main():
         "avg_peak_energy_total_uj": avg_energy_total_uj,
         "avg_peak_energy_uj": avg_energy_uj,
         "per_peak": [asdict(m) for m in metrics],
+        "summary_voltage_v": None,
+        "summary_current_ma": None,
+        "summary_power_w": None,
+        "summary_energy_per_inference_uj": None,
+        "avg_peak_mean_current_vs_summary_current_ratio": None,
+        "avg_peak_mean_excess_current_vs_summary_current_ratio": None,
+        "avg_peak_energy_total_vs_summary_ratio": None,
+        "avg_peak_excess_energy_vs_summary_ratio": None,
     }
 
+    summary_latency_ms_avg = None
     if summary and summary.get("cnn_latency_us"):
-        report["summary_cnn_latency_us_avg"] = summary["cnn_latency_us"]["avg"]
-        report["summary_cnn_latency_ms_avg"] = summary["cnn_latency_us"]["avg"] / 1000.0
-        report["duration_vs_summary_ratio"] = (
-            avg_duration_ms / (summary["cnn_latency_us"]["avg"] / 1000.0)
-        )
+        summary_latency_ms_avg = summary["cnn_latency_us"]["avg"] / 1000.0
+    elif summary and summary.get("latency", {}).get("avg_ms") is not None:
+        summary_latency_ms_avg = float(summary["latency"]["avg_ms"])
+
+    if summary_latency_ms_avg is not None:
+        report["summary_cnn_latency_us_avg"] = summary_latency_ms_avg * 1000.0
+        report["summary_cnn_latency_ms_avg"] = summary_latency_ms_avg
+        report["duration_vs_summary_ratio"] = avg_duration_ms / summary_latency_ms_avg
 
     if summary and summary.get("energy_estimate"):
         energy = summary["energy_estimate"]

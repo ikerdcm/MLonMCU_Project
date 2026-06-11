@@ -16,6 +16,7 @@ add_subdirectory(kws_coral)
 add_subdirectory(kws_live)
 add_subdirectory(kws_bench)
 add_subdirectory(single_inference)
+add_subdirectory(kws_idle)        # int8-accel v1 offline duty-cycle (1 inf / 5 s, WFI sleep) — power
 add_subdirectory(kws_bench_cpu)   # fp32-cpu offline (no Edge TPU)
 add_subdirectory(kws_idle_cpu)    # fp32-cpu offline duty-cycle (1 inf / 5 s, WFI sleep) — power
 add_subdirectory(kws_live_cpu)    # fp32-cpu online  (no Edge TPU)

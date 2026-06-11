@@ -9,28 +9,41 @@
 #     v31 distill f64b4      | v32 distill f32b4
 set -euo pipefail
 
-# version id -> edgetpu model basename (the ONLY network that gets flashed).
-declare -A VERSION_MODEL=(
-    [v1]="ds_cnn_l_static_v2_edgetpu"
-    [v21]="ds_cnn_l_pruned_f64b4_int8_edgetpu"
-    [v22]="ds_cnn_l_pruned_f32b6_int8_edgetpu"
-    [v23]="ds_cnn_l_pruned_f32b4_int8_edgetpu"
-    [v31]="ds_cnn_l_distilled_f64b4_int8_edgetpu"
-    [v32]="ds_cnn_l_distilled_f32b4_int8_edgetpu"
-)
-# version id reported by the firmware (reverse lookup from basename).
-declare -A MODEL_VERSION
-for v in "${!VERSION_MODEL[@]}"; do MODEL_VERSION["${VERSION_MODEL[$v]}"]="$v"; done
+# version id <-> edgetpu model basename. case-based (no associative arrays) so this
+# runs on macOS's stock bash 3.2. ALL_VERSIONS is the selectable set.
+ALL_VERSIONS="v1 v21 v22 v23 v31 v32"
+version_to_model() {
+    case "$1" in
+        v1)  echo "ds_cnn_l_static_v2_edgetpu" ;;
+        v21) echo "ds_cnn_l_pruned_f64b4_int8_edgetpu" ;;
+        v22) echo "ds_cnn_l_pruned_f32b6_int8_edgetpu" ;;
+        v23) echo "ds_cnn_l_pruned_f32b4_int8_edgetpu" ;;
+        v31) echo "ds_cnn_l_distilled_f64b4_int8_edgetpu" ;;
+        v32) echo "ds_cnn_l_distilled_f32b4_int8_edgetpu" ;;
+        *)   echo "" ;;
+    esac
+}
+model_to_version() {
+    case "$1" in
+        ds_cnn_l_static_v2_edgetpu)            echo "v1" ;;
+        ds_cnn_l_pruned_f64b4_int8_edgetpu)    echo "v21" ;;
+        ds_cnn_l_pruned_f32b6_int8_edgetpu)    echo "v22" ;;
+        ds_cnn_l_pruned_f32b4_int8_edgetpu)    echo "v23" ;;
+        ds_cnn_l_distilled_f64b4_int8_edgetpu) echo "v31" ;;
+        ds_cnn_l_distilled_f32b4_int8_edgetpu) echo "v32" ;;
+        *)                                     echo "unknown" ;;
+    esac
+}
 
 EVAL_VERSION="v1"
-EVAL_MODEL="${VERSION_MODEL[v1]}"
+EVAL_MODEL="$(version_to_model v1)"
 if [[ "${1:-}" == "--version" ]]; then
     EVAL_VERSION="$2"; shift 2
-    EVAL_MODEL="${VERSION_MODEL[$EVAL_VERSION]:-}"
-    [[ -n "$EVAL_MODEL" ]] || { echo "ERROR: unknown --version '$EVAL_VERSION' (have: ${!VERSION_MODEL[*]})"; exit 1; }
+    EVAL_MODEL="$(version_to_model "$EVAL_VERSION")"
+    [[ -n "$EVAL_MODEL" ]] || { echo "ERROR: unknown --version '$EVAL_VERSION' (have: $ALL_VERSIONS)"; exit 1; }
 elif [[ "${1:-}" == "--model" ]]; then
     EVAL_MODEL="$2"; shift 2
-    EVAL_VERSION="${MODEL_VERSION[$EVAL_MODEL]:-unknown}"
+    EVAL_VERSION="$(model_to_version "$EVAL_MODEL")"
 fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CORAL_DIR="$(dirname "$SCRIPT_DIR")"

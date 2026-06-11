@@ -272,5 +272,14 @@
     "flash_text_kib": 208.84765625,
     "static_sram_kib": 99.73828125,
     "from_eval_build": true
+  },
+
+  "energy_estimate": {
+    "voltage_v": 3.7,
+    "current_ma": 13.22,
+    "power_w": 0.048914,
+    "energy_per_inference_j": 0.09724696098375,
+    "energy_per_inference_uj": 97246.96098375,
+    "note": "PPK2 measurement: 3.7V supply, avg 13.22mA during MAX78000 fp32-cpu inference (M4F, no CNN accelerator). Energy from measured power x testbench latency.avg_ms (1988.121 ms)."
   }
 }

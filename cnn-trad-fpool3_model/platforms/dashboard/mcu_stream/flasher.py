@@ -43,6 +43,9 @@ MODELS = {
     # needs apps pointed at ds_cnn_l_static_v2_edgetpu.tflite (TODO with re-measure).
     "coral":    {"DS-CNN (INT8 v2, Edge-TPU)": "int8",
                  "DS-CNN (FP32, CPU)": "fp32"},
+    # GAP9 is built+flashed by its own Connect button (gap9.py), never by
+    # flash_all.sh — this entry only feeds the model dropdown / label set.
+    "gap9":     {"DS-CNN-L (FP32, Deeploy)": "fp32"},
 }
 
 # Which label set each model's pred_idx uses (see protocol.LABEL_SETS).

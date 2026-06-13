@@ -3,7 +3,8 @@
  *
  * Pipeline:
  *   PDM mic (Vesper, SAI1) → SFU CIC → 48 kHz PCM int32
- *   → 3:1 decimation → 16 kHz float32 (2-second window)
+ *   → chunked capture (250 ms) with VAD early exit
+ *   → 3:1 decimation → 16 kHz float32 (1-2 s captured region)
  *   → multi-alignment 1-second extraction around the speech peak
  *   → MFCC (490 coefficients) per alignment — raw, no gating/stretching
  *   → Deeploy DS-CNN-L Float32 inference per alignment (8-core cluster)
@@ -30,8 +31,9 @@
  *   amplitude peak at different frames around the GSC-typical position and
  *   average the softmax outputs (ensemble over alignments).
  *
- * Latency per recognition cycle: 2 s recording + N_WINDOWS × (MFCC + ~120 ms
- * inference) ≈ 2.5 s.
+ * Latency: VAD trigger ends the recording 750 ms after the trigger chunk, so
+ * the result arrives ~1 s after the word (incl. N_WINDOWS × (MFCC + ~120 ms
+ * inference) ≈ 0.4 s).  Idle cycles restart every 1.25 s.
  */
 
 #include <math.h>
@@ -48,8 +50,11 @@
 
 /* VAD threshold on abs-peak of DC-removed 16 kHz signal — used only as a
  * trigger to skip empty cycles, never to modify features.
- * Observed:  background ~3–15 M,  speech ~100–1000 M. */
-#define VAD_THRESHOLD 300000000.0f
+ * Observed:  background ~3–15 M,  loud speech ~300–2000 M, normal speaking
+ * volume at desk distance sits well below the old 300 M threshold, so use
+ * 100 M (~7–30× above background).  Lower further (e.g. 50 M) if detection
+ * still requires raising your voice. */
+#define VAD_THRESHOLD 100000000.0f
 
 /* Ensemble window alignments: number of MFCC frames before the amplitude
  * peak.  In GSC the keyword is roughly centred, so its vowel peak typically
@@ -61,10 +66,21 @@ static const int EXTRACT_PRE[] = { 14, 20, 26 };
 /* Detection threshold on the ensemble-averaged softmax probability. */
 #define CONF_THRESHOLD 0.60f
 
-/* 2-second audio constants */
+/* Audio buffer capacity (2 seconds) */
 #define AUDIO_2S_48K  (2 * MIC_SAMPLES_1S)    /* 96000 samples @ 48 kHz */
 #define AUDIO_2S_16K  (2 * MFCC_AUDIO_LEN)    /* 32000 samples @ 16 kHz */
-#define N_FRAMES_2S   (2 * MFCC_N_FRAMES)     /* 98 frames */
+
+/* Chunked capture with early exit: record 250 ms chunks; if no chunk crosses
+ * VAD_THRESHOLD within IDLE_CHUNKS (1.25 s) restart the listening cycle.  On
+ * a trigger keep recording POST_TRIGGER_CHUNKS (750 ms) past the trigger
+ * chunk and classify immediately — the response arrives ~1 s after the word
+ * instead of after a fixed 2-second window.  Minimum capture on a trigger in
+ * the first chunk is 1 + 3 chunks = 1 s = MFCC_AUDIO_LEN exactly. */
+#define CHUNK_48K           (MIC_SAMPLES_1S / 4)        /* 250 ms @ 48 kHz */
+#define CHUNK_16K           (CHUNK_48K / 3)             /* 250 ms @ 16 kHz */
+#define MAX_CHUNKS          (AUDIO_2S_48K / CHUNK_48K)  /* 8 = 2 s buffer cap */
+#define IDLE_CHUNKS         5                           /* 1.25 s idle window */
+#define POST_TRIGGER_CHUNKS 3                           /* 750 ms tail */
 
 /* ── Label table (must match training order) ─────────────────────────────── */
 static const char *KWS_LABELS[] = {
@@ -148,37 +164,65 @@ int main(void)
     /* ── Inference loop ─────────────────────────────────────────────────── */
     int inference_count = 0;
     while (1) {
-        /* 1. Signal that we are listening, then capture 2 seconds. */
+        /* 1. Chunked capture with early exit (VAD per chunk). */
         printf("-- Listening --\r\n");
-        mic_record(s_audio_48k, AUDIO_2S_48K);
+        int   n_chunks  = 0;
+        int   triggered = 0;
+        int   post_left = 0;
+        float vad_peak  = 0.0f;
+        for (int k = 0; k < MAX_CHUNKS; k++) {
+            int32_t *c48 = s_audio_48k + k * CHUNK_48K;
+            mic_record(c48, CHUNK_48K);
+            n_chunks = k + 1;
 
-        /* 2. DC-remove + 3:1 decimate 48 kHz → 16 kHz for the full 2 seconds.
-              mic_downsample_to_16k() only handles 1 second; do it inline. */
-        {
+            /* Chunk abs-peak on decimated, DC-removed samples. */
             int64_t dc_acc = 0;
-            for (int i = 0; i < AUDIO_2S_16K; i++)
-                dc_acc += s_audio_48k[i * 3];
-            float dc = (float)dc_acc / (float)AUDIO_2S_16K;
-            for (int i = 0; i < AUDIO_2S_16K; i++)
-                s_audio_16k[i] = (float)s_audio_48k[i * 3] - dc;
-        }
+            for (int i = 0; i < CHUNK_16K; i++)
+                dc_acc += c48[i * 3];
+            float dc = (float)dc_acc / (float)CHUNK_16K;
+            float pk = 0.0f;
+            for (int i = 0; i < CHUNK_16K; i++) {
+                float v = (float)c48[i * 3] - dc;
+                if (v < 0.0f) v = -v;
+                if (v > pk) pk = v;
+            }
+            if (pk > vad_peak) vad_peak = pk;
 
-        /* 3. VAD: abs-peak over the full 2-second buffer. */
-        float vad_peak = 0.0f;
-        for (int i = 0; i < AUDIO_2S_16K; i++) {
-            float v = s_audio_16k[i];
-            if (v < 0.0f) v = -v;
-            if (v > vad_peak) vad_peak = v;
+            if (!triggered) {
+                if (pk >= VAD_THRESHOLD) {
+                    triggered = 1;
+                    post_left = POST_TRIGGER_CHUNKS;
+                } else if (k + 1 >= IDLE_CHUNKS) {
+                    break;          /* idle window over — restart cycle */
+                }
+            } else if (--post_left <= 0) {
+                break;              /* post-trigger tail captured */
+            }
         }
-        if (vad_peak < VAD_THRESHOLD)
+        if (!triggered)
             continue;
 
-        /* 3b. CIC saturation check: Q31 output clips near ±2^31.  Clipped
+        /* 2. DC-remove + 3:1 decimate 48 kHz → 16 kHz over the captured
+              region.  mic_downsample_to_16k() only handles 1 second; inline. */
+        int n_16k = (n_chunks * CHUNK_48K) / 3;
+        {
+            int64_t dc_acc = 0;
+            for (int i = 0; i < n_16k; i++)
+                dc_acc += s_audio_48k[i * 3];
+            float dc = (float)dc_acc / (float)n_16k;
+            for (int i = 0; i < n_16k; i++)
+                s_audio_16k[i] = (float)s_audio_48k[i * 3] - dc;
+        }
+        if (n_16k < MFCC_AUDIO_LEN)     /* cannot happen — defensive */
+            continue;
+
+#ifdef KWS_DEBUG
+        /* 3. CIC saturation check: Q31 output clips near ±2^31.  Clipped
               vowels distort the spectrum, so flag recordings that get close
               to full scale (observed peaks up to ~2.0e9 ≈ 93 % FS). */
         {
             int clipped = 0;
-            for (int i = 0; i < AUDIO_2S_16K; i++) {
+            for (int i = 0; i < n_16k; i++) {
                 float v = s_audio_16k[i];
                 if (v > 2.0e9f || v < -2.0e9f) clipped++;
             }
@@ -186,15 +230,17 @@ int main(void)
                 printf("[clip] %d samples near int32 full scale — "
                        "speak softer / increase CIC_Shift\r\n", clipped);
         }
+#endif
 
         /* 4. Find the speech peak: frame with highest abs-max amplitude.
               Searching in MFCC frame steps (320 samples = 20 ms per frame). */
+        int n_frames_cap = n_16k / MFCC_FRAME_STEP;
         int peak_frame_2s = 0;
         float peak_amp_2s = 0.0f;
-        for (int t = 0; t < N_FRAMES_2S; t++) {
+        for (int t = 0; t < n_frames_cap; t++) {
             int start = t * MFCC_FRAME_STEP;
             int end   = start + MFCC_FRAME_STEP;
-            if (end > AUDIO_2S_16K) end = AUDIO_2S_16K;
+            if (end > n_16k) end = n_16k;
             float frame_max = 0.0f;
             for (int i = start; i < end; i++) {
                 float v = s_audio_16k[i];
@@ -207,8 +253,10 @@ int main(void)
             }
         }
 
-        printf("--- Detected (peak=%.0f) peak_frame=%d (%.0fms in 2s buf) ---\r\n",
-               vad_peak, peak_frame_2s, peak_frame_2s * 20.0f);
+#ifdef KWS_DEBUG
+        printf("--- Detected (peak=%.0f) peak_frame=%d (%.0fms, captured %dms) ---\r\n",
+               vad_peak, peak_frame_2s, peak_frame_2s * 20.0f, n_16k / 16);
+#endif
 
         /* 5. Ensemble over N_WINDOWS alignments: extract the 1-second window,
               compute the raw MFCC (peak-normalise → MFCC, exactly like
@@ -222,9 +270,9 @@ int main(void)
             int start_frame = peak_frame_2s - EXTRACT_PRE[w];
             if (start_frame < 0) start_frame = 0;
             int start_sample = start_frame * MFCC_FRAME_STEP;
-            /* Clamp so the 1-second window stays within the 2-second buffer. */
-            if (start_sample + MFCC_AUDIO_LEN > AUDIO_2S_16K)
-                start_sample = AUDIO_2S_16K - MFCC_AUDIO_LEN;
+            /* Clamp so the 1-second window stays within the captured region. */
+            if (start_sample + MFCC_AUDIO_LEN > n_16k)
+                start_sample = n_16k - MFCC_AUDIO_LEN;
 
             /* Clamping can collapse alignments onto the same window when the
                peak sits near a buffer edge — skip duplicates. */
@@ -277,11 +325,13 @@ int main(void)
                 for (int i = 0; i < n; i++)
                     probs_avg[i] += out[i];
                 n_run++;
+#ifdef KWS_DEBUG
                 int cls = argmax_float(out, n);
                 printf("[win %d] peak@frame %2d  start=%4dms  best=%-8s p=%.4f"
                        "  [%u cycles]\r\n",
                        w, EXTRACT_PRE[w], start_sample / 16,
                        KWS_LABELS[cls], out[cls], total_cycles);
+#endif
             }
         }
         if (n_run == 0)
@@ -295,13 +345,26 @@ int main(void)
         float conf = probs_avg[cls];
 
         if (conf >= CONF_THRESHOLD)
-            printf(">> %-8s  (class %d, avg score %.4f)\r\n",
-                   KWS_LABELS[cls], cls, conf);
+            printf(">> %-8s  (%.2f)\r\n", KWS_LABELS[cls], conf);
         else
-            printf(">> no detection  (best: %s, avg score %.4f < %.2f)\r\n",
-                   KWS_LABELS[cls], conf, CONF_THRESHOLD);
+            printf(">> ?         (unsure: %s %.2f)\r\n", KWS_LABELS[cls], conf);
+
+        /* Machine-readable line for the MCU dashboard — same BENCH format the
+         * STM32/MAX78000 firmwares emit (parsed by dashboard protocol.py).
+         * s= carries the ensemble-averaged per-class scores (0-100) that feed
+         * the dashboard's score bar chart. */
+        printf("BENCH,event=inference,mode=live,pred_idx=%d,conf_pct=%d,"
+               "cnn_us=%u,cycles=%u,s=",
+               cls, (int)(conf * 100.0f + 0.5f),
+               (unsigned)(total_cycles / 240u), (unsigned)total_cycles);
+        for (int i = 0; i < KWS_NUM_CLASSES; i++)
+            printf("%d%s", (int)(probs_avg[i] * 100.0f + 0.5f),
+                   (i < KWS_NUM_CLASSES - 1) ? ";" : "");
+        printf("\r\n");
+#ifdef KWS_DEBUG
         for (int i = 0; i < KWS_NUM_CLASSES; i++)
             printf("   %-8s %.4f\r\n", KWS_LABELS[i], probs_avg[i]);
+#endif
     }
 
     mic_close();

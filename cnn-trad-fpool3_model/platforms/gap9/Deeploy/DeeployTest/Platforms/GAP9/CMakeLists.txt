@@ -39,6 +39,12 @@ if(LIVE_INFERENCE)
     target_include_directories(${ProjectId} PRIVATE ${MFCC_DIR}/include)
     target_compile_definitions(${ProjectId} PRIVATE LIVE_INFERENCE)
 
+    # Verbose frontend diagnostics (per-window results, probability table,
+    # c0 trace).  Enable with:  -D KWS_DEBUG=ON
+    if(KWS_DEBUG)
+        target_compile_definitions(${ProjectId} PRIVATE KWS_DEBUG KWS_DEBUG_C0)
+    endif()
+
     # Compile the SFU graph (KWSMic.src → KWSMic_L2_Descr.c + KWSMic_L2_Descr.h).
     # SFU tool must be in PATH (source gap9-sdk/sourceme.sh before cmake).
     if(NOT SFU)

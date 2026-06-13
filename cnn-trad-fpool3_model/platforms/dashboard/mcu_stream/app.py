@@ -22,9 +22,11 @@ from PySide6.QtWidgets import (
 import pyqtgraph as pg
 
 from .protocol import PROFILES, InferenceRecord, label_in_set, LABEL_SETS
-from .reader import SerialReader, list_serial_ports, detect_ports
+from .reader import SerialReader, ProcessReader, list_serial_ports, detect_ports
 from .flasher import (flash_command, flash_available, FLASH_MODES, REPORT_MODES,
                       MODELS, MODEL_LABEL_SET)
+from .gap9 import (gap9_live_command, gap9_cleanup_command, gap9_stop_command,
+                   gap9_available)
 
 # Time-series plot sources (the dropdown). Scores are a separate stackable view.
 PLOT_SOURCES = {
@@ -112,7 +114,7 @@ class McuPanel(QGroupBox):
     def __init__(self, slot_idx: int, on_flash=None, parent=None):
         super().__init__(f"MCU slot {slot_idx + 1}", parent)
         self.on_flash = on_flash
-        self.reader: SerialReader | None = None
+        self.reader: SerialReader | ProcessReader | None = None
         self._t0_wall: float | None = None
         self._line_times: deque[float] = deque()
         self._inf_times: deque[float] = deque()
@@ -165,7 +167,8 @@ class McuPanel(QGroupBox):
         controls2 = QHBoxLayout()
         controls2.addWidget(QLabel("Model:"))
         controls2.addWidget(self.cb_model)
-        controls2.addWidget(QLabel("Port:"))
+        self.lbl_port = QLabel("Port:")
+        controls2.addWidget(self.lbl_port)
         controls2.addWidget(self.cb_port)
         controls2.addWidget(self.btn_refresh)
         controls2.addWidget(self.btn_connect)
@@ -218,6 +221,13 @@ class McuPanel(QGroupBox):
         self.cb_mode.addItems(prof.modes)
         self.cb_model.clear()
         self.cb_model.addItems(list(MODELS.get(self.cb_mcu.currentData(), {}).keys()))
+        # Process-sourced MCUs (GAP9) have no serial port; their Connect button
+        # builds + flashes + runs via docker/JTAG, so the Flash button is moot.
+        is_proc = prof.source == "process"
+        for w in (self.lbl_port, self.cb_port, self.btn_refresh):
+            w.setVisible(not is_proc)
+        self.btn_flash.setVisible(not is_proc)
+        self.btn_connect.setText("Build + Run" if is_proc else "Connect")
         self._update_bar_labels()
         self._autoselect_port()
 
@@ -248,30 +258,47 @@ class McuPanel(QGroupBox):
             self._disconnect()
 
     def _connect(self) -> None:
-        port = self.cb_port.currentText()
-        if not port or port.startswith("("):
-            self.lbl_status.setText("no port selected")
-            return
         mcu = self.cb_mcu.currentData()
         mode = self.cb_mode.currentText()
-        baud = PROFILES[mcu].default_baud
+        prof = PROFILES[mcu]
 
-        self._reset_stats()
-        self.reader = SerialReader(mcu, mode, port, baud)
+        if prof.source == "process":
+            if not gap9_available():
+                self.lbl_status.setText("docker or gap9/Deeploy dir not found")
+                return
+            self._reset_stats()
+            self.reader = ProcessReader(
+                mcu, mode, gap9_live_command(),
+                pre_commands=[gap9_cleanup_command()],
+                stop_command=gap9_stop_command())
+        else:
+            port = self.cb_port.currentText()
+            if not port or port.startswith("("):
+                self.lbl_status.setText("no port selected")
+                return
+            self._reset_stats()
+            self.reader = SerialReader(mcu, mode, port, prof.default_baud)
+
         self.reader.record.connect(self._on_record)
         self.reader.raw.connect(self._on_raw)
         self.reader.status.connect(self._on_status)
         self.reader.start()
 
-        self.btn_connect.setText("Disconnect")
+        self.btn_connect.setText("Stop" if prof.source == "process"
+                                 else "Disconnect")
         self._set_controls_enabled(False)
 
     def _disconnect(self) -> None:
         if self.reader is not None:
+            is_proc = isinstance(self.reader, ProcessReader)
             self.reader.stop()
-            self.reader.wait(2000)
+            # docker stop needs SIGTERM grace + SIGKILL fallback (~3 s); the
+            # QThread object must outlive its thread or Qt crashes.
+            self.reader.wait(8000 if is_proc else 2000)
             self.reader = None
-        self.btn_connect.setText("Connect")
+        prof = PROFILES[self.cb_mcu.currentData()]
+        self.btn_connect.setText("Build + Run" if prof.source == "process"
+                                 else "Connect")
         self.lbl_status.setText("idle")
         self.lbl_status.setStyleSheet("color: gray;")
         self._set_controls_enabled(True)
@@ -774,9 +801,15 @@ class MonitorWindow(QWidget):
         self.timer.start(500)
 
     def connect_all(self) -> None:
-        """Open the serial connection on every slot that has a port selected."""
+        """Open the serial connection on every slot that has a port selected.
+
+        Process-sourced slots (GAP9) are skipped: their Connect implies a
+        minutes-long docker build+flash, which should stay an explicit click.
+        """
         for p in self.panels:
-            if p.reader is None and p.cb_port.currentText():
+            if (p.reader is None
+                    and PROFILES[p.mcu_key()].source == "serial"
+                    and p.cb_port.currentText()):
                 p._connect()
 
     def open_eval(self) -> None:
@@ -804,8 +837,12 @@ class MonitorWindow(QWidget):
             return
         mode = self.flash_mode.currentText()
         # Free serial ports / avoid probe contention: disconnect affected readers.
+        # GAP9 is not flashed by flash_all.sh (its Connect does build+flash+run
+        # over its own JTAG probe), so leave process-sourced panels running.
         affected = self.panels if mcu is None else [
             p for p in self.panels if p.mcu_key() == mcu]
+        affected = [p for p in affected
+                    if PROFILES[p.mcu_key()].source == "serial"]
         for p in affected:
             if p.reader is not None:
                 p._disconnect()

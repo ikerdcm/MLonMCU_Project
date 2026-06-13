@@ -66,6 +66,7 @@ class McuProfile:
     default_baud: int = 115200
     assert_dtr: bool = False   # Coral CDC drops output until DTR is asserted
     port_hint: str = "usbmodem"
+    source: str = "serial"     # "serial" = pyserial port, "process" = subprocess stdout
 
 
 PROFILES = {
@@ -80,6 +81,13 @@ PROFILES = {
     "max78000": McuProfile(
         key="max78000", name="MAX78000",
         modes=("live", "offline"), usb_vid=0x0d28,  # DAPLink CMSIS-DAP
+    ),
+    # GAP9 has no USB-CDC console: firmware printf goes over JTAG semihosting
+    # through OpenOCD inside the Deeploy Docker container, so the dashboard
+    # reads the container's stdout instead of a serial port (see gap9.py).
+    "gap9": McuProfile(
+        key="gap9", name="GAP9 EVK",
+        modes=("live",), source="process",
     ),
 }
 
@@ -182,21 +190,23 @@ def build_record(mcu: str, mode: str, line: str,
             except (ValueError, TypeError):
                 return None
 
+        conf_pct = _to_int(fields, "conf_pct")   # GAP9 live emits its softmax %
         rec = InferenceRecord(
             mcu=mcu, mode=mode, t_host=t_host, t_wall=t_wall,
             event=event, raw=line,
             run=_to_int(fields, "run"),
             pred_idx=idx,
             label=label_from_idx(idx),
+            confidence=None if conf_pct is None else float(conf_pct),
             infer_us=_to_int(fields, "cnn_us", "infer_us"),
             cycles=_to_int(fields, "cycles"),
             level=_to_int(fields, "rms", "level"),
             thr=_to_int(fields, "thr"),
             scores=_ilist("s"),
             extra={k: v for k, v in fields.items()
-                   if k not in ("event", "run", "pred_idx", "cnn_us",
-                                "infer_us", "cycles", "rms", "level", "thr",
-                                "s")},
+                   if k not in ("event", "run", "pred_idx", "conf_pct",
+                                "cnn_us", "infer_us", "cycles", "rms", "level",
+                                "thr", "s")},
         )
         return rec
 

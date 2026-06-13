@@ -125,9 +125,11 @@ void mic_record(int32_t *buf, int n_samples_48k)
             break;
         }
     }
+#ifdef KWS_DEBUG
     if (extra_ms > 0)
         printf("[mic] DMA lagged wall-clock wait by ~%u ms\r\n",
                (unsigned)extra_ms);
+#endif
 }
 
 void mic_downsample_to_16k(const int32_t *buf_48k, float *audio_16k)

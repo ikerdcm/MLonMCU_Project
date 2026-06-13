@@ -161,6 +161,10 @@ Nach einem gesprochenen Keyword:
 ```
 
 **Hinweise:**
+- **Dashboard:** Das Ganze geht auch per Klick — im MCU-Dashboard
+  (`platforms/dashboard/run_dashboard.sh`) den Slot auf *GAP9 EVK* stellen und
+  **Build + Run** drücken. Voraussetzung bleibt Schritt 2 (ftdi_sio-Unbind)
+  oder die einmalige udev-Regel `platforms/dashboard/99-gap9-ftdi.rules`.
 - Nach `-- Listening --` hat man **2 Sekunden** Zeit das Keyword zu sprechen.
 - Das System nimmt immer 2 s auf, sucht den Amplituden-Peak und probiert 3 verschiedene Fenster-Alignments (±120 ms um Frame 20). Die Softmax-Ausgaben werden gemittelt.
 - Erkennung gilt nur bei avg score ≥ 0.60 (sonst `>> no detection`).

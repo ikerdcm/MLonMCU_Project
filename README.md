@@ -1,5 +1,3 @@
-# ML on MCU Keyword Spotting
-
 <p align="center">
   <img src="presentation/title.png" alt="ML on MCU title banner" width="900">
 </p>

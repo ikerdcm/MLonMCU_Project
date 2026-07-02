@@ -1,7 +1,7 @@
 # ML on MCU Keyword Spotting
 
 <p align="center">
-  <img src="presentation_plots/title.png" alt="ML on MCU title banner" width="900">
+  <img src="presentation/title.png" alt="ML on MCU title banner" width="900">
 </p>
 
 This repository contains the embedded keyword-spotting work for two model families: `ai85kws20netv3_model` and `cnn-trad-fpool3_model`. Each model folder contains its platform ports, model artifacts, measurement helpers, and result exports. Power traces and peak analyses are kept separately in `Experiments`.
@@ -11,7 +11,7 @@ The goal was not just to run one model once, but to compare deployment paths acr
 ## Overview
 
 <p align="center">
-  <img src="presentation_plots/image.png" alt="Project overview" width="1000">
+  <img src="presentation/image.png" alt="Project overview" width="1000">
 </p>
 
 The overview image summarizes the experiment matrix: model families are columns, target platforms are rows, and each box is one deployment mode. Blue boxes are CPU deployments, green boxes are accelerator-backed deployments, and red boxes mark variants that were evaluated but are not practically deployable or not useful as final embedded targets. `FP32`, `INT8Q`, `INT8QP`, and `INT8QP D` denote floating point, quantized, quantized+pruned, and quantized+pruned+distilled variants. `X` marks combinations that were not implemented or not meaningful.
@@ -46,9 +46,8 @@ MLonMCU_Project/
 |   +-- training/                 # Keras training, pruning, distillation scripts
 +-- Experiments/
 |   +-- PWR Consumption/          # raw PPK2 CSVs, peak analyses, power reports
-+-- presentation_plots/           # overview and title graphics
++-- presentation/                 # presentation slides and figures
 +-- Papers/
-+-- Plots/
 ```
 
 ## Results

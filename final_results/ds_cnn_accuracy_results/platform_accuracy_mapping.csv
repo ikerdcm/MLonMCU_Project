@@ -1,6 +1,0 @@
-Platform,Version,Label,Model Format,Model File,Inference Engine,Accuracy (%),Correct / Total,Quant. Loss vs Float32,Confusion Matrix File,Notes
-STM32U5,v0,float32,TFLite Float32,ds_cnn_l.tflite,X-CUBE-AI (Cortex-M33),93.03,4549 / 4890,—,confusion_ds_cnn_l_float32.png,No quantization applied
-STM32U5,v1,INT8,TFLite INT8,ds_cnn_l_static.tflite,X-CUBE-AI (Cortex-M33),92.72,4534 / 4890,-0.31%,confusion_ds_cnn_l.png,Post-training quantization (PTQ)
-MAX78000,v0,float32 SW,TFLite Float32,ds_cnn_l.tflite,Software on Cortex-M4F,93.03,4549 / 4890,—,confusion_ds_cnn_l_float32.png,No CNN accelerator — pure software inference
-MAX78000,v1,INT8 HW,TFLite INT8,ds_cnn_l_static.tflite,CNN Hardware Accelerator,92.72,4534 / 4890,-0.31%,confusion_ds_cnn_l.png,CNN accelerator with INT8 weights
-Coral Dev Board Micro,v0,INT8 Edge TPU,TFLite INT8 (Edge TPU compiled),ds_cnn_l_static_edgetpu.tflite,Google Edge TPU,92.72,4534 / 4890,-0.31%,confusion_ds_cnn_l.png,All 12 DS-CNN-L ops mapped to Edge TPU

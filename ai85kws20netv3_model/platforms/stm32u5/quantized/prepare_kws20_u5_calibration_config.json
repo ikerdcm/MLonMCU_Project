@@ -1,7 +1,0 @@
-{
-  "dataset_root": "/home/pascal/max78000/datasets/speech_commands_v2",
-  "model_path": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/models/kws20_v3_qat_true2d_nchw_allconst_folded_for_cubeai.onnx",
-  "output_dir": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/stm32u5/quantized",
-  "num_samples": 260,
-  "seed": 42
-}

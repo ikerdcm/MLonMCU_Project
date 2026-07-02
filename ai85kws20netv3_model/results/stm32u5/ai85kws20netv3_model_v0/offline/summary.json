@@ -1,0 +1,84 @@
+{
+  "timestamp": "2026-05-10T11:55:26.408908",
+  "mode": "offline",
+  "config": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/stm32u5/tools/kws20_measure_u5_config.json",
+  "project": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/stm32u5/u5_keyword_spotting",
+  "port": "/dev/ttyACM0",
+  "baud": 115200,
+  "elf": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/stm32u5/u5_keyword_spotting/Debug/u5_keyword_spotting.elf",
+  "elf_size_bytes": 2699820,
+  "memory": {
+    "text_bytes": 798149,
+    "data_bytes": 14844,
+    "bss_bytes": 158408,
+    "dec_bytes": 971401,
+    "hex": "ed289"
+  },
+  "static_sram_usage": {
+    "static_sram_bytes": 173252,
+    "static_sram_kib": 169.19140625,
+    "data_bytes": 14844,
+    "bss_bytes": 158408
+  },
+  "counts": {
+    "num_uart_events": 51,
+    "num_inference_events": 50,
+    "done_seen": true
+  },
+  "model_info": null,
+  "sensor_acquisition": {
+    "sample_rate_hz": 16000.0,
+    "sample_count": 16384.0,
+    "audio_window_s": 1.024,
+    "audio_window_ms": 1024.0
+  },
+  "cnn_latency_us": {
+    "count": 50,
+    "min": 397195.0,
+    "max": 397196.0,
+    "avg": 397195.7,
+    "median": 397196.0,
+    "std": 0.4629100498862757,
+    "p95": 397196.0
+  },
+  "cycles": {
+    "count": 50,
+    "min": 63551301.0,
+    "max": 63551509.0,
+    "avg": 63551398.38,
+    "median": 63551397.5,
+    "std": 50.612126481099125,
+    "p95": 63551486.0
+  },
+  "uart_transmission_time_estimate_s": {
+    "count": 51,
+    "min": 0.001388888888888889,
+    "max": 0.006076388888888889,
+    "avg": 0.005967456427015255,
+    "median": 0.006076388888888889,
+    "std": 0.0006548714064762738,
+    "p95": 0.006076388888888889
+  },
+  "cnn_latency_ms_avg": 397.1957,
+  "inferences_per_second_from_cnn_time": 2.517650619077699,
+  "estimated_end_to_end_lower_bound_ms": 1421.1957,
+  "cycles_estimate": {
+    "clock_mhz": 160.0,
+    "cycles_per_inference_avg": 63551311.99999999,
+    "mac_ops_per_cycle": 0.13843002957987713
+  },
+  "compute_estimate": {
+    "mac_ops_per_inference": 8797410.0,
+    "mac_ops_per_second": 22148804.73278034,
+    "mops_per_second": 22.14880473278034
+  },
+  "energy_estimate": {
+    "voltage_v": 3.28,
+    "current_ma": 24.057782514966355,
+    "power_w": 0.07890952664908964,
+    "energy_per_inference_j": 0.03134252467405381,
+    "energy_per_inference_uj": 31342.52467405381,
+    "mac_ops_per_joule": 280686067.6186285,
+    "mac_ops_per_second_per_watt": 280686067.6186285
+  }
+}

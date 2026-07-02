@@ -1,1 +1,0 @@
-v1 = int8-accel   # INT8, on-chip CNN accelerator

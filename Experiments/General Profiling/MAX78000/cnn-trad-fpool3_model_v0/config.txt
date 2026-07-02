@@ -1,1 +1,0 @@
-v0 = fp32-cpu     # FP32 baseline, Arm core (no accel)

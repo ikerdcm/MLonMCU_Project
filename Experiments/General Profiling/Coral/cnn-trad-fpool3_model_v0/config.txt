@@ -1,1 +1,0 @@
-v0 = fp32-cpu     # FP32 baseline, M7 CPU, no Edge-TPU op  (to build)

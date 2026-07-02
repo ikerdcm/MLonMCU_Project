@@ -1,6 +1,0 @@
-{
-  "model_path": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/models/kws20_v3_qat_true2d_nchw_allconst_folded_for_cubeai.onnx",
-  "calibration_nhwc": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/stm32u5/quantized/calibration_u5_current_model_nhwc.npz",
-  "calibration_nchw": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/stm32u5/quantized/calibration_u5_current_model_nchw.npz",
-  "output_dir": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/stm32u5/quantized"
-}

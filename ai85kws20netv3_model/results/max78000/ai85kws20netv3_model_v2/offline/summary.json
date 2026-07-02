@@ -1,0 +1,102 @@
+{
+  "timestamp": "2026-05-08T14:39:09.742969",
+  "mode": "offline",
+  "variant_name": "w90",
+  "config": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/max78000/tools/kws20_measure_max78000_w90_offline_config.json",
+  "project": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/max78000/kws20_demo_w90",
+  "port": "/dev/ttyACM0",
+  "baud": 115200,
+  "board": "FTHR_RevA",
+  "elf": "/home/pascal/Documents/ml_on_mcu/MLonMCU_Project/ai85kws20netv3_model/platforms/max78000/kws20_demo_w90/build/max78000.elf",
+  "elf_size_bytes": 2197992,
+  "memory": {
+    "text_bytes": 396048,
+    "data_bytes": 2604,
+    "bss_bytes": 35572,
+    "dec_bytes": 434224,
+    "hex": "6a030"
+  },
+  "static_sram_usage": {
+    "static_sram_bytes": 38176,
+    "static_sram_kib": 37.28125,
+    "data_bytes": 2604,
+    "bss_bytes": 35572
+  },
+  "counts": {
+    "num_uart_events": 995,
+    "num_inference_events": 9,
+    "num_prediction_events": 9
+  },
+  "prediction_histogram": {
+    "five": 9
+  },
+  "model_info": {
+    "event": "model_info",
+    "mode": "offline",
+    "input_elems": "16384",
+    "output_elems": "21",
+    "macc": "7207328",
+    "ops": "7259928"
+  },
+  "cnn_latency_us": {
+    "count": 9,
+    "min": 1711.0,
+    "max": 1711.0,
+    "avg": 1711.0,
+    "median": 1711.0,
+    "std": 0.0,
+    "p95": 1711.0
+  },
+  "cycles": {
+    "count": 8,
+    "min": 66880.0,
+    "max": 66880.0,
+    "avg": 66880.0,
+    "median": 66880.0,
+    "std": 0.0,
+    "p95": 66880.0
+  },
+  "uart_transmission_time_estimate_s": {
+    "count": 995,
+    "min": 0.0,
+    "max": 0.015711805555555555,
+    "avg": 0.0021387318537130174,
+    "median": 0.001388888888888889,
+    "std": 0.002151883148628459,
+    "p95": 0.005121527777777778
+  },
+  "sensor_acquisition": {
+    "sample_rate_hz": 16000.0,
+    "sample_count": 16384.0,
+    "audio_window_s": 1.024,
+    "audio_window_ms": 1024.0,
+    "fw_reported": {
+      "event": "acquisition",
+      "mode": "offline",
+      "sample_rate_hz": "16000",
+      "sample_count": "16384",
+      "audio_window_ms": "1024",
+      "chunk": "128",
+      "preamble": "3840",
+      "threshold_high": "130",
+      "threshold_low": "70"
+    }
+  },
+  "cnn_latency_ms_avg": 1.711,
+  "inferences_per_second_from_cnn_time": 584.4535359438925,
+  "mac_ops_per_cycle": 107.76507177033493,
+  "compute_estimate": {
+    "mac_ops_per_inference": 7207328.0,
+    "mac_ops_per_second": 4212348334.307423,
+    "mops_per_second": 4212.348334307423
+  },
+  "energy_estimate": {
+    "voltage_v": 3.7,
+    "current_ma": 36.69,
+    "power_w": 0.13575299999999998,
+    "energy_per_inference_j": 0.00023227338299999995,
+    "energy_per_inference_uj": 232.27338299999994,
+    "mac_ops_per_joule": 31029504573.06596,
+    "mac_ops_per_second_per_watt": 31029504573.065964
+  }
+}

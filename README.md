@@ -84,12 +84,12 @@ Interpretation notes:
 
 | Timestamp | Board | Config | Model | N | Model accuracy % | MCU accuracy % | Lat avg (ms) | Lat p95 (ms) | Flash/.text / L2 (KiB) | SRAM / L1 scratch (KiB) | Energy/Inference (uJ) | Run |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 2026-06-08 15:16 | max | int8-cpu | v0_0 | 16 | 90.80 | 89.43 | 897.288 | 897.290 | 397.8 | 66.7 | 49541.78 | Experiments/MAX78000/ai85kws20netv3_v0_0 |
-| 2026-05-05 16:48 | max | int8-accel | v0 | 11 | 90.80 | 91.25 | 1.849 | 1.849 | 381.1 | 37.7 | 283.39 | Experiments/MAX78000/ai85kws20netv3_v0 |
-| 2026-05-08 22:44 | max | int8-accel-w90 | v1 | 7 | 85.10 | 83.47 | 1.711 | 1.711 | 357.5 | 37.8 | 250.94 | Experiments/MAX78000/ai85kws20netv3_v1 |
-| 2026-05-04 19:22 | u5 | fp32-cpu | v0 | 6 | 91.17 | 91.23 | 397.242 | 397.242 | 724.1 | 238.1 | 31394.71 | Experiments/U5/ai85kws20netv3_v0 |
-| 2026-05-06 18:22 | u5 | int8-cpu | v1 | 3 | 90.80 | 90.01 | 173.839 | 173.839 | 250.1 | 180.8 | 12751.97 | Experiments/U5/ai85kws20netv3_v1 |
-| 2026-05-10 16:10 | u5 | int8-cpu-w90 | v2 | 13 | 85.10 | 84.27 | 152.922 | 152.922 | 226.7 | 176.8 | 11475.73 | Experiments/U5/ai85kws20netv3_v2 |
+| 2026-06-08 15:16 | max | int8-cpu | v0_0 | 16 | 90.80 | 89.43 | 897.288 | 897.290 | 397.8 | 66.7 | 49541.78 | ai85kws20netv3_model/results/max78000/ai85kws20netv3_model_v0 |
+| 2026-05-05 16:48 | max | int8-accel | v0 | 11 | 90.80 | 91.25 | 1.849 | 1.849 | 381.1 | 37.7 | 283.39 | ai85kws20netv3_model/results/max78000/ai85kws20netv3_model_v1 |
+| 2026-05-08 22:44 | max | int8-accel-w90 | v1 | 7 | 85.10 | 83.47 | 1.711 | 1.711 | 357.5 | 37.8 | 250.94 | ai85kws20netv3_model/results/max78000/ai85kws20netv3_model_v2 |
+| 2026-05-04 19:22 | u5 | fp32-cpu | v0 | 6 | 91.17 | 91.23 | 397.242 | 397.242 | 724.1 | 238.1 | 31394.71 | ai85kws20netv3_model/results/stm32u5/ai85kws20netv3_model_v0 |
+| 2026-05-06 18:22 | u5 | int8-cpu | v1 | 3 | 90.80 | 90.01 | 173.839 | 173.839 | 250.1 | 180.8 | 12751.97 | ai85kws20netv3_model/results/stm32u5/ai85kws20netv3_model_v1 |
+| 2026-05-10 16:10 | u5 | int8-cpu-w90 | v2 | 13 | 85.10 | 84.27 | 152.922 | 152.922 | 226.7 | 176.8 | 11475.73 | ai85kws20netv3_model/results/stm32u5/ai85kws20netv3_model_v2 |
 
 ## Where To Look
 

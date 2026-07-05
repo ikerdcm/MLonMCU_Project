@@ -30,7 +30,7 @@ REPORT_MODES = {
 # Per-MCU flashable models: label -> flash_all.sh model token.
 # Every board exposes the ledger's precision split — v0 = fp32-cpu (32-bit) and
 # v1 (8-bit) — selected via --stm32-model / --max-model / --coral-model. The
-# first entry is the dropdown default (kept as the working 8-bit/INT8 build).
+# first entry is the dropdown default (kept as the working 8-bit/INT8 build)
 MODELS = {
     "max78000": {"DS-CNN (INT8+accel, 8-bit)": "v1",
                  "DS-CNN (FP32, 32-bit)": "v0",
